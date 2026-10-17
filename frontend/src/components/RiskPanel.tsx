@@ -1,0 +1,54 @@
+import type { Forecast } from "../api/types";
+import { num } from "../format";
+
+export function RiskPanel({ forecast }: { forecast: Forecast | null }) {
+  if (!forecast) return <section className="card"><h3>Excursion risk</h3><p className="muted">No forecast yet.</p></section>;
+  if (forecast.status !== "ok") {
+    return (
+      <section className="card">
+        <h3>Excursion risk</h3>
+        <p className="warn-text">Forecast withheld: {forecast.reason}</p>
+        <p className="muted small">The twin does not guess when recent CGM data are insufficient.</p>
+      </section>
+    );
+  }
+  const ex = forecast.excursion;
+  if (!ex) {
+    return (
+      <section className="card">
+        <h3>Excursion risk</h3>
+        <p className="big g-high">{num(forecast.current_glucose_mg_dl)} mg/dL</p>
+        <p className="muted small">Glucose is already above 180 mg/dL, so an onset forecast does not apply.
+          The trajectory forecast is still shown on the chart.</p>
+      </section>
+    );
+  }
+  const maxAbs = Math.max(...ex.top_factors.map((f) => Math.abs(f.contribution)), 0.01);
+  return (
+    <section className={`card risk risk-${ex.risk_band}`}>
+      <h3>Excursion risk · next {ex.horizon_min} min</h3>
+      <div className="risk-head">
+        <div className="big">{Math.round(ex.probability * 100)}%</div>
+        <div>
+          <span className={`badge badge-${ex.risk_band}`}>{ex.risk_band.toUpperCase()}</span>
+          {ex.alert && <div className="alert-text">Above the alert threshold ({Math.round(ex.alert_threshold * 100)}%). Consider reviewing.</div>}
+        </div>
+      </div>
+      <p className="muted small">{ex.event_definition}</p>
+      <h4>What drives this estimate</h4>
+      <ul className="factors">
+        {ex.top_factors.map((f) => (
+          <li key={f.feature}>
+            <span className="f-label">{f.label}{f.value !== null && <span className="muted"> ({f.value})</span>}</span>
+            <span className="f-bar">
+              <span className={f.contribution >= 0 ? "bar up" : "bar down"} style={{ width: `${(Math.abs(f.contribution) / maxAbs) * 100}%` }} />
+            </span>
+            <span className={f.contribution >= 0 ? "f-dir up" : "f-dir down"}>{f.contribution >= 0 ? "raises" : "lowers"}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="muted tiny">Each bar sums the logistic-regression log-odds terms of a group of related inputs, relative to the training
+        average. Grouping avoids misleading signs from correlated inputs. These are associations, not causes.</p>
+    </section>
+  );
+}
