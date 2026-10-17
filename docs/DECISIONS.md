@@ -31,3 +31,14 @@ before the deadline.
 
 **ADR-009 Split-conformal 80% intervals.** These are distribution-free, cheap and honest (test coverage 0.76–0.80). Quantile models are
 unnecessary for v0.1.
+
+**ADR-010 Robustness audit as a separate command (wave 2).** `glucotwin audit` re-implements the protocol independently, checks it
+reproduces `evaluation_report.json` exactly, then adds patient-bootstrap CIs, stricter (sustained) warning metrics, ablations, extra seeds and
+a harder-realism stress test. The served model and the headline report are unchanged, so earlier numbers stay reproducible.
+
+**ADR-011 Display-only synthetic genetics (wave 2).** The official brief lists genetic markers in the simulated EHR. We add family history and
+a TCF7L2 rs7903146 genotype from a separate RNG stream, so all other data and metrics are byte-identical. They are not given a simulated effect,
+because an invented effect size would let the model "discover" our own assumption.
+
+**ADR-012 Replay limited to held-out test patients (wave 2).** Replaying a training patient shows in-sample predictions that look better
+than held-out performance. The API now refuses it.

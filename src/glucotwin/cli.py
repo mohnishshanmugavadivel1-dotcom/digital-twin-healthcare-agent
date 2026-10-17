@@ -1,4 +1,4 @@
-"""Command line entry point: ``glucotwin {train,serve,summary}``."""
+"""Command line entry point: ``glucotwin {train,serve,summary,audit}``."""
 
 from __future__ import annotations
 
@@ -42,6 +42,10 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--port", type=int, default=8000)
     m = sub.add_parser("summary", help="print the evaluation report")
     m.add_argument("--report", default="reports/evaluation_report.json")
+    a = sub.add_parser("audit", help="independent robustness audit (bootstrap CIs, ablations, seeds, stress test)")
+    a.add_argument("--seed", type=int, default=DEFAULT_SEED)
+    a.add_argument("--boot", type=int, default=1000)
+    a.add_argument("--quick", action="store_true", help="skip extra seeds (faster)")
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
@@ -56,6 +60,11 @@ def main(argv: list[str] | None = None) -> None:
         uvicorn.run("glucotwin.api.app:create_app", factory=True, host=args.host, port=args.port)
     elif args.cmd == "summary":
         _summary(Path(args.report))
+    elif args.cmd == "audit":
+        from glucotwin.evaluation.audit import run_audit
+
+        run_audit(seed=args.seed, n_boot=args.boot, extra_seeds=() if args.quick else (1, 2, 3))
+        print("wrote reports/audit_report.json")
 
 
 if __name__ == "__main__":

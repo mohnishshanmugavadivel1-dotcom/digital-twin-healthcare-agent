@@ -1,5 +1,8 @@
 # Competition readiness (Agent G)
 
+> **Superseded in part (2026-10-17, wave 2).** The official rules were found in full. See [COMPETITION_COMPLIANCE.md](COMPETITION_COMPLIANCE.md).
+> In particular, the video must be a **minimum of 20 minutes** (not 15–20), and the current demo plan is [DEMO_SCRIPT.md](DEMO_SCRIPT.md).
+
 ## What is verified about the challenge
 
 From the official Unstop page (https://unstop.com/hackathons/crp-digital-twin-challenge-2026-happiest-health-1757873, read 2026-10-17):
@@ -46,7 +49,7 @@ validation; the evaluation rubric and weights; the video length and format; whet
 | Transparency | Evaluation tab: baselines, held-out patients, intervals, limitations | /api/evaluation |
 | Responsible AI | Synthetic-only, disclaimers everywhere, no instructions, associations not causes | QA_SECURITY |
 
-## Demo strategy (15–20 min video, draft)
+## Demo strategy (wave-1 draft; superseded by DEMO_SCRIPT.md, minimum 20 min)
 
 1. 0:00–1:30. The problem: post-meal hyperglycaemia in Indian T2D, and why a 2-hour warning matters. State clearly that this is a prototype on synthetic data.
 2. 1:30–4:00. What a digital twin is here: record + streams, then state, then forecast, then the doctor. Show the architecture diagram.

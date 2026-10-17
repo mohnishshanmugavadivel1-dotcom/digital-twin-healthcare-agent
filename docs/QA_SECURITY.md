@@ -8,7 +8,7 @@
 * Every new feature lands with a test. Every bug fix lands with a regression test.
 * Lint with `ruff` (pyflakes, pycodestyle, isort, bugbear, pyupgrade). The frontend is type-checked by `tsc -b` during the build.
 
-## Current suite (45 tests, all passing on 2026-10-17)
+## Current suite (52 tests, all passing on 2026-10-17 after wave 2)
 
 | File | What it protects |
 |---|---|
@@ -20,6 +20,8 @@
 | `test_engine.py` | Range, unit and patient validation; idempotent duplicates; out-of-order rejection; insufficient-data forecasts; state versioning; no risk above 180; staleness |
 | `test_api.py` | Health, test-split-only exposure, 404 and 422 handling, **replay never reveals future data**, replay completion, ingest validation, model card and evaluation |
 | `test_pipeline.py` | Report contains all baselines, learned model beats persistence, bundle round-trip |
+| `test_audit.py` (wave 2) | Default realism is byte-identical, stress realism changes logs, genetics are deterministic and **not** a model feature, quantile threshold below the grid, sustained versus any-alert arithmetic |
+| `test_api.py` (wave 2 additions) | Replay refused for non-test patients (404); oversized replay offsets give 422, not 500 |
 
 The leakage tests were themselves validated by mutation. Injecting a 30-minute future shift into one feature made two tests fail.
 
@@ -67,3 +69,12 @@ make train     # regenerates reports/evaluation_report.json deterministically
 * Every random draw flows from one seed, and the cohort, splits, models (`random_state`) and report are deterministic. Two full runs on 2026-10-17
   produced identical metrics.
 * `requirements.lock` pins the exact Python environment used for the reported numbers (Python 3.11.2).
+
+## Wave-2 security checks (2026-10-17)
+
+* `pip-audit -r requirements.lock`: initially found **PYSEC-2026-1845 / CVE-2025-71176** in pytest 8.4.2 (dev-only tmpdir handling, CVSS 6.8).
+  Upgraded to pytest 9.1.1, after which no known vulnerabilities were found. `npm audit` (frontend, including dev): 0 vulnerabilities.
+* Probes against the running API: path-traversal-style IDs give 404; huge replay offsets gave **500** (fixed, now 422); replay of training
+  patients was allowed (fixed, now 404). There is no CORS middleware, so the app is same-origin only. Secret scan of tracked files found nothing.
+* Synthetic-identity safeguards: IDs must match `SYN-####` (schema-enforced), names carry "(synthetic)", `is_synthetic: true` is a literal in
+  the record contract, and every forecast carries a disclaimer.

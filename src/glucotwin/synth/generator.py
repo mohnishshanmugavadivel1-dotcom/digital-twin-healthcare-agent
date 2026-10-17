@@ -36,7 +36,7 @@ import numpy as np
 import pandas as pd
 
 from glucotwin.config import CGM_INTERVAL_MIN
-from glucotwin.contracts import LabResult, Medication, PatientRecord, Sex
+from glucotwin.contracts import GeneticMarker, LabResult, Medication, PatientRecord, Sex
 
 DATASET_NAME = "glucotwin-synthetic-t2d"
 DATASET_VERSION = "0.1.0"
@@ -148,7 +148,25 @@ def _sample_patients(rng: np.random.Generator, n: int):
     return hidden, demo
 
 
-def _daily_schedule(rng: np.random.Generator, n: int, days: int):
+@dataclass(frozen=True)
+class Realism:
+    """Knobs for how hard the observable data are. Defaults reproduce the published v0.1 cohort exactly.
+
+    Used by the robustness audit (``glucotwin audit``) to test how much reported performance
+    depends on optimistic assumptions (near-perfect, real-time meal logging; low sensor noise).
+    """
+
+    meal_log_prob: float = 0.9  # probability that a meal is logged at all
+    carb_log_sigma: float = 0.25  # log-normal SD of the carb-estimation error
+    meal_log_delay_max_min: int = 0  # logs appear U(0, max) minutes after eating (timestamp = log time)
+    cgm_noise_sd: float = 4.5  # AR(1) innovation SD of the CGM sensor noise (mg/dL)
+
+
+DEFAULT_REALISM = Realism()
+
+
+def _daily_schedule(rng: np.random.Generator, n: int, days: int, realism: Realism = DEFAULT_REALISM,
+                    delay_rng: np.random.Generator | None = None):
     """Return carb input per minute (n, T) in grams/min, logged meals, and activity (n, T) in steps/min."""
     T = days * 1440
     carbs = np.zeros((n, T))
@@ -172,9 +190,13 @@ def _daily_schedule(rng: np.random.Generator, n: int, days: int):
                 true_g = rng.uniform(lo, hi) * carb_scale
                 dur = 15
                 carbs[p, minute : min(minute + dur, T)] += true_g / dur
-                if rng.random() < 0.9:  # 10 % of meals are never logged
-                    logged = true_g * rng.lognormal(0, 0.25)
-                    meal_events.append((p, minute, float(np.round(logged))))
+                if rng.random() < realism.meal_log_prob:  # default: 10 % of meals are never logged
+                    logged = true_g * rng.lognormal(0, realism.carb_log_sigma)
+                    log_minute = minute
+                    if realism.meal_log_delay_max_min > 0 and delay_rng is not None:
+                        # separate RNG so the default cohort's random stream is unchanged
+                        log_minute = min(minute + int(delay_rng.integers(0, realism.meal_log_delay_max_min + 1)), T - 1)
+                    meal_events.append((p, log_minute, float(np.round(logged))))
             # activity
             awake = np.arange(base + 6 * 60 + 30, base + 23 * 60)
             steps[p, awake] = rng.poisson(rng.uniform(4, 12), awake.size)
@@ -222,7 +244,7 @@ def _simulate(hp: HiddenParams, carbs: np.ndarray, steps: np.ndarray, rng: np.ra
     return out
 
 
-def _cgm_from_plasma(plasma: np.ndarray, rng: np.random.Generator):
+def _cgm_from_plasma(plasma: np.ndarray, rng: np.random.Generator, noise_sd: float = 4.5):
     n, T = plasma.shape
     ig = np.empty_like(plasma)
     ig[:, 0] = plasma[:, 0]
@@ -234,7 +256,7 @@ def _cgm_from_plasma(plasma: np.ndarray, rng: np.random.Generator):
     bias = rng.normal(1.0, 0.04, (n, 1))
     noise = np.zeros_like(sampled)
     for k in range(1, sampled.shape[1]):
-        noise[:, k] = 0.7 * noise[:, k - 1] + rng.normal(0, 4.5, n)
+        noise[:, k] = 0.7 * noise[:, k - 1] + rng.normal(0, noise_sd, n)
     cgm = np.clip(np.round(sampled * bias + noise), 40, 400)
     # dropouts: a few multi-reading gaps per patient + sparse single misses
     mask = rng.random(cgm.shape) < 0.005
@@ -246,15 +268,17 @@ def _cgm_from_plasma(plasma: np.ndarray, rng: np.random.Generator):
     return idx, cgm, plasma[:, idx]
 
 
-def generate_cohort(n_patients: int = 60, days: int = 14, seed: int = DEFAULT_SEED) -> Cohort:
-    """Generate a deterministic synthetic cohort. Same (n, days, seed) -> identical output."""
+def generate_cohort(n_patients: int = 60, days: int = 14, seed: int = DEFAULT_SEED,
+                    realism: Realism = DEFAULT_REALISM) -> Cohort:
+    """Generate a deterministic synthetic cohort. Same (n, days, seed, realism) -> identical output."""
     if n_patients < 1 or days < 1:
         raise ValueError("n_patients and days must be >= 1")
     rng = np.random.default_rng(seed)
     hp, demo = _sample_patients(rng, n_patients)
-    carbs, steps_min, meal_events = _daily_schedule(rng, n_patients, days)
+    carbs, steps_min, meal_events = _daily_schedule(rng, n_patients, days, realism,
+                                                    delay_rng=np.random.default_rng([seed, 7]))
     plasma = _simulate(hp, carbs, steps_min, rng, days)
-    idx, cgm, true5 = _cgm_from_plasma(plasma, rng)
+    idx, cgm, true5 = _cgm_from_plasma(plasma, rng, realism.cgm_noise_sd)
 
     start_utc = (DEFAULT_START_LOCAL - timedelta(minutes=UTC_OFFSET_MIN)).replace(tzinfo=UTC)
     start_ts = pd.Timestamp(start_utc)
@@ -288,7 +312,7 @@ def generate_cohort(n_patients: int = 60, days: int = 14, seed: int = DEFAULT_SE
         frames.append(meals[["patient_id", "timestamp", "kind", "value"]])
     obs = pd.concat(frames, ignore_index=True).sort_values(["patient_id", "timestamp", "kind"]).reset_index(drop=True)
 
-    records = _build_records(ids, splits, demo, hp, cgm, rng, start_utc)
+    records = _add_genetics(_build_records(ids, splits, demo, hp, cgm, rng, start_utc), seed)
     return Cohort(records=records, observations=obs, true_glucose=pd.concat(truth_frames, ignore_index=True),
                   hidden=hp, seed=seed, days=days, start_utc=start_utc)
 
@@ -344,3 +368,21 @@ def _build_records(ids, splits, demo, hp: HiddenParams, cgm, rng, start_utc) -> 
             split=splits[p],
         ))
     return records
+
+
+# Illustrative allele frequency for the TCF7L2 rs7903146 T allele. ASSUMPTION for synthetic display only
+# (not taken from a verified population source); it has no effect on simulated physiology or on the model.
+TCF7L2_T_ALLELE_FREQ = 0.3
+
+
+def _add_genetics(records: list[PatientRecord], seed: int) -> list[PatientRecord]:
+    """Attach synthetic family history + one genotype per record using a SEPARATE RNG stream,
+    so all other cohort values (and every reported metric) are unchanged."""
+    grng = np.random.default_rng([seed, 11])
+    out = []
+    for r in records:
+        k = int(grng.binomial(2, TCF7L2_T_ALLELE_FREQ))
+        fam = bool(grng.random() < 0.5)
+        marker = GeneticMarker(gene="TCF7L2", variant="rs7903146", genotype=["CC", "CT", "TT"][k], risk_alleles=k)
+        out.append(r.model_copy(update={"family_history_t2d": fam, "genetic_markers": [marker]}))
+    return out

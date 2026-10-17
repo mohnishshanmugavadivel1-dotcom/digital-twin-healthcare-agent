@@ -1,5 +1,5 @@
 import type { Forecast } from "../api/types";
-import { num } from "../format";
+import { num, riskPct } from "../format";
 
 export function RiskPanel({ forecast }: { forecast: Forecast | null }) {
   if (!forecast) return <section className="card"><h3>Excursion risk</h3><p className="muted">No forecast yet.</p></section>;
@@ -28,7 +28,7 @@ export function RiskPanel({ forecast }: { forecast: Forecast | null }) {
     <section className={`card risk risk-${ex.risk_band}`}>
       <h3>Excursion risk · next {ex.horizon_min} min</h3>
       <div className="risk-head">
-        <div className="big">{Math.round(ex.probability * 100)}%</div>
+        <div className="big">{riskPct(ex.probability)}</div>
         <div>
           <span className={`badge badge-${ex.risk_band}`}>{ex.risk_band.toUpperCase()}</span>
           {ex.alert && <div className="alert-text">Above the alert threshold ({Math.round(ex.alert_threshold * 100)}%). Consider reviewing.</div>}

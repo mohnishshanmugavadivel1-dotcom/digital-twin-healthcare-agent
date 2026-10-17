@@ -1,3 +1,11 @@
+export interface GeneticMarker {
+  gene: string;
+  variant: string;
+  genotype: string;
+  risk_alleles: number;
+  note: string;
+}
+
 // Mirrors src/glucotwin/contracts.py (schema v0.1.0). Keep in sync; the backend is the source of truth.
 
 export type ISODate = string;
@@ -23,6 +31,8 @@ export interface PatientRecord {
   conditions: string[];
   medications: Medication[];
   labs: LabResult[];
+  family_history_t2d?: boolean | null;
+  genetic_markers?: GeneticMarker[];
   utc_offset_minutes: number;
   split: Split | null;
 }

@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>GlucoTwin: presentation</title>
+<style>
+@page{size:1280px 720px;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;color:#0f172a}
+.slide{width:1280px;height:720px;padding:48px 64px 40px;position:relative;overflow:hidden;page-break-after:always;background:#fff}
+.slide:last-child{page-break-after:auto}
+h1{font-size:44px;margin:0 0 10px;letter-spacing:-.01em}
+h2{font-size:32px;margin:0 0 18px;letter-spacing:-.01em}
+h3{font-size:19px;margin:0 0 8px;color:#1e3a8a}
+p,li{font-size:19px;line-height:1.45}
+ul{margin:6px 0 0 0;padding-left:24px}
+li{margin:4px 0}
+.muted{color:#64748b}.small{font-size:15px}.tiny{font-size:13px}
+.foot{position:absolute;left:64px;right:64px;bottom:18px;display:flex;justify-content:space-between;font-size:12.5px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:8px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:36px}
+.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px}
+.card{border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;background:#f8fafc}
+.warn{background:#fff7ed;border-color:#fed7aa}
+.ok{background:#f0fdf4;border-color:#bbf7d0}
+table{border-collapse:collapse;width:100%;font-size:16px}
+th,td{border-bottom:1px solid #e2e8f0;padding:7px 8px;text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{background:#f1f5f9;font-weight:700}
+tr.hl td{background:#eff6ff;font-weight:600}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:#e0e7ff;color:#3730a3;margin-left:8px;vertical-align:middle}
+.banner{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 14px;font-size:15px}
+.title{background:linear-gradient(135deg,#eff6ff 0%,#fff 60%)}
+.big{font-size:56px;font-weight:800;color:#1d4ed8;line-height:1}
+img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
+.ph{color:#b91c1c;font-weight:700}
+</style></head><body>
+
+<!-- 1 -->
+<section class="slide title">
+  <div style="margin-top:90px">
+    <div class="muted" style="font-size:18px;font-weight:600;letter-spacing:.06em">HAPPIEST HEALTH · DIGITAL TWIN CHALLENGE 2026</div>
+    <h1 style="font-size:60px;margin-top:14px">GlucoTwin</h1>
+    <p style="font-size:26px;max-width:980px;margin-top:6px">A continuously updated virtual Type 2 diabetes patient that estimates, up to 2 hours ahead,
+      the risk that a post-meal glucose excursion is about to begin, and shows a doctor why.</p>
+    <p style="margin-top:36px"><b>Team:</b> <span class="ph">[TEAM NAME]</span> · <b>College / incubator:</b> <span class="ph">[COLLEGE]</span><br>
+      <b>Members:</b> <span class="ph">[NAMES]</span></p>
+    <div class="banner" style="margin-top:28px;max-width:980px">Research and educational prototype on <b>synthetic patients only</b>. Not a medical device.
+      Outputs are not diagnoses or treatment instructions.</div>
+  </div>
+  <div class="foot"><span>GlucoTwin v0.2</span><span>1</span></div>
+</section>
+
+<!-- 2 -->
+<section class="slide">
+  <h2>Problem and healthcare use case</h2>
+  <div class="cols">
+    <div>
+      <h3>Condition: Type 2 diabetes (India)</h3>
+      <ul>
+        <li>Post-meal glucose excursions are common in T2D, and a clinician reviewing CGM usually sees them <b>after</b> they happen.</li>
+        <li>The challenge asks for a twin that fuses <b>simulated EHR</b> with <b>wearable / CGM streams</b> and predicts an adverse event, e.g. "a sudden glucose spike 2 hours in advance".</li>
+      </ul>
+      <h3 style="margin-top:22px">Use case</h3>
+      <ul>
+        <li>A doctor monitors several remotely monitored patients.</li>
+        <li>The twin flags who is likely to cross 180 mg/dL in the next 2 h, while glucose is still normal, with a forecast band and the reasons.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="card">
+        <h3>Event definition (frozen before modelling)</h3>
+        <p class="small">At time t, asked only if the latest CGM ≤ 180 mg/dL. <b>Positive</b> if ≥ 3 consecutive 5-min CGM readings
+          &gt; 180 mg/dL (≥ 15 min; gaps break the run) <b>begin</b> within (t, t + 120 min].</p>
+        <p class="small muted">Why "onset": predicting "above 180" while already above 180 is trivial and useless clinically.</p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3>Outputs per CGM reading</h3>
+        <ul class="small"><li>Glucose forecast at 30/60/90/120 min with an 80% interval</li>
+          <li>Probability of excursion onset within 2 h, alert at a validation-chosen threshold</li>
+          <li>Grouped explanation (associations, not causes)</li></ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>2</span></div>
+</section>
+
+<!-- 3 -->
+<section class="slide">
+  <h2>Why a digital twin, and not a single risk score?</h2>
+  <div class="cols3">
+    <div class="card"><h3>Continuously updated</h3><p class="small">A versioned per-patient state is updated with <b>every</b> observation: glucose and trend,
+      24 h time-in-range, meals and carbs on board, activity, data quality. Forecasts are re-issued at each reading.</p></div>
+    <div class="card"><h3>Fuses record + streams</h3><p class="small">The static record (labs, medications, history) gives context and a prior. Streams give
+      the current state. Both feed the same leakage-safe feature builder offline and online.</p></div>
+    <div class="card"><h3>Personalised</h3><p class="small">Each twin learns its patient's <b>carb sensitivity</b> (mg/dL per g) from observed meal
+      responses, shrunk towards a record-based prior. This changes the expected post-meal rise.</p></div>
+  </div>
+  <div class="card warn" style="margin-top:22px"><h3>What it is not (yet)</h3>
+    <p class="small">The twin does not simulate interventions ("what if she walks after lunch?"). That would need per-patient physiological
+      parameter fitting, which is on the roadmap, not built. Our twin is a <b>state-tracking forecaster</b> with one personalised physiological parameter.</p></div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>3</span></div>
+</section>
+
+<!-- 4 -->
+<section class="slide" style="padding:28px 40px 36px">
+  <h2 style="margin-bottom:6px">Architecture (as implemented)</h2>
+  <img src="architecture.svg" style="width:1060px;display:block;margin:0 auto" alt="architecture">
+  <div class="foot"><span>Dashed = planned, not built · full-size PDF: docs/submission/GlucoTwin_Architecture.pdf</span><span>4</span></div>
+</section>
+
+<!-- 5 -->
+<section class="slide">
+  <h2>Data: synthetic, by rule and by necessity</h2>
+  <div class="cols">
+    <div>
+      <ul>
+        <li>Rules: "strictly required to use anonymized, open-source, or synthetic datasets".</li>
+        <li>Real CGM + EHR datasets with 5-min data (OhioT1DM, T1DEXI, DiaTrend) need data use agreements, which is not feasible before the deadline.</li>
+        <li><b>Generator:</b> a Bergman-type minimal model with meals, activity, dawn effect and unobserved "stress days". <b>Hidden</b> physiology is never shown to models.</li>
+        <li><b>Observable:</b> record (labs derived with noise), CGM with lag, bias, AR noise and dropouts, steps, heart rate, meal logs with carb error and 10% unlogged.</li>
+        <li>60 patients × 14 days; 5-min CGM; seed 20261017.</li>
+      </ul>
+    </div>
+    <div>
+      <table>
+        <tr><th>Plausibility check</th><th>Ours</th><th>ShanghaiT2DM*</th></tr>
+        <tr><td>Time in range 70–180</td><td>77.8%</td><td>77.7%</td></tr>
+        <tr><td>Time above 180</td><td>21.8%</td><td>20.0%</td></tr>
+        <tr><td>Time below 70</td><td>0.4%</td><td>2.4%</td></tr>
+      </table>
+      <p class="tiny muted">*Published summary of an open Chinese T2D cohort (Zhao et al., Sci Data 2023), quoted from a secondary copy. This is a plausibility check, not validation.</p>
+      <div class="card warn" style="margin-top:12px"><p class="small"><b>Known gaps.</b> Lows are under-represented: hypoglycaemia only occurs on sulfonylurea or insulin in our simulator.
+        Synthetic HbA1c is derived from the evaluated 14 days (corr 0.95 with that window's mean CGM). The ablation shows it does not inflate results (slide 8).</p></div>
+    </div>
+  </div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>5</span></div>
+</section>
+
+<!-- 6 -->
+<section class="slide">
+  <h2>Evaluation protocol and leakage safeguards</h2>
+  <div class="cols">
+    <div>
+      <h3>Protocol</h3>
+      <ul>
+        <li><b>Patient-level split</b> 36 / 12 / 12; no patient appears in two splits.</li>
+        <li>All models are fitted on train only. <b>Model choice, alert threshold and conformal intervals use validation only.</b> Test is evaluated once.</li>
+        <li>Baselines on the identical test rows: persistence, damped trend, ridge (trajectory); trend rule (event).</li>
+        <li>Deterministic: a <b>clean clone</b> with a fresh environment reproduced every metric exactly (wave-2 audit).</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Leakage safeguards (tested)</h3>
+      <ul>
+        <li>Features use observations ≤ t only. A <b>truncation test</b> shows that removing the future never changes past features.</li>
+        <li>The <b>same code</b> builds features offline and online (parity test).</li>
+        <li>Personal carb sensitivity uses a meal only after its 2-h response window has ended.</li>
+        <li><b>Mutation check:</b> injecting a 30-min future shift makes two leakage tests fail.</li>
+        <li>The dashboard replay can only show held-out test patients and never reveals data after "now" (API test).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>6</span></div>
+</section>
+
+<!-- 7 -->
+<section class="slide">
+  <h2>Results on 12 held-out synthetic patients <span class="tag">reproduced in a clean clone</span></h2>
+  <div class="cols">
+    <div>
+      <h3>Glucose forecast RMSE (mg/dL)</h3>
+      <table>
+        <tr><th>Model</th><th>30 min</th><th>60 min</th><th>120 min</th></tr>
+        <tr><td>Persistence (last value)</td><td>18.7</td><td>31.4</td><td>46.6</td></tr>
+        <tr><td>Damped trend</td><td>17.4</td><td>31.1</td><td>50.4</td></tr>
+        <tr><td>Ridge</td><td>11.2</td><td>17.0</td><td>27.9</td></tr>
+        <tr class="hl"><td>Gradient boosting (served)</td><td>10.4</td><td>17.2</td><td>25.9</td></tr>
+      </table>
+      <p class="small muted">95% patient-bootstrap CI, served model: 30 min 9.8–11.0; 120 min 23.2–29.1.
+        80% conformal interval coverage on test: 0.76–0.80. Clarke A+B ≥ 95.7%.</p>
+    </div>
+    <div>
+      <h3>Excursion onset within 120 min</h3>
+      <table>
+        <tr><th>Model</th><th>AUROC (95% CI)</th><th>Sens / Spec</th><th>False alerts / day</th></tr>
+        <tr><td>Trend rule baseline</td><td>0.655 (0.583–0.736)</td><td>0.44 / 0.74</td><td>6.3</td></tr>
+        <tr class="hl"><td>Logistic regression (served)</td><td>0.884 (0.839–0.923)</td><td>0.67 / 0.90</td><td>1.4</td></tr>
+        <tr><td>Gradient boosting</td><td>0.936 (0.915–0.955)</td><td>0.78 / 0.90</td><td>1.1</td></tr>
+      </table>
+      <p class="small muted">Test prevalence 14.6% of eligible time points. Logistic regression is served because its explanation is exact and additive.
+        Gradient boosting discriminates better (roadmap: serve it with SHAP).</p>
+    </div>
+  </div>
+  <div class="banner" style="margin-top:14px">These describe our simulator and are an <b>upper bound</b>. Real-data studies report a 30-min RMSE of about 17–20 mg/dL. Not clinical validation.</div>
+  <div class="foot"><span>Source: reports/evaluation_report.json, reports/audit_report.json</span><span>7</span></div>
+</section>
+
+<!-- 8 -->
+<section class="slide">
+  <h2>A stricter look: our own audit <span class="tag">wave-2 · glucotwin audit</span></h2>
+  <div class="cols">
+    <div>
+      <h3>How often does the doctor get warned? (served model)</h3>
+      <table>
+        <tr><th>Definition</th><th>Share of onsets</th></tr>
+        <tr><td>Any alert in the 2 h before onset</td><td>91% (0.83–0.98)</td></tr>
+        <tr><td>…with ≥ 30 min lead</td><td>87%</td></tr>
+        <tr class="hl"><td><b>Sustained</b>: alert still on just before onset</td><td>69% (0.48–0.83)</td></tr>
+      </table>
+      <p class="small muted">Median lead: any alert 95 min; sustained 85 min (capped at 120). False-alert episodes per monitored day: 1.36 (0.92–1.92).
+        The headline "91% warned" uses the lenient definition, so we report both.</p>
+    </div>
+    <div>
+      <h3>Robustness</h3>
+      <table>
+        <tr><th>Check</th><th>Logistic AUROC</th><th>Sustained warned</th></tr>
+        <tr><td>Main cohort</td><td>0.884</td><td>69%</td></tr>
+        <tr><td>3 other cohort seeds</td><td>0.883–0.910</td><td>72%–78%</td></tr>
+        <tr><td>No record (EHR) features</td><td>0.907</td><td>73%</td></tr>
+        <tr><td>No meal features</td><td>0.849</td><td>68%</td></tr>
+        <tr><td>Stress: 60% logged, ±50% carbs, 0–45 min late, noisier CGM</td><td>0.904</td><td>70%</td></tr>
+      </table>
+      <p class="small muted">Stress test: RMSE at 30 min rises from 10.4 to 15.4; warnings with ≥ 30 min lead fall from 87% to 78%.
+        Direct record features did <b>not</b> help held-out discrimination; the record contributes through the personal prior and context.</p>
+    </div>
+  </div>
+  <div class="foot"><span>Source: reports/audit_report.json (deterministic; 1000 patient-level bootstrap resamples)</span><span>8</span></div>
+</section>
+
+<!-- 9 -->
+<section class="slide" style="padding:30px 48px 36px">
+  <h2 style="margin-bottom:8px">Clinician dashboard: what the doctor sees</h2>
+  <div style="display:grid;grid-template-columns:640px 1fr;gap:28px;align-items:start">
+    <img class="shot" src="../../screenshots/dashboard.png" alt="dashboard">
+    <ul class="small" style="margin-top:0">
+      <li><b>Patient list:</b> held-out test patients, latest glucose, latest risk.</li>
+      <li><b>Record header:</b> labs, medications, history.</li>
+      <li><b>Glucose chart:</b> last 12 h, 2-h forecast with 80% band, meals, earlier predictions versus what happened.</li>
+      <li><b>Risk card:</b> probability (never shown as 100%), alert wording "Consider reviewing", top factor groups.</li>
+      <li><b>Risk history</b> and <b>twin state:</b> TIR, carbs on board, learned carb sensitivity, data quality.</li>
+      <li><b>Replay:</b> the twin only sees data up to "now".</li>
+      <li><b>Evaluation tab:</b> every baseline and limitation.</li>
+    </ul>
+  </div>
+  <div class="foot"><span>Screenshot of the running build, held-out patient SYN-0039 at 08:55</span><span>9</span></div>
+</section>
+
+<!-- 10 -->
+<section class="slide">
+  <h2>Two demo moments: one success, one failure</h2>
+  <div class="cols">
+    <div class="card ok">
+      <h3>SYN-0039 · Sun 8 Mar (held-out patient)</h3>
+      <ul class="small">
+        <li>08:53 a 140 g breakfast is logged; at 08:55 glucose is <b>89 mg/dL</b>.</li>
+        <li>Risk is <b>&gt;99%</b>, the alert switches on, and the forecast reaches about 205 mg/dL at +60 min.</li>
+        <li>Onset at 10:20, peak about 207 mg/dL. The alert stayed on throughout: an <b>85-min sustained warning</b>.</li>
+        <li>Honest detail: the rise came later than the 30-min forecast (103 observed versus 128 forecast at 09:25).</li>
+      </ul>
+      <p class="tiny muted">Deep link /?patient=SYN-0039&amp;start=151.833 · verified against the live API</p>
+    </div>
+    <div class="card warn">
+      <h3>SYN-0019 · Thu 12 Mar (held-out patient)</h3>
+      <ul class="small">
+        <li>14:45: glucose 88 mg/dL, risk 31%, just <b>below</b> the 35% threshold. <b>No meal logged.</b></li>
+        <li>About 15:45: glucose crosses 180, peaking at about 191. <b>Missed.</b></li>
+        <li>Unlogged meals are the main failure mode: removing meal features costs the most AUROC, and the stress test cuts lead time.</li>
+      </ul>
+      <p class="tiny muted">Deep link /?patient=SYN-0019&amp;start=253.667 · 53 missed daytime onsets are listed by scripts/find_demo_scenario.py</p>
+    </div>
+  </div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>10</span></div>
+</section>
+
+<!-- 11 -->
+<section class="slide">
+  <h2>Safety boundaries and limitations</h2>
+  <div class="cols">
+    <div>
+      <h3>Safety boundaries (built in)</h3>
+      <ul class="small">
+        <li>A "synthetic, not a medical device" banner on every screen; synthetic IDs (SYN-####) and names tagged "(synthetic)".</li>
+        <li>No instructions: the alert text is "Consider reviewing", never "give insulin" or "eat".</li>
+        <li>Explanations are labelled as associations, not causes.</li>
+        <li>No risk number when data are insufficient or stale; no onset risk when glucose is already above 180.</li>
+        <li>Probabilities are never displayed as 100% or 0%.</li>
+        <li>Local demo: no authentication, so it is <b>not for real patient data</b>.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Limitations</h3>
+      <ul class="small">
+        <li>Evaluated only on our own simulator; no real-patient or external validation.</li>
+        <li>12 test patients, so the confidence intervals are wide.</li>
+        <li>Meal logging is near-real-time in the main cohort, which is optimistic.</li>
+        <li>Lows are under-represented; no HRV or sleep streams yet.</li>
+        <li>Genotype shown in the record is synthetic and display-only.</li>
+        <li>No regulatory claims (CDSCO SaMD, DPDP, HIPAA).</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>11</span></div>
+</section>
+
+<!-- 12 -->
+<section class="slide">
+  <h2>Potential impact and the path to real validation</h2>
+  <div class="cols">
+    <div>
+      <h3>If validated, the intended value is</h3>
+      <ul class="small">
+        <li>Earlier, reviewable warnings for remotely monitored T2D patients, in place of after-the-fact CGM review.</li>
+        <li>A per-patient view that explains <i>why</i> risk is high (meal, trend, recent control).</li>
+        <li>A transparent evaluation template (baselines, CIs, alert burden) for any future model.</li>
+      </ul>
+      <p class="tiny muted">We have run no pilot and have no user or outcome data. No impact figures are claimed.</p>
+    </div>
+    <div>
+      <h3>Validation roadmap (planned)</h3>
+      <ol class="small">
+        <li>Retrospective check on open data (ShanghaiT2DM, CC BY 4.0; 15-min CGM).</li>
+        <li>Serve gradient boosting with SHAP; within-patient chronological evaluation.</li>
+        <li>Clinician usability review of the dashboard (think-aloud, no patients).</li>
+        <li>Ethics-approved retrospective study on consented, de-identified data.</li>
+        <li>Prospective <b>silent-mode</b> study (alerts not shown to clinicians), then a regulatory pathway assessment.</li>
+      </ol>
+    </div>
+  </div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>12</span></div>
+</section>
+
+<!-- 13 -->
+<section class="slide">
+  <h2>Engineering and reproducibility</h2>
+  <div class="cols">
+    <div>
+      <h3>Stack</h3>
+      <ul class="small">
+        <li>Python 3.11 · NumPy · pandas · scikit-learn · Pydantic v2 contracts · FastAPI</li>
+        <li>React 19 + TypeScript + Recharts (Vite)</li>
+        <li>pytest (52 tests) · ruff · GitHub Actions CI · pinned requirements.lock / package-lock.json</li>
+      </ul>
+      <h3 style="margin-top:18px">Reproduce</h3>
+      <pre style="font-size:15px;background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px">make setup
+make train     # same metrics every run
+make serve     # http://localhost:8000
+glucotwin audit  # CIs, ablations, stress test
+make check     # lint + tests + build</pre>
+    </div>
+    <div>
+      <h3>Verified in the wave-2 audit</h3>
+      <ul class="small">
+        <li>Clean clone + fresh environment: tests pass and the report is identical.</li>
+        <li>Audit re-implementation matches every headline metric exactly.</li>
+        <li>pip-audit and npm audit: no known vulnerabilities (after a pytest upgrade).</li>
+        <li>Fixed: API returned 500 on extreme replay offsets (now 422); training patients could be replayed (now refused).</li>
+        <li>Open source: MIT licence.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>github.com/mohnishshanmugavadivel1-dotcom/digital-twin-healthcare-agent</span><span>13</span></div>
+</section>
+
+<!-- 14 -->
+<section class="slide title">
+  <div style="margin-top:150px">
+    <h1>Thank you</h1>
+    <p style="font-size:24px">GlucoTwin: a transparent, reproducible digital-twin prototype for early warning of post-meal hyperglycaemia.</p>
+    <p><b>Team:</b> <span class="ph">[TEAM NAME]</span> · <span class="ph">[COLLEGE]</span> · <span class="ph">[CONTACT]</span></p>
+    <div class="banner" style="max-width:900px;margin-top:24px">All results are from synthetic patients. Not a medical device. Not clinical validation.</div>
+  </div>
+  <div class="foot"><span>GlucoTwin v0.2</span><span>14</span></div>
+</section>
+</body></html>

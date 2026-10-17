@@ -1,4 +1,6 @@
-# Shared data contracts and API (schema v0.1.0)
+# Shared data contracts and API (schema v0.2.0)
+
+**Changes in 0.2.0 (wave 2):** `PatientRecord` gains `family_history_t2d` and `genetic_markers[]`. Both are synthetic, display-only, and not model inputs. `ReplayCreate.start_offset_hours` and `duration_hours` are now bounded to ≤ 8,784 h (previously, huge values caused HTTP 500; now they return 422). Replay is restricted to held-out **test** patients (others return 404). Fractional offsets are rounded to the 5-min grid.
 
 `src/glucotwin/contracts.py` is the source of truth; `frontend/src/api/types.ts` mirrors it. The live
 OpenAPI schema is at `/docs` (Swagger UI) and `/openapi.json` while the server runs. Any change to a
@@ -46,7 +48,7 @@ Trajectory targets are the observed CGM values at t+30, t+60, t+90 and t+120 min
 | GET | `/api/patients/{id}/state` | – | `TwinState` | 404 if there are no observations yet |
 | GET | `/api/patients/{id}/forecast` | – | latest `Forecast` | 404 |
 | GET | `/api/patients/{id}/forecasts` | `since`, `limit` | `ForecastSummary[]` | 404 |
-| POST | `/api/replay` | `ReplayCreate` {patient_id, start_offset_hours = 24, duration_hours?} | `ReplayStatus` (201) | 404 |
+| POST | `/api/replay` | `ReplayCreate` {patient_id (test split only), start_offset_hours = 24 (0–8784), duration_hours? (≤ 8784)} | `ReplayStatus` (201) | 404 |
 | GET | `/api/replay/{sid}` | – | `ReplayStatus` | 404 |
 | POST | `/api/replay/{sid}/step` | `ReplayStep` {minutes: 5–1440} | `ReplayStatus` | 404, 422 |
 | DELETE | `/api/replay/{sid}` | – | 204 | 404 |
