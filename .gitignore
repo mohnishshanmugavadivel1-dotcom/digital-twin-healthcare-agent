@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Generated data and model artifacts (always reproducible from code + seed)
+data/*
+!data/README.md
+artifacts/*
+!artifacts/.gitkeep
+
+# Real/third-party datasets must never be committed
+data/real/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.log
+.env
+*.tsbuildinfo
