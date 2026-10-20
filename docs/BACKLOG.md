@@ -1,4 +1,4 @@
-# Prioritised backlog, dependency graph and risk register
+<img width="1901" height="852" alt="image" src="https://github.com/user-attachments/assets/21ac5e81-d62e-4c7b-a23e-23f309c5778a" /># Prioritised backlog, dependency graph and risk register
 
 **Wave-2 status (2026-10-17):** B-02 DONE (official rules in COMPETITION_COMPLIANCE.md) · B-03 DONE (`docs/submission/GlucoTwin_Architecture.pdf`) · B-04 DONE (`docs/submission/GlucoTwin_Presentation.pdf`; team details filled 2026-10-18) · B-09 DONE (patient-bootstrap CIs, `glucotwin audit`) · B-11 DONE (`scripts/find_demo_scenario.py`) · B-14 partly (pytest CVE fixed; TestClient deprecation remains) · B-01 partly (team details filled 2026-10-18; licence holder open), B-06 BLOCKED on the team. New items: B-19 event-model feature set — investigated 2026-10-20 (docs/ABLATION_RECORD_FEATURES.md, scripts/ablate_record_features.py): ablation reproduced (test AUROC 0.884 → 0.9075 without the record block, Δ CI −0.053..−0.001); mechanism identified (fasting_glucose_mg_dl carries std coef −3.7 against the dynamic evidence); validation does NOT prefer the change (0.8881 vs 0.8866), so the served model is unchanged — re-select across cohort seeds on validation post-submission; B-20 derive synthetic HbA1c from a pre-monitoring period instead of the evaluated window.
 
@@ -9,7 +9,7 @@ P2 = after submission (jury round).
 
 | ID | Pri | Item | Owner role | Depends on | Size |
 |---|---|---|---|---|---|
-| B-01 | P0 | Fill team details, college or incubator, and confirm the licence holder in README / LICENSE — **team details filled 2026-10-18; licence-holder confirmation (institutional IP policy) still open** | Team | – | XS |
+| B-01 | P0 | Fill team details, college or incubator, and confirm the licence holder in README / LICENSE — **team details filled 2026-10-18; licence-holder confirmation (institutional IP policy) still open**PARTIAL (team details filled; institutional IP policy check open) | Team | – | XS |
 | B-02 | P0 | Confirm the official submission guidelines and data rules on Unstop; update COMPETITION.md | G | – | XS |
 | B-03 | P0 | Export the architecture diagram to PDF (render the Mermaid in ARCHITECTURE.md) | G | – | S |
 | B-04 | P0 | Presentation deck (PDF/PPT) from the outline in COMPETITION.md, using real numbers from the report | G | B-02 | M |
@@ -18,7 +18,7 @@ P2 = after submission (jury round).
 | B-07 | P1 | Serve HGB for the event task with TreeSHAP group attributions; compare faithfulness with the logistic-regression groups | C | – | M |
 | B-08 | P1 | Within-patient chronological evaluation with a 120-min embargo (quantifies the value of personalisation) | C | – | S |
 | B-09 | P1 | Patient-bootstrap 95% confidence intervals for all reported metrics | C | – | S |
-| B-10 | P1 | What-if panel: change meal carbs or a walk and re-simulate on the twin (needs per-patient parameter fitting) | C + D + E | B-07 optional | L |
+| B-10 | P1 | What-if panel: change meal carbs or a walk and re-simulate on the twin (needs per-patient parameter fitting) PARTIAL (meal counterfactual lab shipped; activity/walk scenario remains P2) | C + D + E | B-07 optional | L |
 | B-11 | P1 | "Hero patient" finder script: list test-patient timestamps where risk rose ≥ 60 min before an excursion | C | – | S |
 | B-12 | P2 | Late or out-of-order data: re-sort and recompute affected forecasts instead of rejecting | D | – | M |
 | B-13 | P2 | Persistence (SQLite) for observations and forecasts if multi-user demos are needed | D | – | M |
