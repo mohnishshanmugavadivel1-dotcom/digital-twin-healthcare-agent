@@ -2,7 +2,8 @@ import {
   Area, CartesianGrid, ComposedChart, Line, ReferenceArea, ReferenceLine, Scatter, Tooltip, XAxis, YAxis,
 } from "recharts";
 import type { Forecast, ForecastSummary, Observation } from "../api/types";
-import { fmtTime, toMs } from "../format";
+import { fmtTime, formatChartTooltipEntry, toMs } from "../format";
+import type { ChartTipRow } from "../format";
 import { useWidth } from "../useWidth";
 
 interface Props {
@@ -82,11 +83,8 @@ export function GlucoseChart({ cgm, meals, forecast, scenario, history, clockMs,
           <Scatter data={mealPts} dataKey="v" fill="#2f9e44" shape="triangle" isAnimationActive={false} name="Logged meal" />
           <Tooltip
             labelFormatter={(t) => fmtTime(Number(t), offsetMin)}
-            formatter={(value, name, item) => {
-              if (name === "Logged meal") return [`${(item.payload as Pt).mealG ?? ""} g carbs`, "Meal"];
-              if (Array.isArray(value)) return [`${value[0]}–${value[1]} mg/dL`, "80% interval"];
-              return [`${Math.round(Number(value))} mg/dL`, String(name)];
-            }}
+            formatter={(value, name, item) =>
+              formatChartTooltipEntry(value, String(name), item?.payload as ChartTipRow | undefined)}
           />
         </ComposedChart>
       )}

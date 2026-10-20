@@ -8,7 +8,7 @@
 * Every new feature lands with a test. Every bug fix lands with a regression test.
 * Lint with `ruff` (pyflakes, pycodestyle, isort, bugbear, pyupgrade). The frontend is type-checked by `tsc -b` during the build.
 
-## Current suite (52 tests, all passing on 2026-10-17 after wave 2)
+## Current suite (62 tests, all passing; last full run 2026-10-20)
 
 | File | What it protects |
 |---|---|

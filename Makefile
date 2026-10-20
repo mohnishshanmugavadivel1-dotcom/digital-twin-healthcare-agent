@@ -18,6 +18,9 @@ summary:
 build-frontend:
 	cd frontend && npm run build
 
+frontend-test:     ## Node-runner unit tests for frontend formatters (no browser needed)
+	cd frontend && npm test
+
 serve: build-frontend  ## API + built dashboard on http://localhost:8000
 	$(VENV)/bin/glucotwin serve --host 0.0.0.0 --port 8000
 
@@ -28,6 +31,6 @@ test:
 	$(VENV)/bin/pytest
 
 lint:
-	$(VENV)/bin/ruff check src tests
+	$(VENV)/bin/ruff check src tests scripts
 
-check: lint test build-frontend  ## minimum release check
+check: lint test build-frontend frontend-test  ## minimum release check

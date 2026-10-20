@@ -24,14 +24,13 @@ import argparse
 import json
 
 import numpy as np
-import pandas as pd
 from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
 
-from glucotwin.synth.generator import DEFAULT_SEED, generate_cohort
 from glucotwin.dataset import build_cohort_table
 from glucotwin.evaluation.metrics import choose_threshold
 from glucotwin.features import EHR_FEATURES, FEATURE_NAMES
 from glucotwin.models.forecasting import LogisticEventModel
+from glucotwin.synth.generator import DEFAULT_SEED, generate_cohort
 
 BOOTSTRAP = 1000
 
@@ -47,8 +46,10 @@ def fit_and_score(train, val, test, features: list[str]) -> dict:
     y = te_e["y_event"].to_numpy().astype(int)
     val_auroc = float(roc_auc_score(va_e["y_event"].to_numpy().astype(int), model.predict_proba(va_e[features])))
     pred = (score >= thr).astype(int)
-    tn = int(((pred == 0) & (y == 0)).sum()); tp = int(((pred == 1) & (y == 1)).sum())
-    fp = int(((pred == 1) & (y == 0)).sum()); fn = int(((pred == 0) & (y == 1)).sum())
+    tn = int(((pred == 0) & (y == 0)).sum())
+    tp = int(((pred == 1) & (y == 1)).sum())
+    fp = int(((pred == 1) & (y == 0)).sum())
+    fn = int(((pred == 0) & (y == 1)).sum())
     return {
         "features": features,
         "threshold": round(float(thr), 4),
@@ -73,7 +74,8 @@ def patient_bootstrap_auc_delta(res_with: dict, res_without: dict, rng: np.ndarr
     for _ in range(BOOTSTRAP):
         take = rng.choice(uniq, size=uniq.size, replace=True)
         idx = np.concatenate([np.flatnonzero(pids == p) for p in take])
-        aw.append(roc_auc_score(y[idx], sw[idx])); ao.append(roc_auc_score(y[idx], so[idx]))
+        aw.append(roc_auc_score(y[idx], sw[idx]))
+        ao.append(roc_auc_score(y[idx], so[idx]))
         deltas.append(aw[-1] - ao[-1])
     q = np.quantile
     return {
