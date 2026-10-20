@@ -30,6 +30,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
   const [simGrams, setSimGrams] = useState(60);
   const [sim, setSim] = useState<CounterfactualResult | null>(null);
   const [simBusy, setSimBusy] = useState(false);
+  const [simError, setSimError] = useState<string | null>(null);
   const busy = useRef(false);
 
   const refresh = useCallback(async (status: ReplayStatus) => {
@@ -47,6 +48,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
     setPlaying(false);
     setError(null);
     setSim(null);
+    setSimError(null);
     try {
       const [rec, status] = await Promise.all([api.patient(patientId), api.createReplay(patientId, startOffsetHours)]);
       setRecord(rec);
@@ -56,11 +58,14 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
 
   const runSim = useCallback(async () => {
     setSimBusy(true);
+    setSimError(null);
     try {
       setSim(await api.counterfactual(patientId, simGrams));
-    } catch (e) { setError(String(e)); }
+    } catch (e) { setSimError(String(e)); } // local to the strip: a failed simulation must not blank the workspace
     finally { setSimBusy(false); }
   }, [patientId, simGrams]);
+
+  const clearSim = useCallback(() => { setSim(null); setSimError(null); }, []);
 
   useEffect(() => { void start(); }, [start]);
 
@@ -70,6 +75,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
     try {
       const status = await api.stepReplay(replay.session_id, minutes);
       setSim(null); // a what-if is tied to the "now" it was computed at
+      setSimError(null);
       await refresh(status);
       onTick();
       if (status.finished) setPlaying(false);
@@ -111,7 +117,14 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
           )}
         </div>
         <div className="replay">
-          <div className="clock" aria-live="polite">{fmtDateTime(clockMs, offset)} <span className="muted tiny">local ({fmtOffset(offset)})</span></div>
+          <div className="clock" aria-live="polite">{fmtDateTime(clockMs, offset)} <span className="muted tiny">local ({fmtOffset(offset)})</span>
+            {state?.data_quality && (
+              <span className={`fresh${state.data_quality.stale ? " fresh-stale" : ""}`}
+                    title="Minutes since the last CGM reading reached the twin">
+                CGM {state.data_quality.minutes_since_last_cgm == null ? "–" : Math.round(state.data_quality.minutes_since_last_cgm)} min ago{state.data_quality.stale ? " · STALE" : ""}
+              </span>
+            )}
+          </div>
           <div className="progress"><span style={{ width: `${Math.min(progress, 1) * 100}%` }} /></div>
           <div className="controls">
             <button className="primary" onClick={() => setPlaying((p) => !p)} disabled={replay.finished}>{playing ? "Pause" : "Play"}</button>
@@ -136,7 +149,9 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
             <b className="sim-tag">SIMULATED</b>
             <label className="small">What if the patient eats <input type="number" min={1} max={300} value={simGrams}
               onChange={(e) => setSimGrams(Math.max(1, Math.min(300, Number(e.target.value))))} aria-label="Hypothetical meal carbs in grams" /> g of carbs now?</label>
-            <button onClick={() => void runSim()} disabled={simBusy}>{simBusy ? "Simulating…" : "Simulate meal"}</button>
+            <button className="primary" onClick={() => void runSim()} disabled={simBusy}>{simBusy ? "Simulating…" : "Simulate meal"}</button>
+            {(sim || simError) && <button onClick={clearSim}>Clear scenario</button>}
+            {simError && <span className="sim-error small" role="alert">Simulation failed: {simError}</span>}
             {sim && sim.baseline.status === "ok" && sim.scenario.status === "ok" && (
               <span className="small">
                 Scenario at {fmtDateTime(toMs(sim.as_of), offset)}: <b>{sim.delta_glucose_60mg_dl! > 0 ? "+" : ""}{sim.delta_glucose_60mg_dl} mg/dL</b> at +60 min
@@ -144,6 +159,9 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                   <> · excursion risk {(100 * sim.baseline.excursion.probability).toFixed(0)}% → <b>{(100 * sim.scenario.excursion.probability).toFixed(0)}%</b></>
                 )}
               </span>
+            )}
+            {sim && (sim.baseline.status !== "ok" || sim.scenario.status !== "ok") && (
+              <span className="muted small">Scenario withheld — not enough recent CGM data for a reliable what-if at this moment.</span>
             )}
             <div className="muted tiny" style={{ flexBasis: "100%" }}>The hypothetical meal is never added to the patient record. A simulated scenario for exploration — not medical advice.</div>
           </div>
