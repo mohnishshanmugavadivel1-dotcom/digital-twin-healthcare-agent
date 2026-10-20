@@ -47,6 +47,7 @@ from glucotwin.contracts import (
     TwinState,
 )
 from glucotwin.features import (
+    FEATURE_NAMES,
     build_feature_frame,
     carb_sensitivity_prior,
     meal_responses,
@@ -64,6 +65,11 @@ VALID_RANGES = {
     ObservationKind.heart_rate: HR_VALID_RANGE,
 }
 MAX_FORECAST_HISTORY = 5000
+
+
+def feats_frame_empty() -> pd.DataFrame:
+    """Empty feature frame with the serving columns (for withheld what-if forecasts)."""
+    return pd.DataFrame(columns=FEATURE_NAMES)
 
 
 @dataclass
@@ -219,6 +225,15 @@ class TwinEngine:
         if hist.empty or not (hist["kind"] == ObservationKind.cgm.value).any():
             raise ValueError("counterfactual needs at least one CGM observation")
         t0 = pd.Timestamp(hist["timestamp"].max()).round("5min")
+        # Same sufficiency gate as the served forecast path: a what-if must never look
+        # more confident than the twin itself would be on the same evidence.
+        cgm_mask = hist["kind"] == ObservationKind.cgm.value
+        n_recent = int((cgm_mask & (hist["timestamp"] > t0 - pd.Timedelta(minutes=60))
+                        & (hist["timestamp"] <= t0)).sum())
+        if n_recent < MIN_CGM_READINGS_FOR_FORECAST:
+            reason = f"only {n_recent} CGM readings in the last 60 min (need {MIN_CGM_READINGS_FOR_FORECAST})"
+            empty = feats_frame_empty()
+            return self._forecast_at(t0, empty, reason=reason), self._forecast_at(t0, empty, reason=reason)
 
         def features_for(frame: pd.DataFrame) -> pd.DataFrame:
             window = frame[frame["timestamp"] > t0 - pd.Timedelta(hours=ENGINE_HISTORY_HOURS)]
@@ -236,14 +251,14 @@ class TwinEngine:
         scenario = self._forecast_at(t0, features_for(scenario_hist))
         return baseline, scenario
 
-    def _forecast_at(self, t: pd.Timestamp, feats: pd.DataFrame) -> Forecast:
+    def _forecast_at(self, t: pd.Timestamp, feats: pd.DataFrame, reason: str | None = None) -> Forecast:
         """Standalone forecast builder for what-if scenarios (does NOT touch twin state)."""
         fid = uuid.uuid4().hex[:12]
-        if t not in feats.index or pd.isna(feats.loc[t, "glucose"]):
+        if reason is not None or t not in feats.index or pd.isna(feats.loc[t, "glucose"]):
             return Forecast(
                 forecast_id=fid, patient_id=self.record.patient_id, issued_at=t.to_pydatetime(),
                 model_version=self.bundle.model_version, status="insufficient_data",
-                reason="not enough recent CGM data for a what-if forecast", current_glucose_mg_dl=None,
+                reason=reason or "not enough recent CGM data for a what-if forecast", current_glucose_mg_dl=None,
             )
         points, excursion = self.bundle.predict_row(feats.loc[[t]], t)
         return Forecast(

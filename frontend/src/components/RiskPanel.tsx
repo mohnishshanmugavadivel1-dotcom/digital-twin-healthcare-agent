@@ -35,6 +35,16 @@ export function RiskPanel({ forecast }: { forecast: Forecast | null }) {
         </div>
       </div>
       <p className="muted small">{ex.event_definition}</p>
+      <div className="horizons" role="list" aria-label="Predicted glucose by horizon">
+        {forecast.trajectory.map((p) => (
+          <div key={p.horizon_min} className="hz" role="listitem" title={`Model-predicted glucose ${p.lower_mg_dl}–${p.upper_mg_dl} mg/dL in ${p.horizon_min} minutes`}>
+            <span className="hz-h">+{p.horizon_min} min</span>
+            <span className="hz-v">{Math.round(p.glucose_mg_dl)}<span className="unit"> mg/dL</span></span>
+            <span className="muted tiny">[{Math.round(p.lower_mg_dl)}–{Math.round(p.upper_mg_dl)}]</span>
+          </div>
+        ))}
+      </div>
+      <p className="muted tiny">Predicted values with the 80% interval — <b>model-generated</b>, not observed measurements.</p>
       <h4>What drives this estimate</h4>
       <ul className="factors">
         {ex.top_factors.map((f) => (

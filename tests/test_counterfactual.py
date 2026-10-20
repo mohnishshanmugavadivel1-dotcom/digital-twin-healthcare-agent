@@ -140,3 +140,29 @@ def test_counterfactual_endpoint_validation_and_split_guard(client, service):
     r = client.post(f"/api/patients/{train_pid}/counterfactual", json={"meal_grams": 60})
     assert r.status_code == 404
     assert "test split" in r.json()["detail"]
+
+
+def test_counterfactual_refuses_when_recent_cgm_is_sparse(trained, small_cohort):
+    """A what-if must be at most as confident as the twin itself: with fewer than
+    MIN_CGM_READINGS_FOR_FORECAST readings in the last 60 minutes both legs are
+    withheld, and a what-if becomes available again once recent data recover."""
+    from glucotwin.service import TwinService
+
+    _, bundle, report_path, _ = trained
+    svc = TwinService(bundle, report_path=report_path, cohort=small_cohort, warmup_hours=0)
+    eng = svc.engines[svc.demo_patient_ids()[0]]
+    base = pd.Timestamp("2026-03-05T12:00:00Z")
+    sparse = [{"timestamp": base - pd.Timedelta(minutes=m), "kind": "cgm", "value": 110.0}
+              for m in range(300, 239, -5)]
+    sparse.append({"timestamp": base - pd.Timedelta(minutes=50), "kind": "cgm", "value": 112.0})
+    eng.ingest_frame(pd.DataFrame(sparse))
+    assert eng.latest_forecast.status == "insufficient_data"  # the served forecast refuses on this evidence
+    baseline, scenario = eng.counterfactual_forecast(60.0)
+    assert baseline.status == "insufficient_data" and scenario.status == "insufficient_data"
+    assert "last 60 min" in baseline.reason
+    # recovery: a dense recent hour restores the what-if
+    dense = [{"timestamp": base - pd.Timedelta(minutes=m), "kind": "cgm", "value": 118.0}
+             for m in range(45, -1, -5)]
+    eng.ingest_frame(pd.DataFrame(dense))
+    b2, s2 = eng.counterfactual_forecast(60.0)
+    assert b2.status == "ok" and s2.status == "ok"
