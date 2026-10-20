@@ -118,3 +118,12 @@ export interface ModelCard {
   alert_threshold: number; interval_level: number; target_definition: string; training_data: string;
   intended_use: string; limitations: string[];
 }
+
+export interface CounterfactualRequest { meal_grams: number }
+
+export interface CounterfactualResult {
+  patient_id: string; as_of: ISODate;
+  baseline: Forecast; scenario: Forecast;
+  delta_glucose_60mg_dl: number | null; delta_probability: number | null;
+  is_simulated: true; disclaimer: string;
+}

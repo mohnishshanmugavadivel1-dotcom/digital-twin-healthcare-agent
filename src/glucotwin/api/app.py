@@ -15,6 +15,8 @@ from fastapi.staticfiles import StaticFiles
 
 from glucotwin.contracts import (
     SCHEMA_VERSION,
+    CounterfactualRequest,
+    CounterfactualResult,
     EvaluationReport,
     Forecast,
     ForecastSummary,
@@ -105,6 +107,14 @@ def build_router(svc: TwinService) -> APIRouter:
         if since is not None:
             hist = [f for f in hist if f.issued_at > since]
         return hist[-limit:]
+
+    @r.post("/patients/{pid}/counterfactual", response_model=CounterfactualResult, status_code=201)
+    def post_counterfactual(pid: str, body: CounterfactualRequest):
+        """What-if: forecast with a hypothetical meal eaten now (simulated only, never ingested)."""
+        try:
+            return svc.counterfactual(pid, body.meal_grams)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
 
     @r.post("/replay", response_model=ReplayStatus, status_code=201)
     def create_replay(body: ReplayCreate):

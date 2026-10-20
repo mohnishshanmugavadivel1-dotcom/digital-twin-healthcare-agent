@@ -361,4 +361,26 @@ class ModelCard(_Model):
     limitations: list[str]
 
 
+class CounterfactualRequest(_Model):
+    """A hypothetical meal eaten *now*. It is never ingested into the patient record."""
+
+    meal_grams: float = Field(ge=1, le=300, description="Carbohydrates of the hypothetical meal in grams (1-300)")
+
+
+class CounterfactualResult(_Model):
+    """Baseline versus simulated what-if forecast. Strictly a simulated scenario, never advice."""
+
+    patient_id: PatientId
+    as_of: datetime
+    baseline: Forecast
+    scenario: Forecast
+    delta_glucose_60mg_dl: float | None = None
+    delta_probability: float | None = None
+    is_simulated: Literal[True] = True
+    disclaimer: str = (
+        "Simulated what-if scenario. The hypothetical meal was never added to the patient record. "
+        "Not medical advice and not a treatment recommendation."
+    )
+
+
 IngestResult.model_rebuild()

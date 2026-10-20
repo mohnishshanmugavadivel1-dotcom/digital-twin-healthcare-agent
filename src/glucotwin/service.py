@@ -16,6 +16,7 @@ from pathlib import Path
 import pandas as pd
 
 from glucotwin.contracts import (
+    CounterfactualResult,
     EvaluationReport,
     PatientRecord,
     PatientSummary,
@@ -30,6 +31,10 @@ log = logging.getLogger(__name__)
 
 class NotFound(KeyError):
     pass
+
+
+def _trajectory_glucose(fc, horizon_min: int) -> float:
+    return next(p.glucose_mg_dl for p in fc.trajectory if p.horizon_min == horizon_min)
 
 
 @dataclass
@@ -150,6 +155,31 @@ class TwinService:
 
     def replay_status(self, sid: str) -> ReplayStatus:
         return self._status(self.session(sid))
+
+    def counterfactual(self, pid: str, meal_grams: float) -> CounterfactualResult:
+        """What-if meal simulation on a held-out demo patient. Never mutates the twin."""
+        with self.lock:
+            if pid not in self.engines:
+                raise NotFound(pid)
+            if pid not in self.demo_patient_ids():
+                # a what-if on train/validation patients would present in-sample model behaviour as held out
+                raise NotFound(f"{pid} is not a held-out test patient; what-if is limited to the test split")
+            eng = self.engines[pid]
+            baseline, scenario = eng.counterfactual_forecast(meal_grams)
+            d60 = (
+                round(_trajectory_glucose(scenario, 60) - _trajectory_glucose(baseline, 60), 1)
+                if baseline.status == "ok" and scenario.status == "ok"
+                else None
+            )
+            dp = (
+                round(scenario.excursion.probability - baseline.excursion.probability, 4)
+                if baseline.excursion is not None and scenario.excursion is not None
+                else None
+            )
+            return CounterfactualResult(
+                patient_id=pid, as_of=eng.as_of.to_pydatetime(), baseline=baseline, scenario=scenario,
+                delta_glucose_60mg_dl=d60, delta_probability=dp,
+            )
 
     def _status(self, sess: ReplaySession) -> ReplayStatus:
         eng = self.engines[sess.patient_id]

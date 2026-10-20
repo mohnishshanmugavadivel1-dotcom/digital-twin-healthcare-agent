@@ -1,5 +1,5 @@
 import type {
-  EvaluationReport, Forecast, ModelCard, ForecastSummary, HealthStatus, Observation, ObservationKind,
+  CounterfactualResult, EvaluationReport, Forecast, ModelCard, ForecastSummary, HealthStatus, Observation, ObservationKind,
   PatientRecord, PatientSummary, ReplayStatus, TwinState,
 } from "./types";
 
@@ -35,6 +35,8 @@ export const api = {
     request<ReplayStatus>("/api/replay", { method: "POST", body: JSON.stringify({ patient_id, start_offset_hours }) }),
   stepReplay: (sid: string, minutes: number) =>
     request<ReplayStatus>(`/api/replay/${sid}/step`, { method: "POST", body: JSON.stringify({ minutes }) }),
+  counterfactual: (id: string, meal_grams: number) =>
+    request<CounterfactualResult>(`/api/patients/${id}/counterfactual`, { method: "POST", body: JSON.stringify({ meal_grams }) }),
   evaluation: () => request<EvaluationReport>("/api/evaluation"),
   model: () => request<ModelCard>("/api/model"),
 };
