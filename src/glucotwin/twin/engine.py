@@ -201,6 +201,58 @@ class TwinEngine:
         if len(self.forecast_history) > MAX_FORECAST_HISTORY:
             self.forecast_history = self.forecast_history[-MAX_FORECAST_HISTORY:]
 
+    # ----------------------------------------------------------- counterfactual
+    def counterfactual_forecast(self, meal_grams: float) -> tuple[Forecast, Forecast]:
+        """Simulate "what if the patient ate ``meal_grams`` of carbs right now".
+
+        Runs entirely on a local copy of the observation history: the hypothetical
+        meal is NEVER ingested into this twin — streams, state, version,
+        ``latest_forecast`` and ``forecast_history`` are untouched (enforced by
+        tests/test_counterfactual.py). Returns ``(baseline, scenario)`` where the
+        baseline is the forecast the twin would issue at ``as_of`` right now and
+        the scenario adds one hypothetical meal at ``as_of`` before rebuilding the
+        same features through the same served models. Simulated output only.
+        """
+        if not 1.0 <= float(meal_grams) <= 300.0:
+            raise ValueError(f"meal_grams must be within [1, 300], got {meal_grams}")
+        hist = self.history_frame()
+        if hist.empty or not (hist["kind"] == ObservationKind.cgm.value).any():
+            raise ValueError("counterfactual needs at least one CGM observation")
+        t0 = pd.Timestamp(hist["timestamp"].max()).round("5min")
+
+        def features_for(frame: pd.DataFrame) -> pd.DataFrame:
+            window = frame[frame["timestamp"] > t0 - pd.Timedelta(hours=ENGINE_HISTORY_HOURS)]
+            return build_feature_frame(window, self.record, responses=self._responses(frame))
+
+        baseline = self._forecast_at(t0, features_for(hist))
+        scenario_hist = (
+            pd.concat(
+                [hist, pd.DataFrame({"timestamp": [t0], "kind": [ObservationKind.meal.value], "value": [float(meal_grams)]})],
+                ignore_index=True,
+            )
+            .sort_values(["timestamp", "kind"])
+            .reset_index(drop=True)
+        )
+        scenario = self._forecast_at(t0, features_for(scenario_hist))
+        return baseline, scenario
+
+    def _forecast_at(self, t: pd.Timestamp, feats: pd.DataFrame) -> Forecast:
+        """Standalone forecast builder for what-if scenarios (does NOT touch twin state)."""
+        fid = uuid.uuid4().hex[:12]
+        if t not in feats.index or pd.isna(feats.loc[t, "glucose"]):
+            return Forecast(
+                forecast_id=fid, patient_id=self.record.patient_id, issued_at=t.to_pydatetime(),
+                model_version=self.bundle.model_version, status="insufficient_data",
+                reason="not enough recent CGM data for a what-if forecast", current_glucose_mg_dl=None,
+            )
+        points, excursion = self.bundle.predict_row(feats.loc[[t]], t)
+        return Forecast(
+            forecast_id=fid, patient_id=self.record.patient_id, issued_at=t.to_pydatetime(),
+            model_version=self.bundle.model_version, status="ok",
+            current_glucose_mg_dl=float(feats.loc[t, "glucose"]),
+            trajectory=points, excursion=excursion, interval_level=self.bundle.interval_level,
+        )
+
     # ------------------------------------------------------------------ state
     def _update_state(self) -> None:
         now = self.as_of

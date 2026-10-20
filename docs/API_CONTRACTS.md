@@ -1,4 +1,6 @@
-# Shared data contracts and API (schema v0.2.0)
+# Shared data contracts and API (schema v0.3.0)
+
+**Changes in 0.3.0 (U1, submission day):** new `POST /api/patients/{id}/counterfactual` (`CounterfactualRequest{meal_grams 1–300}` → 201 `CounterfactualResult`, 422 out of bounds, 404 unknown or non-test patient). It simulates "what if the patient ate this many carbs now" and **never mutates the twin** (state, version, streams and forecast history are untouched; enforced by `tests/test_counterfactual.py`). `CounterfactualResult` is labelled `is_simulated: true` with a fixed disclaimer; the hypothetical meal is never ingested into the record.
 
 **Changes in 0.2.0 (wave 2):** `PatientRecord` gains `family_history_t2d` and `genetic_markers[]`. Both are synthetic, display-only, and not model inputs. `ReplayCreate.start_offset_hours` and `duration_hours` are now bounded to ≤ 8,784 h (previously, huge values caused HTTP 500; now they return 422). Replay is restricted to held-out **test** patients (others return 404). Fractional offsets are rounded to the 5-min grid.
 
@@ -52,6 +54,7 @@ Trajectory targets are the observed CGM values at t+30, t+60, t+90 and t+120 min
 | GET | `/api/replay/{sid}` | – | `ReplayStatus` | 404 |
 | POST | `/api/replay/{sid}/step` | `ReplayStep` {minutes: 5–1440} | `ReplayStatus` | 404, 422 |
 | DELETE | `/api/replay/{sid}` | – | 204 | 404 |
+| POST | `/api/patients/{id}/counterfactual` | `CounterfactualRequest` {meal_grams: 1–300} | `CounterfactualResult` (201): baseline and scenario `Forecast`, Δglucose@60, Δprobability, `is_simulated: true`, disclaimer | 404 (unknown or non-test patient), 422 (grams out of bounds / no CGM data) |
 | GET | `/api/model` | – | `ModelCard` | – |
 | GET | `/api/evaluation` | – | `EvaluationReport` | 404 if the report was never generated |
 

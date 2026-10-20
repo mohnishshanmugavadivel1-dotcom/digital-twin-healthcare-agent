@@ -42,3 +42,10 @@ because an invented effect size would let the model "discover" our own assumptio
 
 **ADR-012 Replay limited to held-out test patients (wave 2).** Replaying a training patient shows in-sample predictions that look better
 than held-out performance. The API now refuses it.
+
+**ADR-013 Counterfactual what-if via local history fork, never via ingestion (U1, submission day).** "What if the patient ate *x* g of
+carbs now" is answered by `TwinEngine.counterfactual_forecast`: it copies the in-memory observation history, appends one hypothetical meal
+at `as_of` on the copy only, rebuilds the same leakage-safe features and calls the same served models twice. The real twin — streams, versioned
+state, latest forecast, forecast history — is untouched (asserted byte-for-byte by tests), so simulations can never contaminate the demo replay
+or the evaluation story. The response is explicitly labelled `is_simulated: true` with a "not medical advice" disclaimer, and the endpoint reuses
+the replay guard (held-out test patients only) so in-sample model behaviour is never presented as held-out.
