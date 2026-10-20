@@ -51,7 +51,7 @@ Requirements: Python 3.11+, Node 20+ (tested with Python 3.11.2 and Node 22.22).
 make setup     # venv + pinned Python deps (requirements.lock) + frontend deps (npm ci)
 make train     # synthetic cohort (60 patients × 14 days, seed 20261017) → train → evaluate  (~45 s, 2 CPUs)
 make serve     # builds the dashboard, then serves API + UI at http://localhost:8000
-make check     # ruff + pytest (52 tests) + frontend type-check/build
+make check     # ruff + pytest (62 tests) + frontend type-check/build
 .venv/bin/glucotwin audit   # ~5 min: bootstrap CIs, sustained warnings, ablations, other seeds, stress test
 ```
 
@@ -85,7 +85,7 @@ For frontend development, run `make dev-frontend` (Vite on :5173, which proxies 
 | `src/glucotwin/twin/engine.py` | Patient state engine (ingest, then state, then forecast) |
 | `src/glucotwin/service.py`, `api/app.py` | Service layer, replay sessions, FastAPI routes |
 | `frontend/` | React + TypeScript + Recharts doctor dashboard, incl. a **what-if meal simulation** (counterfactual fork on a copy of the history — never ingested, always labelled simulated) |
-| `tests/` | 52 pytest tests, including leakage and replay-never-leaks-future tests |
+| `tests/` | 62 pytest tests, including leakage and replay-never-leaks-future tests |
 | `scripts/` | Demo-moment finder, presentation builder, PDF export |
 | `docs/submission/` | Architecture and presentation PDFs, plus their HTML/SVG sources |
 | `docs/` | Architecture, contracts, dataset feasibility, ML plan, frontend spec, QA/security, decisions, backlog, competition plan |
