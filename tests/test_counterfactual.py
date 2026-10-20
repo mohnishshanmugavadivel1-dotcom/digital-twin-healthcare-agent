@@ -166,3 +166,26 @@ def test_counterfactual_refuses_when_recent_cgm_is_sparse(trained, small_cohort)
     eng.ingest_frame(pd.DataFrame(dense))
     b2, s2 = eng.counterfactual_forecast(60.0)
     assert b2.status == "ok" and s2.status == "ok"
+
+
+# ------------------------------------------------------------------ scenario lab (Feature C)
+def test_sequential_scenarios_share_one_immutable_baseline(service):
+    """Scenario Lab contract: several isolated what-if calls in a row all see the
+    same baseline, never see each other, and never move the twin."""
+    eng = _demo_engine(service)
+    before = _snapshot(eng)
+    results = [service.counterfactual(eng.record.patient_id, g) for g in (20, 60, 150)]
+
+    def sig(fc):
+        d = fc.model_dump()
+        d.pop("forecast_id")  # a fresh id per call, by design
+        return d
+
+    for r in results[1:]:
+        assert sig(r.baseline) == sig(results[0].baseline), "baseline must not depend on earlier scenarios"
+
+    d60 = [_traj(r.scenario, 60).glucose_mg_dl for r in results]
+    assert d60 == sorted(d60), "more carbohydrates never lowers the simulated +60-min glucose"
+
+    assert all(r.is_simulated is True and r.scenario.status == "ok" for r in results)
+    assert _snapshot(eng) == before
