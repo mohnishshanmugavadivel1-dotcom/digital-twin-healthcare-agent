@@ -52,7 +52,8 @@ Deep link: **`/?patient=SYN-0039&start=151.833`**. The replay starts at Sun 8 Ma
    "not medical advice" disclaimer. Say those boundaries out loud.
    *Honest note (verified):* at 08:55 — after the real 140 g breakfast — an *additional* hypothetical meal moves the scenario by ≈ 0
    (204.7 → 204.6; risk already saturated at 0.9998): the model already carries 138 g of carbs on board. Demo the fork at 07:55; if you
-   also show it at 08:55, narrate exactly that saturation.
+   also show it at 08:55, the dashboard now explains the saturation on screen (an automatic "≈ no scenario change — … g of carbs on board"
+   note appears whenever the scenario leg lands within 2 mg/dL of baseline).
 
 ### Scene 6: honest failure (verified)
 
