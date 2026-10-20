@@ -47,3 +47,32 @@ export function glucoseClass(g: number | null | undefined) {
 /** Risk as a percentage that never displays false certainty: >99% / <1% at the extremes. */
 export const riskPct = (v: number | null | undefined) =>
   v === null || v === undefined ? "–" : v >= 0.995 ? ">99%" : v < 0.005 ? "<1%" : `${Math.round(v * 100)}%`;
+
+/** The row shape the glucose chart feeds its tooltip (only the fields the formatter reads). */
+export interface ChartTipRow { t: number; v?: number | null; band?: [number, number]; mealG?: number }
+
+const GLUCOSE_SERIES = new Set(["CGM", "Forecast", "What-if meal (simulated)", "Past 60-min prediction"]);
+
+/**
+ * Tooltip entry formatter for the glucose chart. Recharts hands the formatter
+ * EVERY tooltip payload entry — including the X-axis's own dataKey entry
+ * ("t", an epoch-millisecond timestamp), which the chart's old fall-through
+ * branch rendered as "t : 1772447220000 mg/dL". Only genuine glucose-valued
+ * series may display "mg/dL": the hovered time is already the tooltip label
+ * (labelFormatter renders it in the patient's local clock), so unknown or
+ * non-glucose entries return null, which Recharts' tooltip renderer treats as
+ * "skip this row" (DefaultTooltipContent returns null for them). Bands (the
+ * 80% interval series) render as a range, meal markers as grams of carbs.
+ * Returns [value, name] for entries to display, null to omit the row.
+ */
+export function formatChartTooltipEntry(value: unknown, name: string, row?: ChartTipRow): [string, string] | null {
+  if (name === "Logged meal") {
+    return row?.mealG != null ? [`${row.mealG} g carbs`, "Meal"] : null;
+  }
+  if (Array.isArray(value)) {
+    return [`${value[0]}–${value[1]} mg/dL`, "80% interval"];
+  }
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  if (GLUCOSE_SERIES.has(name)) return [`${Math.round(value)} mg/dL`, name];
+  return null;
+}
