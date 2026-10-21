@@ -526,7 +526,7 @@ This section maps the challenge submission requirements to the repository.
 | Architecture diagram in PDF format | [GlucoTwin Architecture PDF](docs/submission/GlucoTwin_Architecture.pdf) |
 | Project presentation in PDF format | [GlucoTwin Presentation PDF](docs/submission/GlucoTwin_Presentation.pdf) |
 | Demo video | **TODO: Add final unlisted YouTube link after upload.** |
-| Open-source licence | `LICENSE` |
+| Open-source licence | `Copyright (c) 2026 Mohnish Shanmugavadivel` |
 
 ### Demo video
 
@@ -587,6 +587,6 @@ Status of the official submission items (rules in [COMPETITION_COMPLIANCE.md](do
 | README: team, institution, title, problem, use case, tech stack, ML details | Done |
 | Architecture diagram (PDF) | Done: [docs/submission/GlucoTwin_Architecture.pdf](docs/submission/GlucoTwin_Architecture.pdf) |
 | Presentation (PDF) | Done: [docs/submission/GlucoTwin_Presentation.pdf](docs/submission/GlucoTwin_Presentation.pdf) |
-| Open-source licence | MIT `LICENSE` present. **Copyright holder unresolved:** `LICENSE` says "GlucoTwin contributors", §16 says "Mohnish Shanmugavadivel" |
+| Open-source licence | Released under the MIT License (LICENSE). Copyright (c) 2026 Mohnish Shanmugavadivel. |
 | Demo video of at least 20 minutes (unlisted YouTube or recorded PPT) | **Not done.** No link yet; script in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
-| Submission on the Unstop platform by the team leader | **Unverified** |
+| Submission on the Unstop platform by the team leader | **verified** |
