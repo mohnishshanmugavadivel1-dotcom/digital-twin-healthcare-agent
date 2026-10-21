@@ -54,7 +54,7 @@ Trajectory targets are the observed CGM values at t+30, t+60, t+90 and t+120 min
 | GET | `/api/replay/{sid}` | – | `ReplayStatus` | 404 |
 | POST | `/api/replay/{sid}/step` | `ReplayStep` {minutes: 5–1440} | `ReplayStatus` | 404, 422 |
 | DELETE | `/api/replay/{sid}` | – | 204 | 404 |
-| POST | `/api/patients/{id}/counterfactual` | `CounterfactualRequest` {meal_grams: 1–300} | `CounterfactualResult` (201): baseline and scenario `Forecast`, Δglucose@60, Δprobability, `is_simulated: true`, disclaimer | 404 (unknown or non-test patient), 422 (grams out of bounds / no CGM data) |
+| POST | `/api/patients/{id}/counterfactual` | `CounterfactualRequest` {meal_grams: 1–300} | `CounterfactualResult` (201): `baseline` (no meal), `reference` (zero-carb meal at the same time) and `scenario` `Forecast`s; `primary` = scenario − reference and `secondary` = scenario − baseline (`CounterfactualComparison`: Δglucose per horizon, Δprobability, reference probability, `risk_saturated` when reference risk > 0.95); `small_meal_unreliable` (< 30 g), `notes`; legacy `delta_glucose_60mg_dl` / `delta_probability` keep their no-meal meaning; `is_simulated: true`, disclaimer (learned associations, not causal effects) — see B-22 | 404 (unknown or non-test patient), 422 (grams out of bounds / no CGM data) |
 | GET | `/api/model` | – | `ModelCard` | – |
 | GET | `/api/evaluation` | – | `EvaluationReport` | 404 if the report was never generated |
 

@@ -1,4 +1,6 @@
-<img width="1901" height="852" alt="image" src="https://github.com/user-attachments/assets/21ac5e81-d62e-4c7b-a23e-23f309c5778a" /># Prioritised backlog, dependency graph and risk register
+# Prioritised backlog, dependency graph and risk register
+
+<img width="1901" height="852" alt="image" src="https://github.com/user-attachments/assets/21ac5e81-d62e-4c7b-a23e-23f309c5778a" />
 
 **Wave-2 status (2026-10-17):** B-02 DONE (official rules in COMPETITION_COMPLIANCE.md) · B-03 DONE (`docs/submission/GlucoTwin_Architecture.pdf`) · B-04 DONE (`docs/submission/GlucoTwin_Presentation.pdf`; team details filled 2026-10-18) · B-09 DONE (patient-bootstrap CIs, `glucotwin audit`) · B-11 DONE (`scripts/find_demo_scenario.py`) · B-14 partly (pytest CVE fixed; TestClient deprecation remains) · B-01 partly (team details filled 2026-10-18; licence holder open), B-06 BLOCKED on the team. New items: B-19 event-model feature set — investigated 2026-10-20 (docs/ABLATION_RECORD_FEATURES.md, scripts/ablate_record_features.py): ablation reproduced (test AUROC 0.884 → 0.9075 without the record block, Δ CI −0.053..−0.001); mechanism identified (fasting_glucose_mg_dl carries std coef −3.7 against the dynamic evidence); validation does NOT prefer the change (0.8881 vs 0.8866), so the served model is unchanged — re-select across cohort seeds on validation post-submission; B-20 derive synthetic HbA1c from a pre-monitoring period instead of the evaluated window.
 
@@ -9,7 +11,7 @@ P2 = after submission (jury round).
 
 | ID | Pri | Item | Owner role | Depends on | Size |
 |---|---|---|---|---|---|
-| B-01 | P0 | Fill team details, college or incubator, and confirm the licence holder in README / LICENSE — **team details filled 2026-10-18; licence-holder confirmation (institutional IP policy) still open**PARTIAL (team details filled; institutional IP policy check open) | Team | – | XS |
+| B-01 | P0 | Fill team details, college or incubator, and confirm the licence holder in README / LICENSE — **PARTIAL** — team details filled 2026-10-18; licence-holder confirmation still open (LICENSE says "GlucoTwin contributors", README §16 says "Mohnish Shanmugavadivel"; institutional IP policy unchecked) | Team | – | XS |
 | B-02 | P0 | Confirm the official submission guidelines and data rules on Unstop; update COMPETITION.md | G | – | XS |
 | B-03 | P0 | Export the architecture diagram to PDF (render the Mermaid in ARCHITECTURE.md) | G | – | S |
 | B-04 | P0 | Presentation deck (PDF/PPT) from the outline in COMPETITION.md, using real numbers from the report | G | B-02 | M |
@@ -28,7 +30,7 @@ P2 = after submission (jury round).
 | B-17 | P2 | Sleep stream (duration, awakenings) from the wearable, with its effect on insulin sensitivity in the simulator | A + D | – | M |
 | B-18 | P2 | FHIR R4 export of PatientRecord / Observation for interoperability | B + D | – | M |
 | B-21 | P2 | Mid-replay connection loss currently replaces the workspace with the full-screen retry card (loud but destructive); make it an inline recoverable banner. Needs browser testing (no browser in the dev sandbox). | E | – | S |
-| B-22 | P2 | Verified what-if artifact (2026-10-20, live): a small hypothetical meal can produce a NEGATIVE Δ60 (20 g → −12.0 mg/dL vs 60 g → +41.1 at SYN-0039 07:55) when it lands inside another logged meal's learned meal-response window — the scenario leg recomputes meal responses and the collision perturbs the response features. Engine frozen per sprint guardrails; the dashboard shows an explicit artifact note. Post-submission: exclude the hypothetical meal from meal-response learning or clamp the scenario recomputation. | D | – | M |
+| B-22 | P1 | **DONE 2026-10-20 (reference fix; diagnosis corrected).** The earlier "simulator artifact / meal-response window collision" diagnosis was wrong: the what-if uses the served ML models (not the simulator), the hypothetical meal never changes the learned carb sensitivity, and the recorded case (20 g → −12.0 vs 60 g → +41.1) did not reproduce. Cause: logging any meal resets `minutes_since_meal`, and the models learned that a long gap anticipates a meal/excursion, so "vs no meal" removes an anticipated meal (Δ+60 < −2 mg/dL in 15.3% of 5 g scenarios; Δrisk < −0.01 in 29.8%). Fix (no model change): primary comparison = scenario − **zero-carb meal at the same time** (0 material negatives in Δ+60/Δrisk for ≥ 30 g); the no-meal comparison stays as a labelled secondary; meals < 30 g flagged unreliable; risk changes greyed when starting risk > 0.95. Evidence: `scripts/counterfactual_audit.py` → `reports/counterfactual_audit.json`; tests: `tests/test_counterfactual_reference.py`. Remaining: the reference itself is unseen in training (min training meal 6 g); Δ+60 is non-decreasing in meal size at 294/326 points. Post-submission: an intervention-capable model (e.g. per-patient mechanistic fit). | D | – | M |
 
 ## Dependency graph (what can run in parallel next)
 

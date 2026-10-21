@@ -1,0 +1,364 @@
+{
+  "generated_at": "2026-10-20T17:40:38+00:00",
+  "model_version": "gt-0.1.0-s20261017-202610201721",
+  "what": "What-if meal comparisons of the served models on held-out synthetic test patients. Learned model associations, not physiological effects.",
+  "design": {
+    "test_patients": 12,
+    "replay_offsets_h": [
+      26.0,
+      35.5,
+      45.0,
+      54.5,
+      64.0,
+      73.5,
+      83.0,
+      92.5,
+      102.0,
+      111.5,
+      121.0,
+      130.5,
+      140.0,
+      149.5,
+      159.0,
+      168.5,
+      178.0,
+      187.5,
+      197.0,
+      206.5,
+      216.0,
+      225.5,
+      235.0,
+      244.5,
+      254.0,
+      263.5,
+      273.0,
+      282.5,
+      292.0,
+      301.5,
+      311.0,
+      320.5
+    ],
+    "eligible_points": 326,
+    "meal_grams": [
+      5,
+      10,
+      20,
+      30,
+      40,
+      60,
+      90,
+      120,
+      200
+    ],
+    "scenarios": 2934,
+    "eligibility": "latest CGM <= 180 mg/dL and a forecast was not withheld",
+    "reference_grams": 0.0,
+    "reliable_min_grams": 30.0,
+    "risk_saturation": 0.95,
+    "material_thresholds": {
+      "glucose_mg_dl": -2.0,
+      "risk": -0.01
+    }
+  },
+  "feature_validity_violations": 0,
+  "one_gram_vs_zero_carb_reference": {
+    "max_abs_glucose_delta_mg_dl": 4.7,
+    "max_abs_risk_delta": 0.0211,
+    "median_abs_risk_delta": 0.001,
+    "conclusion": "not exactly equivalent; the explicit zero-carb reference is used"
+  },
+  "primary_vs_zero_carb_meal_now": {
+    "5": {
+      "share_delta30_below_minus2": 0.0031,
+      "share_delta60_below_minus2": 0.0184,
+      "share_delta120_below_minus2": 0.0061,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 0.0,
+      "median_delta120": 0.0,
+      "median_delta_risk": 0.0052
+    },
+    "10": {
+      "share_delta30_below_minus2": 0.0031,
+      "share_delta60_below_minus2": 0.0307,
+      "share_delta120_below_minus2": 0.0123,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 0.0,
+      "median_delta120": 0.0,
+      "median_delta_risk": 0.0118
+    },
+    "20": {
+      "share_delta30_below_minus2": 0.0061,
+      "share_delta60_below_minus2": 0.0061,
+      "share_delta120_below_minus2": 0.0583,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 3.0,
+      "median_delta120": 0.1,
+      "median_delta_risk": 0.0295
+    },
+    "30": {
+      "share_delta30_below_minus2": 0.0031,
+      "share_delta60_below_minus2": 0.0,
+      "share_delta120_below_minus2": 0.0031,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 28.4,
+      "median_delta120": 3.9,
+      "median_delta_risk": 0.0549
+    },
+    "40": {
+      "share_delta30_below_minus2": 0.0061,
+      "share_delta60_below_minus2": 0.0,
+      "share_delta120_below_minus2": 0.0,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 32.0,
+      "median_delta120": 24.4,
+      "median_delta_risk": 0.0871
+    },
+    "60": {
+      "share_delta30_below_minus2": 0.0061,
+      "share_delta60_below_minus2": 0.0,
+      "share_delta120_below_minus2": 0.0,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 43.5,
+      "median_delta120": 39.4,
+      "median_delta_risk": 0.1742
+    },
+    "90": {
+      "share_delta30_below_minus2": 0.0031,
+      "share_delta60_below_minus2": 0.0,
+      "share_delta120_below_minus2": 0.0,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 53.4,
+      "median_delta120": 52.0,
+      "median_delta_risk": 0.365
+    },
+    "120": {
+      "share_delta30_below_minus2": 0.0031,
+      "share_delta60_below_minus2": 0.0,
+      "share_delta120_below_minus2": 0.0,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 59.85,
+      "median_delta120": 63.5,
+      "median_delta_risk": 0.5445
+    },
+    "200": {
+      "share_delta30_below_minus2": 0.0031,
+      "share_delta60_below_minus2": 0.0,
+      "share_delta120_below_minus2": 0.0,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 65.85,
+      "median_delta120": 72.6,
+      "median_delta_risk": 0.8292
+    }
+  },
+  "secondary_vs_no_meal": {
+    "5": {
+      "share_delta30_below_minus2": 0.1656,
+      "share_delta60_below_minus2": 0.1534,
+      "share_delta120_below_minus2": 0.1104,
+      "share_delta_risk_below_minus0.01": 0.2975,
+      "median_delta60": 11.35,
+      "median_delta120": 16.85,
+      "median_delta_risk": -0.0026
+    },
+    "10": {
+      "share_delta30_below_minus2": 0.1626,
+      "share_delta60_below_minus2": 0.1411,
+      "share_delta120_below_minus2": 0.1135,
+      "share_delta_risk_below_minus0.01": 0.2147,
+      "median_delta60": 11.55,
+      "median_delta120": 16.9,
+      "median_delta_risk": -0.0002
+    },
+    "20": {
+      "share_delta30_below_minus2": 0.1626,
+      "share_delta60_below_minus2": 0.0982,
+      "share_delta120_below_minus2": 0.1074,
+      "share_delta_risk_below_minus0.01": 0.0951,
+      "median_delta60": 14.4,
+      "median_delta120": 17.5,
+      "median_delta_risk": 0.0067
+    },
+    "30": {
+      "share_delta30_below_minus2": 0.1503,
+      "share_delta60_below_minus2": 0.0399,
+      "share_delta120_below_minus2": 0.0982,
+      "share_delta_risk_below_minus0.01": 0.0429,
+      "median_delta60": 38.95,
+      "median_delta120": 20.95,
+      "median_delta_risk": 0.0298
+    },
+    "40": {
+      "share_delta30_below_minus2": 0.1442,
+      "share_delta60_below_minus2": 0.0337,
+      "share_delta120_below_minus2": 0.0675,
+      "share_delta_risk_below_minus0.01": 0.0153,
+      "median_delta60": 42.95,
+      "median_delta120": 44.0,
+      "median_delta_risk": 0.0563
+    },
+    "60": {
+      "share_delta30_below_minus2": 0.1442,
+      "share_delta60_below_minus2": 0.0276,
+      "share_delta120_below_minus2": 0.0399,
+      "share_delta_risk_below_minus0.01": 0.0061,
+      "median_delta60": 55.65,
+      "median_delta120": 59.5,
+      "median_delta_risk": 0.1436
+    },
+    "90": {
+      "share_delta30_below_minus2": 0.1442,
+      "share_delta60_below_minus2": 0.0123,
+      "share_delta120_below_minus2": 0.0031,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 65.0,
+      "median_delta120": 73.8,
+      "median_delta_risk": 0.309
+    },
+    "120": {
+      "share_delta30_below_minus2": 0.1442,
+      "share_delta60_below_minus2": 0.0092,
+      "share_delta120_below_minus2": 0.0,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 72.35,
+      "median_delta120": 82.75,
+      "median_delta_risk": 0.4985
+    },
+    "200": {
+      "share_delta30_below_minus2": 0.1442,
+      "share_delta60_below_minus2": 0.0092,
+      "share_delta120_below_minus2": 0.0,
+      "share_delta_risk_below_minus0.01": 0.0,
+      "median_delta60": 78.15,
+      "median_delta120": 90.5,
+      "median_delta_risk": 0.7783
+    }
+  },
+  "non_decreasing_in_grams_points": {
+    "of": 326,
+    "primary_delta60_tol2": 294,
+    "primary_delta120_tol2": 308,
+    "primary_risk_tol0.01": 326,
+    "secondary_delta60_tol2": 294
+  },
+  "demo_SYN-0039": {
+    "07:55": {
+      "20": {
+        "baseline_risk": 0.2154,
+        "reference_risk": 0.0705,
+        "scenario_risk": 0.2584,
+        "primary_delta_glucose": {
+          "30": 1.7,
+          "60": 3.7,
+          "90": 7.1,
+          "120": 0.9
+        },
+        "secondary_delta_glucose": {
+          "30": 14.3,
+          "60": 5.2,
+          "90": -19.6,
+          "120": -32.2
+        },
+        "primary_risk_saturated": false,
+        "small_meal_unreliable": true
+      },
+      "60": {
+        "baseline_risk": 0.2154,
+        "reference_risk": 0.0705,
+        "scenario_risk": 0.8802,
+        "primary_delta_glucose": {
+          "30": 10.5,
+          "60": 55.9,
+          "90": 50.4,
+          "120": 32.6
+        },
+        "secondary_delta_glucose": {
+          "30": 23.1,
+          "60": 57.4,
+          "90": 23.7,
+          "120": -0.5
+        },
+        "primary_risk_saturated": false,
+        "small_meal_unreliable": false
+      },
+      "120": {
+        "baseline_risk": 0.2154,
+        "reference_risk": 0.0705,
+        "scenario_risk": 0.9986,
+        "primary_delta_glucose": {
+          "30": 20.1,
+          "60": 76.1,
+          "90": 78.7,
+          "120": 58.4
+        },
+        "secondary_delta_glucose": {
+          "30": 32.7,
+          "60": 77.6,
+          "90": 52.0,
+          "120": 25.3
+        },
+        "primary_risk_saturated": false,
+        "small_meal_unreliable": false
+      }
+    },
+    "08:55": {
+      "20": {
+        "baseline_risk": 0.9998,
+        "reference_risk": 0.9998,
+        "scenario_risk": 1.0,
+        "primary_delta_glucose": {
+          "30": -0.1,
+          "60": 1.6,
+          "90": 0.0,
+          "120": -0.6
+        },
+        "secondary_delta_glucose": {
+          "30": -3.5,
+          "60": -1.2,
+          "90": 0.0,
+          "120": -0.6
+        },
+        "primary_risk_saturated": true,
+        "small_meal_unreliable": true
+      },
+      "60": {
+        "baseline_risk": 0.9998,
+        "reference_risk": 0.9998,
+        "scenario_risk": 1.0,
+        "primary_delta_glucose": {
+          "30": -0.1,
+          "60": 2.7,
+          "90": 0.0,
+          "120": -0.6
+        },
+        "secondary_delta_glucose": {
+          "30": -3.5,
+          "60": -0.1,
+          "90": 0.0,
+          "120": -0.6
+        },
+        "primary_risk_saturated": true,
+        "small_meal_unreliable": false
+      },
+      "120": {
+        "baseline_risk": 0.9998,
+        "reference_risk": 0.9998,
+        "scenario_risk": 1.0,
+        "primary_delta_glucose": {
+          "30": -0.1,
+          "60": 2.7,
+          "90": 0.0,
+          "120": -0.6
+        },
+        "secondary_delta_glucose": {
+          "30": -3.5,
+          "60": -0.1,
+          "90": 0.0,
+          "120": -0.6
+        },
+        "primary_risk_saturated": true,
+        "small_meal_unreliable": false
+      }
+    }
+  },
+  "runtime_s": 838.7
+}

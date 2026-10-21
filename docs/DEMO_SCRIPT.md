@@ -44,16 +44,23 @@ Deep link: **`/?patient=SYN-0039&start=151.833`**. The replay starts at Sun 8 Ma
 4. Continue to **10:20**. **Expected:** glucose is 187, above 180. The risk card switches to "already above 180", because the onset question is only asked at ≤ 180.
    The alert stayed on from 08:55 until onset: an **85-min sustained warning**. The peak was about 207 mg/dL.
 5. *Say:* this is one well-chosen example. The audit shows that only about 69% of onsets get a sustained warning (95% CI 0.48–0.83).
-6. **What-if meal (U1, added 2026-10-20; re-verified 2026-10-20 15:00 IST).** Do this at the **07:55 load point, BEFORE pressing +1 h** (glucose 94, no meal on board). In the orange strip enter **120 g** and press
-   **Simulate meal**: a dashed orange scenario curve overlays the solid forecast, with a **SIMULATED** tag and a Δ readout. Verified expected readout:
-   +60-min glucose **119 → 197 mg/dL (Δ ≈ +78)** and excursion risk **22% → 99.9%**.
-   The fork runs on a copy of the history — the hypothetical meal is **never ingested** (state, version, streams and forecast history are
+6. **What-if meal (B-22 reference fix, re-verified 2026-10-20 in the dashboard).** Do this at the **07:55 load point, BEFORE pressing +1 h**
+   (glucose 94, no meal for 681 min). In the orange strip enter **120 g** and press **Simulate meal**: a dashed orange scenario curve overlays the
+   solid forecast, with a **SIMULATED** tag. Verified table row (`reports/counterfactual_audit.json`, `demo_SYN-0039`):
+   - **vs zero-carb meal now (primary):** Δ +30 / +60 / +120 min = **+20.1 / +76.1 / +58.4 mg/dL**, excursion risk **7% → >99%**;
+   - **vs no meal (grey, secondary):** Δ +60 = **+77.6 mg/dL**, risk **22% → >99%**;
+   - note under the table: *"Logging any meal now (even zero-carb) shifts the risk by −14 points on its own: a learned meal-timing association…"*.
+
+   *Say:* the primary column compares eating 120 g now with eating a zero-carb meal at the same moment, so it isolates the carbs. The grey column
+   compares with not eating, and differs because after a long gap the model has learned to expect a meal soon. Both are **learned associations
+   of the forecasting model, not physiology**. Optionally add **20 g**: the row is greyed with an "unreliable < 30 g" flag
+   (+1.7 / +3.7 / +0.9; risk 7% → 26%).
+   The fork runs on copies of the history — no hypothetical meal is **ever ingested** (state, version, streams and forecast history are
    unchanged; `tests/test_counterfactual.py` asserts it), the endpoint is test-split-only, and the response carries a
    "not medical advice" disclaimer. Say those boundaries out loud.
-   *Honest note (verified):* at 08:55 — after the real 140 g breakfast — an *additional* hypothetical meal moves the scenario by ≈ 0
-   (204.7 → 204.6; risk already saturated at 0.9998): the model already carries 138 g of carbs on board. Demo the fork at 07:55; if you
-   also show it at 08:55, the dashboard now explains the saturation on screen (an automatic "≈ no scenario change — … g of carbs on board"
-   note appears whenever the scenario leg lands within 2 mg/dL of baseline).
+   *Honest note (verified):* at 08:55 — after the real 140 g breakfast — an extra 60 g moves the +60-min forecast by only **+2.7 mg/dL** versus
+   a zero-carb meal (138 g already on board) and the risk cell shows **>99% → >99% \*** greyed: starting risk above 95%, change not informative.
+   Demo the fork at 07:55.
 
 ### Scene 6: honest failure (verified)
 
