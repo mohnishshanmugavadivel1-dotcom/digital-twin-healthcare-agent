@@ -214,7 +214,7 @@ GlucoTwin uses a layered architecture.
 | Frontend verification | TypeScript checks and Vite production build |
 | Test automation | Makefile-based checks and Node.js test runner for tooltip formatting |
 
-For the supported environment, use Python 3.11+ and Node.js 20+. Consult the repository's lockfiles and configuration for exact dependency versions.
+For the supported environment, use Python 3.11+ and Node.js 22.6+ (the frontend tests use `node --experimental-strip-types`; CI uses Node 22). Consult the repository's lockfiles and configuration for exact dependency versions.
 
 ## 7. AI/ML models and methodology
 
@@ -319,7 +319,7 @@ For detailed definitions, confidence intervals, ablations and caveats, consult [
 ### Requirements
 
 - Python 3.11 or later.
-- Node.js 20 or later.
+- Node.js 22.6 or later (required by the frontend test runner's `--experimental-strip-types`; declared in `frontend/package.json` `engines`).
 - npm.
 - Make.
 
@@ -383,8 +383,8 @@ On Windows, use the equivalent commands for the active shell and virtual-environ
 6. Toggle the earlier 60-minute predictions to compare earlier forecasts with subsequent synthetic observations.
 7. Inspect the data-quality evidence, including freshness, completeness and gaps.
 8. Open the aligned multisensor timeline.
-9. Enter a hypothetical meal in the scenario lab and inspect the resulting simulated forecast.
-10. Compare scenarios and clear them when finished.
+9. Enter a hypothetical meal in the scenario lab and inspect the resulting simulated forecast. The table's primary columns compare the meal with a zero-carb meal logged at the same time (isolating the carbs); the grey columns compare with no meal (see §11).
+10. Compare scenarios and clear them when finished. Meals under 30 g are flagged as unreliable, and risk changes are greyed when the starting risk is above 95%.
 11. Open the model-evaluation view to inspect the documented metrics.
 
 ### Reproducible demonstration scenarios
@@ -407,13 +407,48 @@ The what-if meal simulation operates on a copy of the available observation hist
 
 The interface distinguishes simulated outputs from observed and forecast values.
 
-### Known counterfactual limitation
+### What the comparison means (backlog B-22)
 
-Testing has identified a simulator artifact in which a small hypothetical meal can produce a negative change in the +60-minute predicted glucose compared with the baseline. One previously observed larger negative change did not reproduce at its original replay point in a subsequent investigation; the broader small-meal inconsistency remains a known limitation.
+Each what-if runs the **same served forecasting models** three times at the current replay time. The physiological simulator is not involved:
 
-The exact physiological validity of these counterfactual outputs has not been established. Do not interpret them as reliable predictions of how a real person would respond to a meal.
+| Leg | History used | Role |
+|---|---|---|
+| Baseline | Observed history, no hypothetical meal | Equals the live forecast |
+| Reference | Plus a **zero-carb meal** logged now | Resets the model's "minutes since last meal" input without adding carbohydrate |
+| Scenario | Plus the hypothetical meal of *X* g logged now | — |
 
-The engine is kept frozen under the current sprint guardrails. Potential remediation is documented in [the project backlog](docs/BACKLOG.md), item B-22.
+- **Primary comparison: scenario − reference.** It isolates the carbohydrate content.
+- **Secondary comparison: scenario − baseline** (grey in the dashboard). It also contains the models' **learned meal-timing expectation**: after a long gap since the last logged meal, the models have learned that a meal, and an excursion, often follows. Logging any meal removes that anticipated meal. At the 07:55 demo point a zero-carb meal alone lowers the risk from 22% to 7%.
+
+Both comparisons are **learned associations of models trained on synthetic data, not causal physiological effects**. Do not interpret them as how a real person would respond to a meal.
+
+**Why this changed.** B-22 was previously described as a "simulator artifact" caused by meal-response window collisions. Neither part held up:
+- The what-if uses the ML models, not the simulator.
+- The hypothetical meal never changes the learned carb sensitivity.
+- The originally recorded case (−12.0 vs +41.1 mg/dL) did not reproduce.
+
+The negative changes came from the reset of "minutes since last meal". [`scripts/counterfactual_audit.py`](scripts/counterfactual_audit.py) writes [`reports/counterfactual_audit.json`](reports/counterfactual_audit.json). It covers 12 held-out test patients × 326 replay points × 9 meal sizes (2,934 scenarios) and found 0 feature-vector violations.
+
+Share of scenarios with a materially negative change:
+
+| Meal | vs no meal: Δ+60 < −2 mg/dL | vs no meal: Δrisk < −0.01 | vs zero-carb: Δ+60 < −2 mg/dL | vs zero-carb: Δrisk < −0.01 |
+|---|---|---|---|---|
+| 5 g | 15.3% | 29.8% | 1.8% | 0% |
+| 20 g | 9.8% | 9.5% | 0.6% | 0% |
+| 30 g | 4.0% | 4.3% | 0% | 0% |
+| 60 g | 2.8% | 0.6% | 0% | 0% |
+| 120 g | 0.9% | 0% | 0% | 0% |
+
+**Qualifiers shown in the dashboard and API:**
+- **Meals under 30 g are flagged as unreliable.** Only 12.9% of training meals are below 30 g, the median small-meal effect is 0.0 mg/dL for 5–10 g, and up to 5.8% of 20 g scenarios still show a materially negative +120-min change.
+- **Risk changes are greyed when the starting risk is above 95%.** The risk cannot rise meaningfully from there.
+
+**Remaining limitations:**
+- **The reference is outside the training data.** No training meal is zero-carb; the smallest is 6 g. The reference row is internally consistent (only the meal clock differs from the baseline), but it is not something the models were trained on.
+- **A 1 g meal is not an exact substitute.** The audit shows it differs from the zero-carb reference by up to 4.7 mg/dL and 0.021 in risk.
+- **The reference cannot fix the shape across meal sizes.** It is the same for every meal size. +60-min changes increase with meal size (2 mg/dL tolerance) at 294 of 326 points, and risk changes at 326 of 326.
+
+The forecasting models, trained artefacts and reported evaluation metrics are unchanged by this comparison change.
 
 ### Temporal integrity
 
@@ -452,23 +487,30 @@ The configured checks include:
 
 - Ruff linting.
 - Python tests.
-- Frontend tooltip formatter tests.
+- Frontend formatter tests (tooltip, scenario table, API errors).
 - TypeScript checks.
 - Vite production build.
 
-### Latest reported verification
+### Verification commands
 
-According to the Arena engineering report for commit `04a0170`, the following checks completed successfully:
+| Command | What it checks |
+|---|---|
+| `make check` | Ruff on `src`, `tests` and `scripts`; pytest; TypeScript + Vite production build; frontend unit tests |
+| `.venv/bin/glucotwin train` | Regenerates the cohort, models and `reports/evaluation_report.json` deterministically (seed 20261017) |
+| `.venv/bin/glucotwin audit` | Regenerates `reports/audit_report.json` (bootstrap CIs, robustness) |
+| `.venv/bin/python scripts/counterfactual_audit.py` | Regenerates `reports/counterfactual_audit.json` (what-if comparisons, B-22; about 15 min) |
 
-- 67 Python tests passed.
-- 4 frontend formatter tests passed.
-- Ruff checks passed.
-- TypeScript and Vite production build passed.
-- `make check` exited with code 0.
+GitHub Actions (`.github/workflows/ci.yml`) runs the same lint, Python test, build and frontend-test steps on every push and pull request.
 
-The tooltip formatter regression test covers the unexpected timestamp entry, glucose-value formatting, interval bands, meal carbohydrate values and invalid or unknown entries.
+**Results recorded for this revision (2026-10-20):**
+- 76 Python tests passed.
+- 10 frontend tests passed (tooltip, scenario-table and API-error formatting).
+- Ruff passed and the production build succeeded.
+- A fresh `glucotwin train` reproduced the committed evaluation metrics exactly (only `generated_at` and `model_version` differ).
 
-**Verification caveat:** These results are reported from the development environment. Browser-based visual QA was not available in that environment. The tooltip's rendered appearance, narrow-screen table overflow, browser console errors and keyboard interaction still require direct browser inspection. Check the latest GitHub Actions run before relying on the results for the submitted commit.
+Check the latest GitHub Actions run for the submitted commit before relying on these results.
+
+**Browser checks:** scripted headless-Chromium runs at 1440 px and 390 px widths covered replay, the scenario table, the evidence panel, error messages and horizontal overflow. Accessibility and keyboard-interaction testing have not been done.
 
 ## 14. Submission artefacts
 
@@ -484,7 +526,7 @@ This section maps the challenge submission requirements to the repository.
 | Architecture diagram in PDF format | [GlucoTwin Architecture PDF](docs/submission/GlucoTwin_Architecture.pdf) |
 | Project presentation in PDF format | [GlucoTwin Presentation PDF](docs/submission/GlucoTwin_Presentation.pdf) |
 | Demo video | **TODO: Add final unlisted YouTube link after upload.** |
-| Open-source licence | `LICENSE` |
+| Open-source licence | `Copyright (c) 2026 Mohnish Shanmugavadivel` |
 
 ### Demo video
 
@@ -500,7 +542,7 @@ This section maps the challenge submission requirements to the repository.
 | Team size | 1 |
 | Team member | Mohnish Shanmugavadivel |
 | Role | Solo student developer |
-| Team leader contact | +91 9003633157 |
+| Team leader contact | Provided to the organisers on the Unstop platform (not published here) |
 
 ## 16. Open-source licence
 
@@ -516,8 +558,8 @@ The repository contains an MIT licence file at `LICENSE`.
 - Synthetic simulator dynamics may be easier to predict than real physiology.
 - The held-out test cohort is small and does not establish generalization to real patients.
 - The event-risk and trajectory results are not clinical validation.
-- The counterfactual simulator has a documented small-meal inconsistency.
-- Browser-based visual, responsive and accessibility QA remains to be completed.
+- What-if meal comparisons are learned associations of the forecasting models, not physiological effects; meals under 30 g are unreliable (§11, backlog B-22).
+- Browser checks so far are scripted headless-Chromium runs (1440 px and 390 px widths, console errors); accessibility and keyboard-interaction QA remain to be completed.
 - The application does not claim real wearable integration or a sleep-data stream.
 - The dashboard is a research prototype and is not suitable for clinical decision-making.
 
@@ -525,8 +567,8 @@ The repository contains an MIT licence file at `LICENSE`.
 
 - Evaluate against appropriately governed real-world datasets.
 - Establish external and prospective validation before making clinical claims.
-- Improve counterfactual consistency and test additional meal-response edge cases.
-- Complete responsive, accessibility and browser-interaction testing.
+- Replace associational what-if comparisons with a model designed for interventions (for example, per-patient mechanistic fitting), then validate it.
+- Complete accessibility and keyboard-interaction testing.
 - Investigate additional sensor streams only when suitable data and validated models are available.
 - Continue improving the traceability of observations, predictions, model versions and evaluation results.
 
@@ -534,3 +576,17 @@ The repository contains an MIT licence file at `LICENSE`.
 ### Final disclaimer
 
 GlucoTwin is an experimental digital-twin research prototype that operates on synthetic patient data. Its predictions, risk estimates, feature attributions and counterfactual scenarios are not clinically validated and must not be used to guide medical care.
+
+## 18. Submission compliance checklist
+
+Status of the official submission items (rules in [COMPETITION_COMPLIANCE.md](docs/COMPETITION_COMPLIANCE.md)). "Unverified" means it cannot be confirmed from this repository.
+
+| Requirement | Status |
+|---|---|
+| Public GitHub repository | Done (public) |
+| README: team, institution, title, problem, use case, tech stack, ML details | Done |
+| Architecture diagram (PDF) | Done: [docs/submission/GlucoTwin_Architecture.pdf](docs/submission/GlucoTwin_Architecture.pdf) |
+| Presentation (PDF) | Done: [docs/submission/GlucoTwin_Presentation.pdf](docs/submission/GlucoTwin_Presentation.pdf) |
+| Open-source licence | Released under the MIT License (LICENSE). Copyright (c) 2026 Mohnish Shanmugavadivel. |
+| Demo video of at least 20 minutes (unlisted YouTube or recorded PPT) | **Not done.** No link yet; script in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
+| Submission on the Unstop platform by the team leader | **verified** |

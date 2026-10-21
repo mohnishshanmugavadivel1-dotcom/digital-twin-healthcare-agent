@@ -121,9 +121,21 @@ export interface ModelCard {
 
 export interface CounterfactualRequest { meal_grams: number }
 
+/** Scenario minus one reference leg (backlog B-22). Learned model associations, not causal effects. */
+export interface CounterfactualComparison {
+  reference: "zero_carb_meal_now" | "no_meal"; label: string;
+  delta_glucose_mg_dl: Record<string, number>; // horizon minutes -> scenario minus reference (mg/dL)
+  delta_probability: number | null; reference_probability: number | null;
+  risk_saturated: boolean; // reference-leg risk > 0.95: the risk change is not informative
+}
+
 export interface CounterfactualResult {
-  patient_id: string; as_of: ISODate;
-  baseline: Forecast; scenario: Forecast;
+  patient_id: string; as_of: ISODate; meal_grams: number | null;
+  baseline: Forecast; reference: Forecast | null; scenario: Forecast;
+  /** Legacy fields: scenario vs NO meal (includes the learned meal-timing expectation). */
   delta_glucose_60mg_dl: number | null; delta_probability: number | null;
+  primary: CounterfactualComparison | null;   // vs a zero-carb meal at the same time
+  secondary: CounterfactualComparison | null; // vs no meal
+  small_meal_unreliable: boolean; notes: string[];
   is_simulated: true; disclaimer: string;
 }

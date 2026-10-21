@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import type { CounterfactualResult, Forecast, ForecastSummary, Observation, PatientRecord, ReplayStatus, TwinState } from "../api/types";
-import { fmtDateTime, fmtOffset, riskPct, toMs } from "../format";
+import { comparisonCells, fmtDateTime, fmtOffset, toMs } from "../format";
 import { GlucoseChart } from "./GlucoseChart";
 import { RiskPanel } from "./RiskPanel";
 import { RiskTimeline } from "./RiskTimeline";
@@ -16,14 +16,7 @@ const SPEEDS = [
   { label: "1 h / tick", minutes: 60 },
 ];
 
-/** Scenario-vs-baseline difference at one horizon (mg/dL), rounded to 0.1. Null when either leg was withheld. */
-function deltaAt(sim: CounterfactualResult, horizon: number): number | null {
-  if (sim.baseline.status !== "ok" || sim.scenario.status !== "ok") return null;
-  const b = sim.baseline.trajectory.find((p) => p.horizon_min === horizon);
-  const s = sim.scenario.trajectory.find((p) => p.horizon_min === horizon);
-  return b && s ? Math.round((s.glucose_mg_dl - b.glucose_mg_dl) * 10) / 10 : null;
-}
-const fmtDelta = (d: number) => (d > 0 ? "+" : "") + d.toFixed(1);
+const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { patientId: string; onTick: () => void; startOffsetHours?: number }) {
   const [record, setRecord] = useState<PatientRecord | null>(null);
@@ -67,7 +60,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
       const [rec, status] = await Promise.all([api.patient(patientId), api.createReplay(patientId, startOffsetHours)]);
       setRecord(rec);
       await refresh(status);
-    } catch (e) { setError(String(e)); }
+    } catch (e) { setError(errText(e)); }
   }, [patientId, refresh, startOffsetHours]);
 
   const runSim = useCallback(async () => {
@@ -76,7 +69,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
     try {
       const result = await api.counterfactual(patientId, simGrams);
       setSims((prev) => [...prev.slice(-3), { grams: simGrams, result }]); // keep the last 4 scenarios
-    } catch (e) { setSimError(String(e)); } // local to the strip: a failed simulation must not blank the workspace
+    } catch (e) { setSimError(errText(e)); } // local to the strip: a failed simulation must not blank the workspace
     finally { setSimBusy(false); }
   }, [patientId, simGrams]);
 
@@ -94,7 +87,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
       await refresh(status);
       onTick();
       if (status.finished) setPlaying(false);
-    } catch (e) { setError(String(e)); setPlaying(false); }
+    } catch (e) { setError(errText(e)); setPlaying(false); }
     finally { busy.current = false; }
   }, [replay, refresh, onTick]);
 
@@ -170,55 +163,62 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
             {sims.length > 0 && <button onClick={clearSim}>Clear scenarios</button>}
             {simError && <span className="sim-error small" role="alert">Simulation failed: {simError}</span>}
             {sims.length > 0 && (
-              <table className="sim-table small" aria-label="Hypothetical meal scenarios compared with the current baseline forecast">
-                <thead>
-                  <tr><th scope="col">Meal</th><th scope="col">Δ +30 min</th><th scope="col">Δ +60 min</th><th scope="col">Δ +120 min</th><th scope="col">Excursion risk</th></tr>
-                </thead>
-                <tbody>
-                  {sims.map(({ grams, result }) => {
-                    const d30 = deltaAt(result, 30), d60 = deltaAt(result, 60), d120 = deltaAt(result, 120);
-                    return (
-                      <tr key={`${result.as_of}-${grams}`}>
-                        <td>{grams} g</td>
-                        <td>{d30 == null ? "—" : fmtDelta(d30)}</td>
-                        <td>{d60 == null ? "—" : fmtDelta(d60)}</td>
-                        <td>{d120 == null ? "—" : fmtDelta(d120)}</td>
-                        <td>{result.baseline.excursion && result.scenario.excursion
-                          ? `${riskPct(result.baseline.excursion.probability)} → ${riskPct(result.scenario.excursion.probability)}` : "n/a"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="table-wrap sim-wrap">
+                <table className="sim-table small" aria-label="Hypothetical meal scenarios: carb effect versus a zero-carb meal at the same time, and versus no meal">
+                  <thead>
+                    <tr>
+                      <th scope="col" rowSpan={2}>Meal</th>
+                      <th scope="colgroup" colSpan={4} title="Scenario minus a zero-carb meal logged at the same time: both legs reset the model's time-since-meal input, so this isolates the carb content">
+                        vs zero-carb meal now (primary)</th>
+                      <th scope="colgroup" colSpan={2} className="sim-secondary" title="Scenario minus the forecast with no meal. Also contains the model's learned meal-timing expectation (after a long gap it anticipates a meal), so it can differ from the primary comparison">
+                        vs no meal</th>
+                    </tr>
+                    <tr>
+                      <th scope="col">Δ +30 min</th><th scope="col">Δ +60 min</th><th scope="col">Δ +120 min</th><th scope="col">Excursion risk</th>
+                      <th scope="col" className="sim-secondary">Δ +60 min</th><th scope="col" className="sim-secondary">Excursion risk</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sims.map(({ grams, result }) => {
+                      const p = comparisonCells(result.primary), s = comparisonCells(result.secondary);
+                      return (
+                        <tr key={`${result.as_of}-${grams}`} className={result.small_meal_unreliable ? "sim-unreliable" : undefined}>
+                          <td>{grams} g{result.small_meal_unreliable && (
+                            <span className="sim-flag" title="Meals under 30 g are unreliable in this model: few training meals are that small and the audited small-meal differences are unstable">unreliable &lt;30 g</span>)}</td>
+                          <td>{p.d30}</td><td>{p.d60}</td><td>{p.d120}</td>
+                          <td className={p.riskQualified ? "sim-qualified" : undefined} title={p.riskTitle}>{p.risk}{p.riskQualified && " *"}</td>
+                          <td className="sim-secondary">{s.d60}</td>
+                          <td className={`sim-secondary${s.riskQualified ? " sim-qualified" : ""}`} title={s.riskTitle}>{s.risk}{s.riskQualified && " *"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
             {sims.length > 0 && (() => {
               const last = sims[sims.length - 1].result;
-              if (last.baseline.status !== "ok" || last.scenario.status !== "ok") {
+              if (!last.primary) {
                 return <span className="muted small" style={{ flexBasis: "100%" }}>Latest scenario withheld — not enough recent CGM data for a reliable what-if at this moment.</span>;
               }
-              const d60 = deltaAt(last, 60);
-              if (d60 != null && d60 < 0) {
-                return (
-                  <span className="muted tiny" style={{ flexBasis: "100%" }}>
-                    Negative Δ at this small meal: a known simulator artifact when the hypothetical meal lands inside another logged
-                    meal's learned-response window. Treat small-carb scenarios qualitatively (backlog B-22).
-                  </span>
-                );
+              const d60 = last.primary.delta_glucose_mg_dl["60"];
+              const cob = state?.carbs_on_board_g ?? 0;
+              const notes = [...last.notes];
+              if (d60 != null && Math.abs(d60) < 2 && !last.small_meal_unreliable) {
+                notes.push(cob >= 5
+                  ? `≈ no carb effect — the model already carries ~${Math.round(cob)} g of carbs on board from logged meals, so additional carbs add little.`
+                  : "≈ no carb effect — at this moment the hypothetical carbs barely move the +60-min forecast.");
               }
-              if (d60 != null && Math.abs(d60) < 2) {
-                return (
-                  <span className="muted tiny" style={{ flexBasis: "100%" }}>
-                    ≈ no scenario change{(state?.carbs_on_board_g ?? 0) >= 5
-                      ? ` — the model already carries ~${Math.round(state?.carbs_on_board_g ?? 0)} g of carbs on board from logged meals, so an additional hypothetical meal adds little.`
-                      : " — at this moment the simulated meal barely moves the +60-min forecast."}
-                  </span>
-                );
-              }
-              return null;
+              return notes.length ? (
+                <ul className="sim-notes muted tiny" aria-label="Notes on the latest scenario">
+                  {notes.map((n) => <li key={n}>{n}</li>)}
+                </ul>
+              ) : null;
             })()}
             <div className="muted tiny" style={{ flexBasis: "100%" }}>Each scenario is computed independently on a copy of the observation history — the hypothetical
-              meal is never added to the patient record, and scenarios do not affect each other or the replay. A simulated comparison for exploration, from a
-              synthetic research simulator — not medical advice, not a treatment recommendation. The chart overlays the latest scenario.</div>
+              meal is never added to the patient record, and scenarios do not affect each other or the replay. Differences are <b>learned associations</b> of
+              forecasting models trained on synthetic simulator data, not causal physiological effects (backlog B-22). <span className="sim-qualified">*</span> starting
+              risk above 95%: change not informative. Not medical advice, not a treatment recommendation. The chart overlays the latest scenario.</div>
           </div>
           <GlucoseChart cgm={cgm} meals={meals} forecast={forecast} scenario={sims.length ? sims[sims.length - 1].result.scenario : null}
                         history={history} clockMs={clockMs} offsetMin={offset} windowHours={WINDOW_HOURS} showPastPredictions={showPast} />

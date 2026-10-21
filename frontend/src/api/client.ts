@@ -2,6 +2,7 @@ import type {
   CounterfactualResult, EvaluationReport, Forecast, ModelCard, ForecastSummary, HealthStatus, Observation, ObservationKind,
   PatientRecord, PatientSummary, ReplayStatus, TwinState,
 } from "./types";
+import { formatApiError } from "../format";
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -10,9 +11,9 @@ export class ApiError extends Error {
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
   if (!res.ok) {
-    let detail = res.statusText;
-    try { detail = JSON.stringify((await res.json()).detail ?? detail); } catch { /* not JSON */ }
-    throw new ApiError(res.status, `${res.status} ${detail}`);
+    let body: unknown = undefined;
+    try { body = await res.json(); } catch { /* not JSON */ }
+    throw new ApiError(res.status, formatApiError(res.status, body, res.statusText));
   }
   return (res.status === 204 ? undefined : await res.json()) as T;
 }

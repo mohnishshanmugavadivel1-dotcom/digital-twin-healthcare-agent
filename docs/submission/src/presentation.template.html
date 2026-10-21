@@ -93,8 +93,9 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       responses, shrunk towards a record-based prior. This changes the expected post-meal rise.</p></div>
   </div>
   <div class="card warn" style="margin-top:22px"><h3>What it is not (yet)</h3>
-    <p class="small">The twin does not simulate interventions ("what if she walks after lunch?"). That would need per-patient physiological
-      parameter fitting, which is on the roadmap, not built. Our twin is a <b>state-tracking forecaster</b> with one personalised physiological parameter.</p></div>
+    <p class="small">The twin does not simulate physiological interventions such as activity ("what if she walks after lunch?"). That would need
+      per-patient physiological parameter fitting, which is on the roadmap, not built. Its what-if meal lab only re-runs the learned forecasters on a
+      hypothetical meal (an association, not a mechanism). Our twin is a <b>state-tracking forecaster</b> with one personalised physiological parameter.</p></div>
   <div class="foot"><span>Synthetic data only · not a medical device</span><span>3</span></div>
 </section>
 
@@ -237,6 +238,8 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <li><b>Risk history</b> and <b>twin state:</b> TIR, carbs on board, learned carb sensitivity, data quality.</li>
       <li><b>Replay:</b> the twin only sees data up to "now".</li>
       <li><b>Evaluation tab:</b> every baseline and limitation.</li>
+      <li><b>What-if meal lab</b> (simulated): <i>X</i> g eaten now versus a zero-carb meal at the same time, plus a grey no-meal comparison.
+        Learned model associations, not physiology; meals under 30 g flagged unreliable.</li>
     </ul>
   </div>
   <div class="foot"><span>Screenshot of the running build, held-out patient SYN-0039 at 08:55</span><span>9</span></div>
@@ -278,7 +281,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <ul class="small">
         <li>A "synthetic, not a medical device" banner on every screen; synthetic IDs (SYN-####) and names tagged "(synthetic)".</li>
         <li>No instructions: the alert text is "Consider reviewing", never "give insulin" or "eat".</li>
-        <li>Explanations are labelled as associations, not causes.</li>
+        <li>Explanations and what-if meal results are labelled as associations, not causes; a what-if is never written to the record.</li>
         <li>No risk number when data are insufficient or stale; no onset risk when glucose is already above 180.</li>
         <li>Probabilities are never displayed as 100% or 0%.</li>
         <li>Local demo: no authentication, so it is <b>not for real patient data</b>.</li>

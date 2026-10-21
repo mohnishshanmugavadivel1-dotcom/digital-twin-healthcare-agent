@@ -39,6 +39,19 @@ ENGINE_HISTORY_HOURS = 26  # history retained in memory (24 h features + margin)
 STALE_CGM_MIN = 20  # no prediction is issued if latest CGM is older than this
 MIN_CGM_READINGS_FOR_FORECAST = 6  # >= 30 min of data in the last hour
 
+# --- Counterfactual (what-if meal) semantics (backlog B-22) -------------------
+# The primary comparison is "meal of X g now" vs "zero-carb meal logged at the same
+# time": both legs reset `minutes_since_meal`, so the contrast isolates the carb
+# content. The no-meal baseline stays available as a secondary comparison because it
+# also contains the models' learned meal-timing expectation.
+COUNTERFACTUAL_MEAL_GRAMS_RANGE = (1.0, 300.0)
+COUNTERFACTUAL_REFERENCE_GRAMS = 0.0  # explicit zero-carb meal (a valid meal observation)
+# Below this the scenario is flagged unreliable: <13 % of training meals are < 30 g
+# and the audit (reports/counterfactual_audit.json) shows unstable small-meal contrasts.
+COUNTERFACTUAL_RELIABLE_MIN_GRAMS = 30.0
+# Above this starting risk a risk change cannot be meaningfully positive: qualify it.
+COUNTERFACTUAL_RISK_SATURATION = 0.95
+
 DISCLAIMER = (
     "Research prototype on synthetic data. Not a medical device. "
     "Forecasts are not diagnoses or treatment instructions."
