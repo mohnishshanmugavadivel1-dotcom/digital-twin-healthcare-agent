@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { api } from "./api/client";
+import { api, IS_STATIC_DEMO } from "./api/client";
+import { loadManifest } from "./api/static";
+import type { SnapshotManifest } from "./api/staticReplay";
 import type { HealthStatus, PatientSummary } from "./api/types";
 import { EvaluationView } from "./components/EvaluationView";
 import { PatientView } from "./components/PatientView";
@@ -18,6 +20,8 @@ export default function App() {
   const [tab, setTab] = useState<Tab>("patients");
   const [error, setError] = useState<string | null>(null);
   const [threshold, setThreshold] = useState(0.5);
+  const [snapshot, setSnapshot] = useState<SnapshotManifest | null>(null);
+  useEffect(() => { if (IS_STATIC_DEMO) loadManifest().then(setSnapshot).catch((e) => setError(String(e))); }, []);
 
   const loadPatients = useCallback(() => {
     api.patients().then((p) => {
@@ -45,7 +49,18 @@ export default function App() {
       <div className="banner" role="note">
         Research prototype on <b>synthetic patients</b>. Not a medical device. Forecasts are not diagnoses or treatment instructions.
       </div>
-      {error && <div className="card error">Backend unreachable: {error}</div>}
+      {IS_STATIC_DEMO && (
+        <div className="static-banner" role="note" aria-label="Static snapshot notice">
+          <b>Static recorded snapshot, not a live system.</b> Every response below was recorded from the real GlucoTwin API by{" "}
+          <code>scripts/export_static_demo.py</code>{snapshot && <> (model {snapshot.model_version}, recorded {snapshot.recorded_at.slice(0, 10)},
+          commit {snapshot.git_head.slice(0, 7)}{snapshot.working_tree_dirty_at_recording ? " plus uncommitted changes" : ""})</>}.
+          Nothing is computed in your browser; what-ifs exist only for the recorded moments and amounts.
+          {snapshot && <> Scenarios: {snapshot.scenarios.map((sc, i) => (
+            <span key={sc.id}>{i > 0 && " · "}<a href={`?patient=${sc.patient_id}`} title={sc.description}>{sc.title}</a></span>))}.</>}
+          {" "}For the full interactive app, run it locally (<code>make setup train serve</code>).
+        </div>
+      )}
+      {error && <div className="card error">{IS_STATIC_DEMO ? "Snapshot could not be loaded" : "Backend unreachable"}: {error}</div>}
       {tab === "evaluation" ? <main className="content"><EvaluationView /></main> : (
         <div className="layout">
           <aside className="sidebar" aria-label="Patient list">

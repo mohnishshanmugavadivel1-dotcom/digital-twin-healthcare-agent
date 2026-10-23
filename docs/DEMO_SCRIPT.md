@@ -1,5 +1,7 @@
 # Demo script: minimum 20-minute video (official requirement)
 
+> **Superseded for recording by [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md)** (2026-10-22). It has the full script, shot list, verified values from the recorded snapshot, and two cuts for the unresolved length rule (the challenge page says both "minimum 20 minutes" and "15–20 minutes"). The scene notes below are kept for reference.
+
 The official guideline is a "**Minimum 20-minute video** explaining and demonstrating your prototype", either a recorded PowerPoint or an
 unlisted YouTube video ([COMPETITION_COMPLIANCE.md](COMPETITION_COMPLIANCE.md)). This script is planned for **22–24 minutes** so that
 editing cannot push it under 20. **No video has been recorded yet.**
@@ -62,15 +64,15 @@ Deep link: **`/?patient=SYN-0039&start=151.833`**. The replay starts at Sun 8 Ma
    a zero-carb meal (138 g already on board) and the risk cell shows **>99% → >99% \*** greyed: starting risk above 95%, change not informative.
    Demo the fork at 07:55.
 
-### Scene 6: honest failure (verified)
+### Scene 6: weakness without a meal log (re-verified 2026-10-21 at 5-min resolution)
 
 Deep link: **`/?patient=SYN-0019&start=253.667`**. The replay starts at Thu 12 Mar, 13:45.
 
 1. **Expected at load (13:45):** glucose 88 mg/dL, risk about 12%.
-2. Press **+1 h**. **Expected at 14:45:** glucose 88 mg/dL, risk about **31%**, just *below* the 35% threshold, so no alert. No meal is logged that afternoon. The last logged meal was 389 min ago. Note that the glucose *forecast* already bends upward (about 160 at +2 h) but stays under 180: a weak signal without the meal.
-3. Press **+1 h**. **Expected at about 15:45:** glucose has risen past 180 (onset 15:45; peak about 191 by 16:10).
-4. *Say:* the twin missed it. The patient almost certainly ate without logging, and the ablation shows meal logs are the single most
-   important input. In the stress test with fewer, later meal logs, warnings with ≥ 30 min lead fell from 87% to 78%.
+2. Press **+1 h**. **Expected at 14:45:** glucose 88 mg/dL, risk about **31%**, just *below* the 35% threshold, so no alert. No meal is logged that afternoon. The last logged meal was 389 min ago.
+3. Now step with **+5 min**. **At 14:50** glucose is 93 mg/dL (it was 70 at 14:35) and the risk crosses the threshold (36%): **alert**. It stays on while glucose climbs. The first reading above 180 mg/dL comes at **15:35**, 45 min later; onset is at about 15:45.
+4. *Say:* this is **not** a miss under our evaluation definition (an alert in the 2 h before onset). But the warning only came *after* the rise had started, because without a meal log the models have nothing to anticipate. With the logged breakfast in Scene 1 the alert came 85 min ahead. Meal logging matters: in the stress test with fewer, later meal logs, warnings with ≥ 30 min lead fell from 87% to 78%.
+   *Correction note:* an earlier version of this scene said "the twin missed it". That was an artefact of 1-hour stepping, which jumps over 14:50–15:30. The risk-history panel always showed the crossing.
 
 ### Other reproducible moments
 

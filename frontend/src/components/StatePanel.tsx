@@ -1,5 +1,5 @@
 import type { TwinState } from "../api/types";
-import { ARROWS, ARROW_TEXT, glucoseClass, num, pct } from "../format";
+import { ARROWS, ARROW_TEXT, glucoseClass, num, pct, personalRuleText } from "../format";
 
 export function StatePanel({ state }: { state: TwinState | null }) {
   if (!state) return null;
@@ -37,6 +37,18 @@ export function StatePanel({ state }: { state: TwinState | null }) {
         <div className="stat-label">Personalised parameter</div>
         <div className="small">Carb sensitivity <b>{p.carb_sensitivity_mg_dl_per_g.toFixed(2)}</b> mg/dL per g</div>
         <div className="muted small">Started from record-based prior {p.carb_sensitivity_prior.toFixed(2)}; learned from {p.meals_used} observed meals.</div>
+        <details className="personal-rule small">
+          <summary>How this parameter updates</summary>
+          <div className="tiny">
+            <div>{personalRuleText(p)}</div>
+            <div className="muted">Prior from the record: <code>1.40 + 0.10 × (HbA1c − 7)</code>, clipped to 0.4–3.0 (a heuristic assumption).
+              Each counted meal contributes its observed rise per gram: peak CGM in the 120 min after the meal minus the last reading before it,
+              divided by the grams. Counted only for meals ≥ 10 g with no other meal within 120 min and ≥ 50% CGM coverage, and only once the
+              120 min have passed, so a forecast never uses later data.</div>
+            <div className="muted">The models use it through two inputs: carb sensitivity and expected meal rise (sensitivity × carbs on board).
+              Updating a patient-specific parameter is not, on its own, evidence of better forecasts.</div>
+          </div>
+        </details>
       </div>
       <div className={`card stat ${dq.stale ? "dq-bad" : ""}`}>
         <div className="stat-label">Data quality</div>

@@ -21,10 +21,12 @@ from glucotwin.contracts import (
     CounterfactualResult,
     EvaluationReport,
     Forecast,
+    JointSupportCheck,
     PatientRecord,
     PatientSummary,
     ReplayStatus,
 )
+from glucotwin.joint_support import CAVEAT, JOINT_FEATURES, load_joint_support
 from glucotwin.models.bundle import ModelBundle
 from glucotwin.synth.generator import Cohort, generate_cohort
 from glucotwin.twin.engine import TwinEngine
@@ -96,9 +98,13 @@ class ReplaySession:
 
 class TwinService:
     def __init__(self, bundle: ModelBundle, report_path: Path | None = None, cohort: Cohort | None = None,
-                 warmup_hours: float = 24.0):
+                 warmup_hours: float = 24.0, joint_support_path: Path | None = None):
         self.bundle = bundle
         self.report_path = report_path
+        # B-23 joint training-support envelope (optional; a missing or mismatched file only disables the check)
+        self.joint_support, self.joint_support_reason = load_joint_support(joint_support_path, bundle.training_data)
+        if self.joint_support is None and joint_support_path is not None:
+            log.warning("joint-support check disabled: %s", self.joint_support_reason)
         # Regenerate exactly the cohort the bundle was trained on, so the patient-level split
         # (and therefore "test patients were never seen in training") holds for the demo.
         self.cohort = cohort if cohort is not None else generate_cohort(**(bundle.cohort_params or {}))
@@ -218,6 +224,9 @@ class TwinService:
             primary = compare_forecasts(scenario, reference, "zero_carb_meal_now")
             small = float(meal_grams) < COUNTERFACTUAL_RELIABLE_MIN_GRAMS
             notes = counterfactual_notes(primary, secondary, small)
+            joint = self._joint_support(eng, meal_grams) if primary is not None else None
+            if joint is not None and joint.status == "no_training_analogue" and joint.message:
+                notes.append(joint.message + " This concerns training support, not a known error in the forecast.")
             return CounterfactualResult(
                 patient_id=pid, as_of=eng.as_of.to_pydatetime(), meal_grams=float(meal_grams),
                 baseline=baseline, reference=reference, scenario=scenario,
@@ -225,7 +234,20 @@ class TwinService:
                 delta_glucose_60mg_dl=secondary.delta_glucose_mg_dl.get("60") if secondary else None,
                 delta_probability=secondary.delta_probability if secondary else None,
                 primary=primary, secondary=secondary, small_meal_unreliable=small, notes=notes,
+                joint_support=joint,
             )
+
+    def _joint_support(self, eng: TwinEngine, meal_grams: float) -> JointSupportCheck:
+        """Assess the scenario leg's meal inputs exactly as the models see them (never the reference leg:
+        a zero-carb meal is outside meal-now support by construction)."""
+        if self.joint_support is None:
+            return JointSupportCheck(status="unavailable", reason=self.joint_support_reason, caveat=CAVEAT)
+        t0, rows, reason = eng._counterfactual_features(meal_grams)
+        feats = rows.get("scenario")
+        if reason is not None or feats is None or t0 not in feats.index:
+            return JointSupportCheck(status="unavailable", reason=reason or "scenario features unavailable",
+                                     caveat=CAVEAT)
+        return JointSupportCheck(**self.joint_support.assess(feats.loc[t0, list(JOINT_FEATURES)].to_dict()))
 
     def _status(self, sess: ReplaySession) -> ReplayStatus:
         eng = self.engines[sess.patient_id]

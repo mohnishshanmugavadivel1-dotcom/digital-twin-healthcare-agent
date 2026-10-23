@@ -129,6 +129,13 @@ export interface CounterfactualComparison {
   risk_saturated: boolean; // reference-leg risk > 0.95: the risk change is not informative
 }
 
+/** B-23 training-support check of the scenario leg. Not evidence of a forecast error. */
+export interface JointSupportCheck {
+  status: "within_training_support" | "no_training_analogue" | "unavailable";
+  reasons: string[]; sparse: string[]; message: string | null; reason: string | null;
+  coordinates: Record<string, number>; training_range: Record<string, number[]>; caveat: string;
+}
+
 export interface CounterfactualResult {
   patient_id: string; as_of: ISODate; meal_grams: number | null;
   baseline: Forecast; reference: Forecast | null; scenario: Forecast;
@@ -137,5 +144,6 @@ export interface CounterfactualResult {
   primary: CounterfactualComparison | null;   // vs a zero-carb meal at the same time
   secondary: CounterfactualComparison | null; // vs no meal
   small_meal_unreliable: boolean; notes: string[];
+  joint_support?: JointSupportCheck | null; // additive (B-23); absent from older servers
   is_simulated: true; disclaimer: string;
 }
