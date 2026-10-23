@@ -134,3 +134,29 @@ export function formatApiError(status: number, body: unknown, statusText = ""): 
   }
   return statusText ? `${prefix}: ${statusText}` : prefix;
 }
+
+/** B-23: chip for a what-if whose meal inputs have no comparable training example; null otherwise.
+ * Worded as training support, never as an error: unavailable or in-support checks show nothing. */
+export interface JointSupportLike { status: string; message?: string | null; caveat?: string }
+export function jointSupportChip(js: JointSupportLike | null | undefined): { label: string; title: string } | null {
+  if (!js || js.status !== "no_training_analogue") return null;
+  const title = [js.message ?? "No comparable example in the training data.", js.caveat ?? ""].filter(Boolean).join(" ");
+  return { label: "outside training support", title };
+}
+
+/** Pseudo-meals of prior weight; must equal CARB_SENS_SHRINKAGE_K in src/glucotwin/features.py. */
+export const CARB_SENS_SHRINKAGE_K = 3;
+
+/**
+ * The personalised carb-sensitivity update, with the patient's own numbers (features.personal_carb_sensitivity):
+ *   s = (K · prior + Σ observed rise per gram) / (K + n),  K = 3 pseudo-meals.
+ * Reconstructs the sum of observed ratios from the reported values so the displayed equation balances.
+ */
+export function personalRuleText(p: { carb_sensitivity_mg_dl_per_g: number; carb_sensitivity_prior: number; meals_used: number }): string {
+  const K = CARB_SENS_SHRINKAGE_K, n = p.meals_used;
+  if (n <= 0) return `No meal response counted yet, so the estimate equals the prior: s = ${p.carb_sensitivity_prior.toFixed(2)} mg/dL per g.`;
+  const observedMean = (p.carb_sensitivity_mg_dl_per_g * (K + n) - K * p.carb_sensitivity_prior) / n;
+  const w = n / (K + n);
+  return `s = (${K} × prior ${p.carb_sensitivity_prior.toFixed(2)} + ${n} × observed mean ≈ ${observedMean.toFixed(2)}) / (${K} + ${n}) = ` +
+    `${p.carb_sensitivity_mg_dl_per_g.toFixed(2)} mg/dL per g; the observed meals carry ${Math.round(w * 100)}% of the weight.`;
+}
