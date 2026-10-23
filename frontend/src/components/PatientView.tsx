@@ -195,7 +195,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
             {sims.length > 0 && <button onClick={clearSim}>Clear scenarios</button>}
             {simError && <span className="sim-error small" role="alert">Simulation failed: {simError}</span>}
             {sims.length > 0 && (<>
-              <p className="swipe-cue tiny muted" aria-hidden="true">← Swipe table for 120m &amp; risk columns →</p>
+              <p className="swipe-cue tiny muted" aria-hidden="true">← Swipe the table for more columns (no-meal comparison, low watch) →</p>
               <div className="table-wrap sim-wrap">
                 <table className="sim-table small" aria-label="Hypothetical meal scenarios: carb effect versus a zero-carb meal at the same time, and versus no meal">
                   <thead>
@@ -203,18 +203,18 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                       <th scope="col" rowSpan={2}>Meal</th>
                       <th scope="colgroup" colSpan={4} title="Scenario minus a zero-carb meal logged at the same time: both legs reset the model's time-since-meal input, so this isolates the carb content">
                         vs zero-carb meal now (primary)</th>
-                      <th scope="colgroup" colSpan={2} className="sim-secondary" title="Scenario minus the forecast with no meal. Also contains the model's learned meal-timing expectation (after a long gap it anticipates a meal), so it can differ from the primary comparison">
-                        vs no meal</th>
                       <th scope="colgroup" colSpan={showWalk ? 3 : 2} className="sim-twin" title="Research estimate, not the served forecast: grams × this patient's learned carb sensitivity × a response shape fitted on synthetic training patients. Held-out synthetic test MAE 5.9 mg/dL at +120 min (served What-If 37.3).">
                         Personalised twin curve (research)</th>
+                      <th scope="colgroup" colSpan={2} className="sim-secondary" title="Scenario minus the forecast with no meal. Also contains the model's learned meal-timing expectation (after a long gap it anticipates a meal), so it can differ from the primary comparison">
+                        vs no meal</th>
                       <th scope="col" rowSpan={2} className="sim-low" title="Whether the lower edge of the scenario forecast's 80% prediction interval falls below 70 mg/dL within 120 min. An interval edge, not a probability.">
                         Low watch<br /><span className="tiny muted">lower bound &lt;70</span></th>
                     </tr>
                     <tr>
                       <th scope="col">Δ +30 min</th><th scope="col">Δ +60 min</th><th scope="col">Δ +120 min</th><th scope="col">Excursion risk</th>
-                      <th scope="col" className="sim-secondary">Δ +60 min</th><th scope="col" className="sim-secondary">Excursion risk</th>
                       <th scope="col" className="sim-twin">Δ +60 min</th><th scope="col" className="sim-twin">Δ +120 min</th>
                       {showWalk && <th scope="col" className="sim-twin" title="Meal plus the walk; in brackets the walk's own effect">+ walk, Δ +120 min</th>}
+                      <th scope="col" className="sim-secondary">Δ +60 min</th><th scope="col" className="sim-secondary">Excursion risk</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -229,8 +229,6 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                             <span className="sim-flag sim-support" title={support.title}>{support.label}</span>)}</td>
                           <td>{p.d30}</td><td>{p.d60}</td><td>{p.d120}</td>
                           <td className={p.riskQualified ? "sim-qualified" : undefined} title={p.riskTitle}>{p.risk}{p.riskQualified && " *"}</td>
-                          <td className="sim-secondary">{s.d60}</td>
-                          <td className={`sim-secondary${s.riskQualified ? " sim-qualified" : ""}`} title={s.riskTitle}>{s.risk}{s.riskQualified && " *"}</td>
                           {(() => {
                             const tc = result.twin_curve;
                             const span = showWalk ? 3 : 2;
@@ -245,6 +243,8 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                                 : "–"}</td>}
                             </>);
                           })()}
+                          <td className="sim-secondary">{s.d60}</td>
+                          <td className={`sim-secondary${s.riskQualified ? " sim-qualified" : ""}`} title={s.riskTitle}>{s.risk}{s.riskQualified && " *"}</td>
                           <td className={`sim-low${low.flagged ? " sim-low-flag" : ""}`} title={low.title}>{low.text}</td>
                         </tr>
                       );

@@ -17,7 +17,7 @@ from glucotwin.fhir_export import patient_bundle
 from glucotwin.fhir_ingest import LAB_GLUCOSE_WARNING, MMOL_TO_MG_DL, parse_bundle
 from glucotwin.service import compare_forecasts
 from glucotwin.twin import response_curve as rc
-from glucotwin.twin_validity_research import paired_walk_delta, reconstruct
+from glucotwin.twin_validity_research import paired_meal_delta, paired_walk_delta, reconstruct
 
 REPO = Path(__file__).resolve().parents[1]
 T0 = datetime(2026, 3, 2, 8, 0, tzinfo=UTC)
@@ -77,6 +77,20 @@ def test_paired_walk_delta_is_zero_without_a_walk_and_lowers_glucose_with_one():
     w = paired_walk_delta(inp, pidx, start, grams)
     assert np.all(w[:, :16] == 0.0)  # nothing changes before the walk starts at +15 min
     assert np.all(w[:, 60] < 0) and np.all(w[:, 120] < 0)
+
+
+def test_demo_example_ground_truth():
+    """README / deck example: SYN-0039, 35 g at 07:55 local (2026-03-08 02:25 UTC), paired-simulator truth."""
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("bp", REPO / "scripts/build_presentation.py")
+    bp = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bp)
+    inp, plasma = reconstruct(60, 14, 20261017)  # the frozen cohort (bundle.cohort_params)
+    start_utc = datetime(2026, 3, 2, 0, 0) - timedelta(minutes=330)
+    minute = int((datetime(2026, 3, 8, 2, 25) - start_utc).total_seconds() // 60)
+    d = paired_meal_delta(inp, plasma, np.array([38]), np.array([minute]), np.array([35.0]))  # index 38 = SYN-0039
+    assert [round(float(d[0, h]), 1) for h in (30, 60, 120)] == [9.1, 40.9, bp.DEMO_TRUTH_120]
 
 
 # ----------------------------------------------------------------------------- AGP

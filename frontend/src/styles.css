@@ -214,3 +214,7 @@ tr.served td { background: #f4f7ff; }
 .handover-lines li { margin: 2px 0; overflow-wrap: anywhere; }
 .handover-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
 .handover-sources > summary { display: inline; cursor: pointer; }
+.whatif .walk-toggle input { width: auto; }
+/* the twin-curve columns made the What-If table wider than the chart card on desktop too: wrap the meal label, show the cue */
+.sim-table td:first-child { white-space: normal; min-width: 110px; max-width: 170px; }
+.swipe-cue { display: block; }

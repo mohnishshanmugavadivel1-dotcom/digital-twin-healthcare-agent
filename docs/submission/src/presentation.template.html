@@ -242,7 +242,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <ul class="small">
         <li><b>Served What-If (negative result):</b> at +120 min, MAE {{wi_mae}} vs {{co_mae}} mg/dL for a cohort-average curve (difference {{wi_diff}} [{{wi_ci}}]; 20–120 g).</li>
         <li><b>Train-fitted personalised curve</b> (shape from 36 training patients' observed CGM; variant chosen on 12 validation patients: {{d_sel}}; scored once on 12 test patients): +120 min MAE <b>{{d_mae}}</b> vs cohort {{d_co}} (difference {{d_diff}} [{{d_ci}}]) and served What-If {{d_wi}}.</li>
-        <li class="muted">+30 / +60 min: curve {{d_mae30}} / {{d_mae60}} vs cohort {{d_co30}} / {{d_co60}}. Research estimator, not served; the simulator's near-linear meal response favours it.</li>
+        <li class="muted">+30 / +60 min: curve {{d_mae30}} / {{d_mae60}} vs cohort {{d_co30}} / {{d_co60}}. +30 min CI includes zero. Shown beside the served What-If as a labelled research column, not part of the forecast; the simulator's near-linear meal response favours it.</li>
       </ul>
     </div>
     <div>
@@ -270,10 +270,30 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <li><b>Replay:</b> the twin only sees data up to "now".</li>
       <li><b>Evaluation tab:</b> every baseline and limitation.</li>
       <li><b>What-if meal lab</b> (simulated): <i>X</i> g eaten now versus a zero-carb meal at the same time, plus a grey no-meal comparison.
-        Learned model associations, not physiology; meals under 30 g flagged unreliable.</li>
+        Learned model associations, not physiology; meals under 30 g flagged unreliable. A purple research column adds the personalised twin curve (next slide).</li>
     </ul>
   </div>
   <div class="foot"><span>Recorded static snapshot of the current build (responses recorded from the real API), held-out synthetic patient SYN-0039 at 07:55 with three what-if meals</span><span>10</span></div>
+</section>
+
+<!-- new -->
+<section class="slide" style="padding:30px 48px 36px">
+  <h2 style="margin-bottom:8px">Twin-curve What-If, Indian meals, AGP and a fact-grounded handover <span class="tag">synthetic data · research estimates labelled</span></h2>
+  <div style="display:grid;grid-template-columns:560px 1fr;gap:26px;align-items:start">
+    <div>
+      <img class="shot" src="../../screenshots/whatif-twin-curve.png" alt="What-If table with the personalised twin-curve research column and walk toggle" style="width:100%">
+      <img class="shot" src="../../screenshots/agp-handover.png" alt="AGP card and verified handover note" style="width:100%;margin-top:10px;max-height:250px;object-fit:cover;object-position:top">
+    </div>
+    <ul class="small" style="margin-top:0">
+      <li><b>Personalised twin curve beside the served What-If.</b> SYN-0039, 35 g at 07:55, +120 min: served model {{tc_served}}, twin curve {{tc_curve}}; paired-simulator truth {{tc_truth}}. Held-out MAE {{d_mae}} vs {{d_wi}} (all test scenarios).</li>
+      <li><b>Post-meal walk toggle</b> (20 min, 2,500 steps): cohort-level effect, test MAE {{walk_mae}} vs {{walk_none}} for "no effect" at +120 min. The tree models only see past steps, so the walk is not put through them.</li>
+      <li><b>24 regional Indian dishes</b> (South 10 · North 5 · West 5 · East 2 · Snacks 2): 11 cited, 13 marked team estimates; indicative GI badges from the 2008 international GI tables. The model sees grams only.</li>
+      <li><b>AGP card:</b> time in ranges, GMI, CV, hourly percentiles; says when data fall below the 14-day / 70% consensus minimum.</li>
+      <li><b>Handover note:</b> fixed template; a separate parser checks that every number traces to the record, state or forecast, or the note is withheld. Describes, never instructs.</li>
+      <li><b>FHIR in:</b> <code>POST /api/fhir/Bundle</code> validates R4 Observations (CGM 99504-3; 14749-6 only with a lab-code warning; HR 8867-4; HbA1c 4548-4). Nothing is ingested; not certified.</li>
+    </ul>
+  </div>
+  <div class="foot"><span>Sources: frontend/static-demo/demo/early-warning.json, reports/research/walk_whatif_validation.json, docs/research/TWIN_VALIDITY.md (addenda v3, v4)</span><span>11</span></div>
 </section>
 
 <!-- 10 -->
@@ -300,7 +320,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <p class="tiny muted">Deep link /?patient=SYN-0019&amp;start=253.667 · Of 298 test onsets, 205 (69%) had a sustained warning and 272 had an alert at some point in the prior 2 h. scripts/find_demo_scenario.py lists 53 daytime onsets (08:00–21:59, ≥ 30 h into the data) whose alert was off at the last reading before onset.</p>
     </div>
   </div>
-  <div class="foot"><span>Synthetic data only · not a medical device</span><span>11</span></div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>12</span></div>
 </section>
 
 <!-- 11 -->
@@ -331,7 +351,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       </ul>
     </div>
   </div>
-  <div class="foot"><span>Synthetic data only · not a medical device · research: docs/research/TWIN_VALIDITY.md</span><span>12</span></div>
+  <div class="foot"><span>Synthetic data only · not a medical device · research: docs/research/TWIN_VALIDITY.md</span><span>13</span></div>
 </section>
 
 <!-- 12 -->
@@ -358,7 +378,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       </ol>
     </div>
   </div>
-  <div class="foot"><span>Synthetic data only · not a medical device</span><span>13</span></div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>14</span></div>
 </section>
 
 <!-- 13 -->
@@ -390,7 +410,7 @@ make check     # lint + tests + build</pre>
       </ul>
     </div>
   </div>
-  <div class="foot"><span>github.com/mohnishshanmugavadivel1-dotcom/digital-twin-healthcare-agent</span><span>14</span></div>
+  <div class="foot"><span>github.com/mohnishshanmugavadivel1-dotcom/digital-twin-healthcare-agent</span><span>15</span></div>
 </section>
 
 <!-- 14 -->
@@ -401,6 +421,6 @@ make check     # lint + tests + build</pre>
     <p><b>Team:</b> team mono · Amrita Vishwa Vidyapeetham, Chennai · Mohnish Shanmugavadivel</p>
     <div class="banner" style="max-width:900px;margin-top:24px">All results are from synthetic patients. Not a medical device. Not clinical validation.</div>
   </div>
-  <div class="foot"><span>GlucoTwin v0.2</span><span>15</span></div>
+  <div class="foot"><span>GlucoTwin v0.2</span><span>16</span></div>
 </section>
 </body></html>
