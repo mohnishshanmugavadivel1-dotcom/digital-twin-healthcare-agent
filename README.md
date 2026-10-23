@@ -51,7 +51,7 @@ make setup && make train && make build-frontend && make serve
 # then open http://localhost:8000/?patient=SYN-0039&start=151.833
 ```
 
-**Public static snapshot:** [https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). It is deployed by the manual GitHub Pages workflow ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)), and the site was confirmed loading on 2026-10-23. The public site serves whichever snapshot was last deployed; its `demo/manifest.json` shows the commit and recording time. The snapshot in this repository was recorded on 2026-10-23 from clean commit 3e89247 (model `gt-0.1.0-s20261017-202610231912`). It includes the FHIR panel with its RiskAssessment and handover note, the low-glucose watch (risk card and What-If column), the personalisation confidence line, the personalised twin-curve research column with the walk toggle, all 24 regional meal presets on a 15-min grid, the AGP card and the fact-grounded handover note. There is no demo video yet.
+**Public static snapshot:** [https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). It is deployed by the manual GitHub Pages workflow ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)), and the site was confirmed loading on 2026-10-23. The public site serves whichever snapshot was last deployed; its `demo/manifest.json` shows the commit and recording time. The snapshot in this repository was recorded on 2026-10-23 (20:27 UTC) from clean commit 55ff96f (model `gt-0.1.0-s20261017-202610232010`). Its frames, forecasts and What-Ifs are identical to the previous recording from 3e89247; only session IDs and the model-version label differ. It includes the FHIR panel with its RiskAssessment and handover note, the low-glucose watch (risk card and What-If column), the personalisation confidence line, the personalised twin-curve research column with the walk toggle, all 24 regional meal presets on a 15-min grid, the AGP card and the fact-grounded handover note. There is no demo video yet.
 
 ### 90-second judge walkthrough
 
@@ -821,6 +821,12 @@ GitHub Actions (`.github/workflows/ci.yml`) runs the same lint, Python test, bui
 - `scripts/validate_fhir_export.py` (fhir.resources 6.4.0, FHIR R4 4.0.1): OK for both recorded exports (82 resources each, including a RiskAssessment) and for a SYN-0019 export at 16:45 that contains the low-glucose-watch prediction (81 resources).
 - Reproducibility: rebuilding the bundle with `run_pipeline` matched `reports/evaluation_report.json` apart from `generated_at` and `model_version`.
 
+**Results recorded on 2026-10-24 (IST) for commit 55ff96f** (the following commit adds only the re-recorded snapshot, the rebuilt deck PDF, the submission-folder copies and this README text):
+- `make check` exit 0: Ruff passed; TypeScript check and production build succeeded; 49/49 frontend tests passed (9 new: swap finder and Atithi companion).
+- pytest: 161 passed with `requirements-realdata.lock` installed (159 passed and 2 Shanghai loader tests skipped without it).
+- Bundle rebuilt with `run_pipeline`: matched `reports/evaluation_report.json` apart from `generated_at` and `model_version`.
+- `scripts/export_static_demo.py` exit 0 from a clean tree. Every frame, forecast and What-If is identical to the 3e89247 recording (session IDs and the model-version label excluded).
+
 Check the latest GitHub Actions run for the submitted commit before relying on these results.
 
 **Browser checks:**
@@ -835,6 +841,11 @@ Check the latest GitHub Actions run for the submitted commit before relying on t
   - `browser_smoke.mjs` passed 14/14;
   - `browser_new_features.mjs` passed 15/15. Four checks were new: banner headline and provenance, the personalisation confidence line, the What-If *Low watch* column, and the FHIR RiskAssessment (probability for the excursion only).
   - There were no console errors or failed requests.
+- On 2026-10-24 (IST), against the snapshot recorded from 55ff96f and served locally:
+  - `docs/qa/browser_swap_atithi.mjs` passed 15/15 at 1366 px and 390 px. It covers the swap finder triggering automatically with the required label, the top 3, the grams-order disclosure, *Load*, the Atithi card verified before and after a scenario, and no page overflow;
+  - `browser_smoke.mjs` passed 14/14, `browser_new_features.mjs` 15/15 and `browser_final_upgrade.mjs` 17/17;
+  - there were no console errors or failed requests.
+  - This run found the swap-finder card widening a 390 px page; two CSS fixes resolved it before the final run.
 - Accessibility and keyboard-interaction testing have not been done.
 
 ## 14. Submission artefacts
