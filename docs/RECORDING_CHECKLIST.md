@@ -25,7 +25,7 @@ Target length **23:00** so editing cannot push the video under 20:00. **No video
 
 | Video clock | Dur. | On screen | Do / say (verified expected values in **bold**) |
 |---|---|---|---|
-| 0:00–1:30 | 1:30 | Deck slide 1 | Team **team mono**, **Amrita Vishwa Vidyapeetham, Chennai**, sole member. One-liner: "a continuously updated virtual T2D patient that warns a doctor up to 2 h before a post-meal excursion". Safety: research prototype, **synthetic patients only**, not a medical device. |
+| 0:00–1:30 | 1:30 | Deck slide 1 | Team **team mono**, **Amrita Vishwa Vidyapeetham, Chennai**; registered members Mohnish Shanmugavadivel (Team Leader, primary/sole developer) and Sachithanantham V (Registered Team Member). One-liner: "a continuously updated virtual T2D patient that warns a doctor up to 2 h before a post-meal excursion". Safety: research prototype, **synthetic patients only**, not a medical device. |
 | 1:30–4:00 | 2:30 | Deck slides 2–3 | Problem (post-meal excursions seen *after* the fact) and why a *twin* (state updated by every reading; record + streams fused; one learned personal parameter) beats a static risk score. |
 | 4:00–6:30 | 2:30 | Architecture PDF | Walk the six lanes; point out dashed boxes = **not built**. |
 | 6:30–8:30 | 2:00 | Deck slide 5 + `synth/generator.py` | Hidden physiology vs observable record/streams; noise, dropouts, 10% unlogged meals; why synthetic (sandbox rules). Plausibility: TIR **77.8%** vs ShanghaiT2DM **77.7%**. |

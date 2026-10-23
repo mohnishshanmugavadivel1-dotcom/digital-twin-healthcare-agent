@@ -13,7 +13,7 @@
  * The note describes; it never instructs. Synthetic data, research prototype, not a diagnosis.
  * Self-contained (type-only imports) so the Node test runner can load it directly.
  */
-import type { AgpSummary, Forecast, Medication, TwinState } from "./api/types";
+import type { AgpSummary, Forecast, Medication, TwinCurveEstimate, TwinState } from "./api/types";
 
 export interface HandoverInput {
   record: { patient_id: string; display_name: string; age_years: number; diabetes_duration_years: number;
@@ -200,11 +200,11 @@ export interface GroundingReport {
   untraced: string[]; sources: { token: string; source: string }[];
 }
 
-export function verifyGrounding(text: string, facts: Facts): GroundingReport {
+export function verifyGrounding(text: string, facts: Facts, scopes: [string, string[]][] = LINE_SCOPES): GroundingReport {
   const sources: { token: string; source: string }[] = [];
   const untraced: string[] = [];
   for (const line of text.split("\n")) {
-    const scope = LINE_SCOPES.find(([prefix]) => line.startsWith(prefix))?.[1] ?? []; // unknown line: nothing allowed
+    const scope = scopes.find(([prefix]) => line.startsWith(prefix))?.[1] ?? []; // unknown line: nothing allowed
     for (const t of numberTokens(line)) {
       const src = (facts.get(t) ?? []).find((s) => scope.some((sc) => s.startsWith(sc)));
       if (src) sources.push({ token: t, source: src });
@@ -222,4 +222,141 @@ export function groundingLabel(r: GroundingReport): string {
   return r.untraced.length === 0
     ? `Verified: ${p}% of numbers (${r.traced}/${r.total}) trace to the twin record, state or forecast (${r.fromData}) or a stated definition (${r.fromDefinitions}).`
     : `NOT verified: ${r.untraced.length} of ${r.total} numbers do not trace to the inputs (${r.untraced.join(", ")}). Do not use this note.`;
+}
+
+/* ------------------------------------------------------------------------------------------------------------- *
+ * Atithi (patient) plain-language companion summary.
+ *
+ * Happiest Health calls the people it serves "atithis" (guests) and describes "more educating than medicating"
+ * (Ashok Soota, PTI, Oct 2025). This is the same fixed-template idea in patient language, checked by the SAME
+ * verifier (`verifyGrounding`) with its own line scopes: if any number does not trace, the card refuses to render.
+ * It explains model output; it never tells anyone to change a medicine, insulin or any treatment.
+ * ------------------------------------------------------------------------------------------------------------- */
+
+/** The meal being considered in the What-If table (its research twin-curve estimate) and the top-ranked swap. */
+export interface CompanionInput extends HandoverInput {
+  scenario?: { grams: number; dish: string | null; twin: TwinCurveEstimate } | null;
+  swap?: { grams: number; dish: string; rise120: number } | null;
+}
+
+/** Constants written into the companion template (not patient data). */
+export const COMPANION_DEFINITIONS: Record<string, string> = {
+  "2": "outlook window, hours (the forecast runs to +120 min)",
+};
+
+export const COMPANION_SECTIONS = [
+  "Your glucose now and over the next 2 hours",
+  "What your digital twin learned about your meals",
+  "A gentle option to discuss with your doctor",
+] as const;
+
+export const COMPANION_FOOTER = "About this note: an educational simulation from synthetic data, written by a fixed template. " +
+  "It is not a diagnosis and it does not change any medicine or treatment; please talk to your doctor before changing anything.";
+
+const ARROW_PLAIN: Record<string, string> = {
+  rising_fast: "going up quickly", rising: "going up slowly", stable: "steady", falling: "going down slowly",
+  falling_fast: "going down quickly", unknown: "without a clear direction yet",
+};
+
+/** One entry per section; each line starts with a scoped prefix ("Right now:", "Outlook:", ...). */
+export function buildCompanion(inp: CompanionInput): { section: string; lines: string[] }[] {
+  const { state: st, forecast: fc, scenario, swap } = inp;
+  const now: string[] = [];
+  const g = st.last_glucose_mg_dl;
+  const dq = st.data_quality;
+  now.push(g == null
+    ? "Right now: the twin has not received a glucose reading yet."
+    : `Right now: your latest glucose reading is ${r0(g)} mg/dL and it is ${ARROW_PLAIN[st.trend_arrow] ?? ARROW_PLAIN.unknown}.` +
+      (dq.stale && dq.minutes_since_last_cgm != null ? ` It was taken ${r0(dq.minutes_since_last_cgm)} minutes ago, so it may be out of date.` : ""));
+  const last = fc && fc.status === "ok" && fc.trajectory.length ? fc.trajectory[fc.trajectory.length - 1] : null;
+  if (fc && last) {
+    let tail: string;
+    if (last.lower_mg_dl < 70) tail = " The lower end dips under 70 mg/dL, which your care team can explain and help you watch for.";
+    else if (fc.excursion?.alert || last.upper_mg_dl > 180) tail = " The upper end goes above 180 mg/dL, which is worth looking at together with your care team.";
+    else tail = " That whole range stays inside the 70-180 mg/dL target range.";
+    now.push(`Outlook: in about 2 hours the twin's best guess is around ${r0(last.glucose_mg_dl)} mg/dL; it could reasonably be ` +
+      `anywhere from ${r0(last.lower_mg_dl)} to ${r0(last.upper_mg_dl)} mg/dL (its ${r0(fc.interval_level * 100)}% range).${tail}`);
+  } else {
+    now.push("Outlook: the twin is not making a forecast at the moment, usually because recent readings are missing.");
+  }
+
+  const meals: string[] = [];
+  const p = st.personal;
+  meals.push(p.meals_used > 0
+    ? `Your meals: from ${p.meals_used} of your logged meals, the twin learned that each gram of carbohydrate tends to raise your ` +
+      `glucose by about ${p.carb_sensitivity_mg_dl_per_g.toFixed(1)} mg/dL. This is an average, not an exact rule.`
+    : "Your meals: the twin has not seen enough of your logged meals yet, so it uses a typical value for now.");
+  const mins = st.minutes_since_last_meal;
+  if (mins == null) meals.push("Recent meal: no meal has been logged yet.");
+  else {
+    const when = mins < 120 ? `${r0(mins)} minutes ago` : `about ${r0(mins / 60)} hours ago`;
+    meals.push(`Recent meal: your last logged meal was ${when}` + (st.carbs_on_board_g >= 1
+      ? `, and about ${r0(st.carbs_on_board_g)} g of its carbohydrate is still being absorbed.`
+      : ", and the twin thinks it has been fully absorbed."));
+  }
+
+  const discuss: string[] = [];
+  if (scenario) {
+    const t = scenario.twin;
+    const name = scenario.dish ? `${scenario.dish} (about ${scenario.grams} g of carbohydrate)` : `a meal with ${scenario.grams} g of carbohydrate`;
+    const walk = t.with_walk_delta_glucose_mg_dl?.["120"];
+    discuss.push(`To discuss: in the twin's simulation, ${name} is followed by a rise of about ${r0(t.delta_glucose_mg_dl["120"])} mg/dL ` +
+      `after 2 hours` + (walk != null
+        ? `; with an easy ${t.walk.minutes}-minute walk after it (about ${t.walk.steps} steps) the simulated rise is about ${r0(walk)} mg/dL.`
+        : "."));
+    if (swap) discuss.push(`Lower-carbohydrate option the twin ranked first: ${swap.dish} (about ${swap.grams} g), simulated rise about ${r0(swap.rise120)} mg/dL after 2 hours.`);
+  } else {
+    discuss.push("To discuss: your care team can use the twin's What-If comparison to show how a meal, or a short walk after it, might change your glucose.");
+  }
+  discuss.push(COMPANION_FOOTER);
+  return [
+    { section: COMPANION_SECTIONS[0], lines: now },
+    { section: COMPANION_SECTIONS[1], lines: meals },
+    { section: COMPANION_SECTIONS[2], lines: discuss },
+  ];
+}
+
+/** Handover facts plus the What-If scenario, the ranked swap, one derived value and the companion constants. */
+export function companionFacts(inp: CompanionInput): Facts {
+  const facts = groundingFacts(inp);
+  const put = (t: string, src: string) => { const l = facts.get(t) ?? []; if (!l.includes(src)) l.push(src); facts.set(t, l); };
+  const add = (v: number | null | undefined, src: string) => {
+    if (v == null || !Number.isFinite(v)) return;
+    for (const x of [v, Math.abs(v)]) for (const t of [Math.round(x).toString(), x.toFixed(1), x.toFixed(2)]) put(t, src);
+  };
+  const { state: st, scenario, swap } = inp;
+  if (st.minutes_since_last_meal != null) add(Math.round(st.minutes_since_last_meal / 60), "state.minutes_since_last_meal (in hours)");
+  if (scenario) {
+    add(scenario.grams, "scenario.grams");
+    if (scenario.dish) for (const t of numberTokens(scenario.dish)) put(t, "scenario.dish");
+    add(scenario.twin.delta_glucose_mg_dl["120"], "scenario.twin_curve.delta_120");
+    add(scenario.twin.with_walk_delta_glucose_mg_dl?.["120"], "scenario.twin_curve.with_walk_delta_120");
+    add(scenario.twin.walk.minutes, "scenario.twin_curve.walk.minutes");
+    add(scenario.twin.walk.steps, "scenario.twin_curve.walk.steps");
+  }
+  if (swap) {
+    add(swap.grams, "swap.grams");
+    for (const t of numberTokens(swap.dish)) put(t, "swap.dish");
+    add(swap.rise120, "swap.twin_curve.delta_120");
+  }
+  for (const [k, v] of Object.entries(COMPANION_DEFINITIONS)) put(k, `definition: ${v}`);
+  return facts;
+}
+
+export const COMPANION_SCOPES: [string, string[]][] = [
+  ["Right now:", ["state.last_glucose_mg_dl", "state.data_quality.minutes_since_last_cgm"]],
+  ["Outlook:", ["forecast.trajectory", "forecast.interval_level", "definition:"]],
+  ["Your meals:", ["state.personal."]],
+  ["Recent meal:", ["state.minutes_since_last_meal", "state.carbs_on_board_g"]],
+  ["To discuss:", ["scenario.", "definition:"]],
+  ["Lower-carbohydrate option", ["swap.", "definition:"]],
+  ["About this note:", []],
+  ["Your glucose now", ["definition:"]],
+  ["What your digital twin", []],
+  ["A gentle option", []],
+];
+
+/** Text the verifier reads: every section title and every line. */
+export function companionText(sections: { section: string; lines: string[] }[]): string {
+  return sections.flatMap((s) => [s.section, ...s.lines]).join("\n");
 }

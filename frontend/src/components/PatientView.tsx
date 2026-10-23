@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api/client";
 import type { AgpSummary, CounterfactualResult, Forecast, ForecastSummary, Observation, PatientRecord, ReplayStatus, TwinState } from "../api/types";
 import { comparisonCells, fmtDateTime, fmtDelta, fmtOffset, hypoglycaemiaMedications, jointSupportChip, scenarioLowWatchCell, toMs } from "../format";
-import type { HandoverInput } from "../handover";
+import type { CompanionInput, HandoverInput } from "../handover";
+import type { RankedSwap } from "../swapFinder";
 import { GI_LABEL, MEAL_PRESETS, PRESET_NOTE, REGIONS, presetById, presetTitle, scenarioLabel } from "../mealPresets";
 import { AgpCard } from "./AgpCard";
+import { AtithiCard } from "./AtithiCard";
 import { FhirViewer } from "./FhirViewer";
 import { GlucoseChart } from "./GlucoseChart";
 import { HandoverCard } from "./HandoverCard";
@@ -12,6 +14,7 @@ import { RiskPanel } from "./RiskPanel";
 import { RiskTimeline } from "./RiskTimeline";
 import { SensorTimeline } from "./SensorTimeline";
 import { StatePanel } from "./StatePanel";
+import { SwapFinder, type SwapReference } from "./SwapFinder";
 
 const WINDOW_HOURS = 12;
 const SPEEDS = [
@@ -39,7 +42,8 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
   const [error, setError] = useState<string | null>(null);
   const [simGrams, setSimGrams] = useState(60);
   const [presetId, setPresetId] = useState<string | null>(null);
-  const [sims, setSims] = useState<{ grams: number; label: string | null; result: CounterfactualResult }[]>([]);
+  const [sims, setSims] = useState<{ grams: number; label: string | null; dish: string | null; result: CounterfactualResult }[]>([]);
+  const [topSwap, setTopSwap] = useState<RankedSwap | null>(null);
   const [simBusy, setSimBusy] = useState(false);
   const [simError, setSimError] = useState<string | null>(null);
   const [showWalk, setShowWalk] = useState(false);
@@ -47,6 +51,17 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
   const busy = useRef(false);
   const handover: HandoverInput | null = useMemo(
     () => (record && state ? { record, state, forecast, agp } : null), [record, state, forecast, agp]);
+  const latestSim = sims.length ? sims[sims.length - 1] : null;
+  const swapRef: SwapReference | null = useMemo(
+    () => (latestSim && latestSim.result.primary ? { grams: latestSim.grams, label: latestSim.label, result: latestSim.result } : null), [latestSim]);
+  const companion: CompanionInput | null = useMemo(() => {
+    if (!handover) return null;
+    const tc = latestSim?.result.twin_curve;
+    return { ...handover,
+      scenario: latestSim && tc ? { grams: latestSim.grams, dish: latestSim.dish, twin: tc } : null,
+      swap: latestSim && tc && topSwap ? { grams: topSwap.preset.carbs, dish: topSwap.preset.label, rise120: topSwap.rise120 } : null };
+  }, [handover, latestSim, topSwap]);
+  const pickSwap = useCallback((p: { id: string; carbs: number }) => { setPresetId(p.id); setSimGrams(p.carbs); }, []);
 
   const refresh = useCallback(async (status: ReplayStatus) => {
     const since = new Date(toMs(status.clock) - (WINDOW_HOURS + 1) * 3600_000).toISOString();
@@ -79,7 +94,8 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
     try {
       const result = await api.counterfactual(patientId, simGrams);
       const label = scenarioLabel(simGrams, presetId);
-      setSims((prev) => [...prev.slice(-3), { grams: simGrams, label, result }]); // keep the last 4 scenarios
+      const dish = label ? presetById(presetId!)!.label : null;
+      setSims((prev) => [...prev.slice(-3), { grams: simGrams, label, dish, result }]); // keep the last 4 scenarios
     } catch (e) { setSimError(errText(e)); } // local to the strip: a failed simulation must not blank the workspace
     finally { setSimBusy(false); }
   }, [patientId, simGrams, presetId]);
@@ -272,6 +288,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                 </ul>
               ) : null;
             })()}
+            <SwapFinder patientId={patientId} reference={swapRef} onPick={pickSwap} onRanked={setTopSwap} />
             <div className="muted tiny" style={{ flexBasis: "100%" }}>Each scenario is computed independently on a copy of the observation history — the hypothetical
               meal is never added to the patient record, and scenarios do not affect each other or the replay. Differences are <b>learned associations</b> of
               forecasting models trained on synthetic simulator data, not causal physiological effects (backlog B-22). Meal presets: {PRESET_NOTE} An
@@ -301,6 +318,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
         <AgpCard patientId={patientId} offset={offset} onLoad={setAgp} />
         <HandoverCard input={handover} />
       </div>
+      <AtithiCard input={companion} />
       <StatePanel state={state} />
     </div>
   );
