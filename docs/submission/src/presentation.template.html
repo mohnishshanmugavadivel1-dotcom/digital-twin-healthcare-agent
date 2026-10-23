@@ -266,7 +266,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
         <li>14:50: glucose rising fast, risk 36%: the alert fires, only 45 min before the first reading above 180 (15:35); peak about 191. <b>Warned, but late.</b></li>
         <li>Unlogged meals are the main failure mode: removing meal features costs the most AUROC, and the stress test cuts lead time.</li>
       </ul>
-      <p class="tiny muted">Deep link /?patient=SYN-0019&amp;start=253.667 · 53 missed daytime onsets are listed by scripts/find_demo_scenario.py</p>
+      <p class="tiny muted">Deep link /?patient=SYN-0019&amp;start=253.667 · Of 298 test onsets, 205 (69%) had a sustained warning and 272 had an alert at some point in the prior 2 h. scripts/find_demo_scenario.py lists 53 daytime onsets (08:00–21:59, ≥ 30 h into the data) whose alert was off at the last reading before onset.</p>
     </div>
   </div>
   <div class="foot"><span>Synthetic data only · not a medical device</span><span>10</span></div>
@@ -293,13 +293,14 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
         <li>Evaluated only on our own simulator; no real-patient or external validation.</li>
         <li>12 test patients, so the confidence intervals are wide.</li>
         <li>Meal logging is near-real-time in the main cohort, which is optimistic.</li>
-        <li>Lows are under-represented; no HRV or sleep streams yet.</li>
-        <li>Genotype shown in the record is synthetic and display-only.</li>
-        <li>No regulatory claims (CDSCO SaMD, DPDP, HIPAA).</li>
+        <li>Lows are under-represented (0.37% of readings &lt; 70 mg/dL vs 2.4% published); the low-glucose watch is a lower bound, <b>not a probability</b>.</li>
+        <li>Vs simulator ground truth, the What-If underestimates late meal effects (+120 min MAE 29.0 vs 12.8 mg/dL for a cohort-average curve).</li>
+        <li>Personalisation is shown only in simulation (hidden meal gain recovered, r 0.95 by day 3; +30 min RMSE −0.52 mg/dL, 95% CI 0.12–0.96).</li>
+        <li>No HRV or sleep streams; genotype is synthetic and display-only. No regulatory claims (CDSCO SaMD, DPDP, HIPAA).</li>
       </ul>
     </div>
   </div>
-  <div class="foot"><span>Synthetic data only · not a medical device</span><span>11</span></div>
+  <div class="foot"><span>Synthetic data only · not a medical device · research: docs/research/TWIN_VALIDITY.md</span><span>11</span></div>
 </section>
 
 <!-- 12 -->

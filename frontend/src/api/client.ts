@@ -1,5 +1,5 @@
 import type {
-  CounterfactualResult, EvaluationReport, Forecast, ModelCard, ForecastSummary, HealthStatus, Observation, ObservationKind,
+  CounterfactualResult, EvaluationReport, FhirBundle, Forecast, ModelCard, ForecastSummary, HealthStatus, Observation, ObservationKind,
   PatientRecord, PatientSummary, ReplayStatus, TwinState,
 } from "./types";
 import { formatApiError } from "../format";
@@ -43,6 +43,7 @@ const liveApi = {
     request<CounterfactualResult>(`/api/patients/${id}/counterfactual`, { method: "POST", body: JSON.stringify({ meal_grams }) }),
   evaluation: () => request<EvaluationReport>("/api/evaluation"),
   model: () => request<ModelCard>("/api/model"),
+  fhir: (id: string, hours = 6) => request<FhirBundle>(`/api/patients/${id}/fhir${qs({ hours })}`),
 };
 
 export const api: typeof liveApi = IS_STATIC_DEMO ? staticApi : liveApi;

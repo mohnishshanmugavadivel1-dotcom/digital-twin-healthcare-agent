@@ -1,0 +1,49 @@
+{
+  "name": "GlucoTwin twin-validity research protocol",
+  "version": 1,
+  "registered": "2026-10-23, before any result of this analysis was computed",
+  "scope": "Synthetic simulator cohort only. Research analysis; the production engine, model weights, benchmark definitions and headline metrics are frozen and are not changed by this analysis.",
+  "cohort": "bundle.cohort_params of the frozen pipeline (60 patients x 14 days, seed 20261017); patient-level split 36 train / 12 validation / 12 test",
+  "model": "frozen served models of the production pipeline (trajectory: hist_gradient_boosting; event: logistic_regression), rebuilt deterministically; the rebuilt evaluation report must equal reports/evaluation_report.json apart from generated_at and model_version",
+  "A_personalisation_ablation": {
+    "patients": "12 held-out test patients; every row of the frozen feature table (same rows as the headline evaluation)",
+    "arm_served": "features exactly as served",
+    "arm_ablated": "carb_sensitivity := the record-based prior for the patient (1.40 + 0.10 x (HbA1c - 7), clipped 0.4-3.0); expected_meal_rise := prior x carbs_on_board; all other inputs unchanged",
+    "metrics": ["trajectory RMSE at 30, 60, 90, 120 min (served trajectory model)", "event AUROC (served event model)"],
+    "uncertainty": "paired patient-cluster bootstrap of (ablated - served), 2000 resamples of the 12 test patients, seed 20261023, 95% percentile interval",
+    "consistency_check": "the served arm must reproduce the committed headline values (RMSE 10.40 / 17.21 / 25.90 at 30/60/120; AUROC 0.884) to the reported precision",
+    "limitation": "inference-time ablation of a model trained WITH the personalised inputs: it measures how much the frozen model relies on them, not the value of a model retrained without them"
+  },
+  "A2_latent_sensitivity_recovery": {
+    "latent_target": "simulator ground truth per patient: mean over that patient's eligible anchors (section B) of the peak difference in noiseless interstitial glucose within 120 min after adding a 40 g meal, divided by 40 (mg/dL per g)",
+    "estimate": "engine personal carb sensitivity at the end of study day d (d = 0 is the record-based prior; d = 1..14), computed with the served functions meal_responses and personal_carb_sensitivity",
+    "metrics": ["Pearson r", "Spearman rho", "mean absolute error (mg/dL per g)", "median ratio estimate / latent"],
+    "patients": "primary: 12 test patients; secondary: all 60 patients (the engine has no fitted parameters other than the prior constants, which were set on the training split)",
+    "uncertainty": "patient bootstrap of Pearson r on the test patients, 2000 resamples, seed 20261023",
+    "limitation": "the engine measures total observed rise per LOGGED gram (logging error, background drift, overlapping effects); the latent target is the incremental simulator response to an exact meal. Agreement in rank (correlation) is the primary question; MAE also contains the definitional offset."
+  },
+  "B_whatif_ground_truth": {
+    "patients": "12 held-out test patients",
+    "anchors": "replay offsets 26.0, 35.5, ..., 320.5 h (32 points; identical to scripts/counterfactual_audit.py)",
+    "meal_grams": [25, 35, 36, 40, 45, 50],
+    "meal_grams_source": "carbohydrate values of the Indian meal presets in frontend/src/mealPresets.ts",
+    "horizons_min": {"primary": [60, 120], "secondary": [30]},
+    "eligibility": "latest CGM <= 180 mg/dL; forecast not withheld; B-23 joint-support status within_training_support for that meal size",
+    "prediction": "served What-If deltas from TwinService.counterfactual: primary (scenario minus zero-carb meal now; the comparison shown in the dashboard) and secondary (scenario minus no meal)",
+    "ground_truth": "paired simulator runs for the same patient: identical hidden parameters, identical meal/activity schedule and identical stress-day draws, re-created from the cohort seed; the only difference is an extra meal of exactly g grams starting at the anchor minute, spread over 15 min (the generator's meal duration). Outcome: difference in noiseless interstitial glucose (the generator's 10-min sensor-lag model, before calibration bias and sensor noise) at anchor + h. Reconstruction must reproduce the cohort's stored true glucose exactly before any counterfactual is used.",
+    "randomness_control": "fully deterministic; no sensor noise in the ground truth (paired design); the meal in the model scenario is logged with exact grams and no delay",
+    "baseline": "cohort-average static meal response: for each meal size and horizon, the mean ground-truth delta over the 36 TRAINING patients at the same anchors (eligibility: latest CGM <= 180 mg/dL); identical for every test patient and moment",
+    "metrics": ["mean absolute error vs ground truth", "mean signed error (bias)", "Spearman rho between predicted and true deltas across scenarios", "direction accuracy: share of scenarios with |true delta| >= 2 mg/dL whose predicted delta has the same sign"],
+    "uncertainty": "patient-cluster bootstrap (12 test patients, 2000 resamples, seed 20261023) of MAE(model) - MAE(baseline)",
+    "limitation": "agreement of a model trained on this simulator with the same simulator; it tests whether the What-If deltas reflect the simulator's meal physics under controlled conditions, not real-world causal validity"
+  },
+  "D_low_glucose_lower_bound_audit": {
+    "rule": "fires when any served 80% lower bound at 30, 60, 90 or 120 min is below 70 mg/dL (lower bound = max(forecast - conformal half-width, 40)); fixed before analysis, not tuned",
+    "outcome": "any CGM reading < 70 mg/dL in (t, t + 120 min]",
+    "patients": "validation (12) and test (12), reported separately, overall and by record flag (sulfonylurea or basal insulin vs neither)",
+    "metrics": ["fire rate", "outcome base rate", "positive predictive value", "sensitivity"],
+    "limitation": "a lower prediction-interval bound is not a probability of hypoglycaemia; the simulator under-represents hypoglycaemia (time below 70 recomputed in this analysis)"
+  },
+  "E_time_below_range": "share of CGM readings < 70 mg/dL over all 60 patients, overall and by medication group (sulfonylurea or basal insulin vs neither)",
+  "outputs": "reports/research/twin_validity.json (aggregates only)"
+}
