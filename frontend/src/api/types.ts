@@ -155,5 +155,27 @@ export interface CounterfactualResult {
   secondary: CounterfactualComparison | null; // vs no meal
   small_meal_unreliable: boolean; notes: string[];
   joint_support?: JointSupportCheck | null; // additive (B-23); absent from older servers
+  twin_curve?: TwinCurveEstimate | null;     // additive research estimate; absent from older servers/snapshots
   is_simulated: true; disclaimer: string;
+}
+
+/** Research estimate shown beside the served What-If: personalised carb-response curve and a cohort walk effect. */
+export interface TwinCurveEstimate {
+  kind: "personalised_curve_research";
+  delta_glucose_mg_dl: Record<string, number>;
+  walk_delta_glucose_mg_dl: Record<string, number> | null;
+  with_walk_delta_glucose_mg_dl: Record<string, number> | null;
+  carb_sensitivity_mg_dl_per_g: number; meals_used: number; latest_cgm_mg_dl: number | null;
+  walk: { minutes: number; steps: number; start_after_meal_min: number };
+  within_tested_range: boolean; outside_tested_reasons: string[];
+  test_mae_mg_dl: Record<string, number>; walk_test_mae_mg_dl: Record<string, number>; caveat: string;
+}
+
+export interface AgpHour { hour: number; n: number; p5: number; p25: number; p50: number; p75: number; p95: number }
+/** GET /api/patients/{id}/agp: descriptive ambulatory glucose profile of received (synthetic) CGM. */
+export interface AgpSummary {
+  patient_id: string; as_of: ISODate; window_days: number; days_with_data: number; n_readings: number;
+  coverage_pct: number; sufficient: boolean; mean_mg_dl: number | null; gmi_pct: number | null; cv_pct: number | null;
+  tir_70_180_pct: number | null; tar_181_250_pct: number | null; tar_over_250_pct: number | null;
+  tbr_54_69_pct: number | null; tbr_under_54_pct: number | null; hourly: AgpHour[]; utc_offset_minutes: number; note: string;
 }

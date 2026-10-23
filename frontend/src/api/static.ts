@@ -10,7 +10,7 @@ import {
   type SnapshotManifest, type SnapshotScenario,
 } from "./staticReplay";
 import type {
-  CounterfactualResult, EvaluationReport, FhirBundle, Forecast, ForecastSummary, HealthStatus, ModelCard, Observation, ObservationKind,
+  AgpSummary, CounterfactualResult, EvaluationReport, FhirBundle, Forecast, ForecastSummary, HealthStatus, ModelCard, Observation, ObservationKind,
   PatientRecord, PatientSummary, ReplayStatus, TwinState,
 } from "./types";
 
@@ -91,5 +91,11 @@ export const staticApi = {
     const sc = await scenarioFor(id);
     if (!sc.fhir) throw new ApiError(404, "This static snapshot has no recorded FHIR export.");
     return sc.fhir.bundle;
+  },
+  // recorded once per scenario at the replay start (its as_of says so); it does not advance with the replay
+  agp: async (id: string, _days = 14): Promise<AgpSummary> => {
+    const sc = await scenarioFor(id);
+    if (!sc.agp) throw new ApiError(404, "This static snapshot has no recorded glucose profile.");
+    return sc.agp.summary;
   },
 };

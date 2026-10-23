@@ -1,0 +1,248 @@
+{
+  "generated_at": "2026-10-23T18:26:07+00:00",
+  "protocol": "experiments/twin_validity/protocol_addendum_v4.json",
+  "model_version_of_cohort_bundle": "gt-0.1.0-s20261017-202610231823",
+  "status": "synthetic simulator only; research estimator; not clinical evidence; not exercise advice",
+  "walk": {
+    "offset_min": 15,
+    "minutes": 20,
+    "steps_per_min": 125.0,
+    "total_steps": 2500
+  },
+  "counts": {
+    "train": {
+      "patients": 36,
+      "scenarios": 8630
+    },
+    "validation": {
+      "patients": 12,
+      "scenarios": 2820
+    },
+    "test": {
+      "patients": 12,
+      "scenarios": 3320
+    }
+  },
+  "train_fit": {
+    "cohort_constant": {
+      "30": -6.077,
+      "60": -31.89,
+      "120": -15.935
+    },
+    "glucose_scaled_beta": {
+      "30": -0.04524,
+      "60": -0.23682,
+      "120": -0.11954
+    }
+  },
+  "validation": {
+    "candidates": {
+      "cohort_constant": {
+        "validation_mae": {
+          "30": 1.716,
+          "60": 9.623,
+          "120": 6.428
+        },
+        "mean_validation_mae": 5.922
+      },
+      "cohort_by_grams": {
+        "validation_mae": {
+          "30": 1.7,
+          "60": 9.281,
+          "120": 6.304
+        },
+        "mean_validation_mae": 5.762
+      },
+      "glucose_scaled": {
+        "validation_mae": {
+          "30": 1.441,
+          "60": 8.546,
+          "120": 5.732
+        },
+        "mean_validation_mae": 5.24
+      }
+    },
+    "selected": "glucose_scaled"
+  },
+  "test": {
+    "30": {
+      "n_scenarios": 3320,
+      "n_patients": 12,
+      "mean_true_walk_effect": -5.031,
+      "true_effect_range": [
+        -11.812,
+        -0.354
+      ],
+      "share_true_negative": 1.0,
+      "selected": {
+        "mae": 1.021,
+        "rmse": 1.317,
+        "bias": -0.453,
+        "direction_accuracy": 1.0,
+        "direction_n": 3280
+      },
+      "no_effect": {
+        "mae": 5.031,
+        "rmse": 5.26,
+        "bias": 5.031,
+        "direction_accuracy": 0.0,
+        "direction_n": 3280
+      },
+      "vs_no_effect": {
+        "mae_diff": -4.01,
+        "mae_diff_ci95": [
+          -4.696,
+          -3.328
+        ],
+        "rmse_diff": -3.943,
+        "rmse_diff_ci95": [
+          -4.631,
+          -3.266
+        ]
+      },
+      "cohort_constant": {
+        "mae": 1.563,
+        "rmse": 1.859,
+        "bias": -1.046,
+        "direction_accuracy": 1.0,
+        "direction_n": 3280
+      },
+      "vs_cohort_constant": {
+        "mae_diff": -0.542,
+        "mae_diff_ci95": [
+          -0.96,
+          -0.16
+        ],
+        "rmse_diff": -0.541,
+        "rmse_diff_ci95": [
+          -0.997,
+          -0.128
+        ]
+      }
+    },
+    "60": {
+      "n_scenarios": 3320,
+      "n_patients": 12,
+      "mean_true_walk_effect": -25.575,
+      "true_effect_range": [
+        -64.17,
+        -1.552
+      ],
+      "share_true_negative": 1.0,
+      "selected": {
+        "mae": 6.225,
+        "rmse": 7.751,
+        "bias": -3.134,
+        "direction_accuracy": 1.0,
+        "direction_n": 3312
+      },
+      "no_effect": {
+        "mae": 25.575,
+        "rmse": 26.932,
+        "bias": 25.575,
+        "direction_accuracy": 0.0,
+        "direction_n": 3312
+      },
+      "vs_no_effect": {
+        "mae_diff": -19.35,
+        "mae_diff_ci95": [
+          -23.231,
+          -15.495
+        ],
+        "rmse_diff": -19.181,
+        "rmse_diff_ci95": [
+          -22.655,
+          -15.514
+        ]
+      },
+      "cohort_constant": {
+        "mae": 8.701,
+        "rmse": 10.541,
+        "bias": -6.315,
+        "direction_accuracy": 1.0,
+        "direction_n": 3312
+      },
+      "vs_cohort_constant": {
+        "mae_diff": -2.475,
+        "mae_diff_ci95": [
+          -4.82,
+          -0.494
+        ],
+        "rmse_diff": -2.79,
+        "rmse_diff_ci95": [
+          -5.109,
+          -0.545
+        ]
+      }
+    },
+    "120": {
+      "n_scenarios": 3320,
+      "n_patients": 12,
+      "mean_true_walk_effect": -11.601,
+      "true_effect_range": [
+        -32.781,
+        -0.327
+      ],
+      "share_true_negative": 1.0,
+      "selected": {
+        "mae": 4.314,
+        "rmse": 5.284,
+        "bias": -2.891,
+        "direction_accuracy": 1.0,
+        "direction_n": 3287
+      },
+      "no_effect": {
+        "mae": 11.601,
+        "rmse": 12.87,
+        "bias": 11.601,
+        "direction_accuracy": 0.0,
+        "direction_n": 3287
+      },
+      "vs_no_effect": {
+        "mae_diff": -7.287,
+        "mae_diff_ci95": [
+          -10.703,
+          -3.525
+        ],
+        "rmse_diff": -7.586,
+        "rmse_diff_ci95": [
+          -10.714,
+          -3.803
+        ]
+      },
+      "cohort_constant": {
+        "mae": 5.914,
+        "rmse": 7.06,
+        "bias": -4.334,
+        "direction_accuracy": 1.0,
+        "direction_n": 3287
+      },
+      "vs_cohort_constant": {
+        "mae_diff": -1.601,
+        "mae_diff_ci95": [
+          -2.668,
+          -0.571
+        ],
+        "rmse_diff": -1.776,
+        "rmse_diff_ci95": [
+          -2.745,
+          -0.711
+        ]
+      }
+    }
+  },
+  "served_coefficients": {
+    "kind": "glucose_scaled",
+    "beta_per_mg_dl": {
+      "30": -0.04524,
+      "60": -0.23682,
+      "120": -0.11954
+    }
+  },
+  "bootstrap": {
+    "resamples": 1000,
+    "seed": 20261017,
+    "unit": "test patient"
+  },
+  "runtime_s": 35.7
+}

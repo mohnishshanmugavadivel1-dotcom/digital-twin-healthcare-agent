@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import { api, IS_STATIC_DEMO } from "../api/client";
 import type { FhirBundle } from "../api/types";
+import type { HandoverInput } from "../handover";
+import { HandoverCard } from "./HandoverCard";
 import { fhirCodes, fhirResourceCounts, fhirRiskPredictions } from "../fhir";
 
 /** FHIR R4 export of the synthetic patient: an interoperability prototype, loaded only when opened. */
-export function FhirViewer({ patientId }: { patientId: string }) {
+export function FhirViewer({ patientId, handover = null }: { patientId: string; handover?: HandoverInput | null }) {
   const [bundle, setBundle] = useState<FhirBundle | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -59,6 +61,11 @@ export function FhirViewer({ patientId }: { patientId: string }) {
             </table>
           </div>
           <pre className="fhir-json">{JSON.stringify(bundle.entry.slice(0, 3), null, 2)}{"\n"}… first 3 of {bundle.entry.length} entries; download for the full Bundle</pre>
+          {handover && (<>
+            <p className="muted tiny">Handover note for the receiving clinician, from the twin's current state (the same note as below
+              the chart; plain text, not a FHIR resource).</p>
+            <HandoverCard input={handover} compact />
+          </>)}
         </>
       )}
     </details>

@@ -90,3 +90,42 @@ def paired_meal_delta(inp: SimInputs, plasma: np.ndarray, patient_idx: np.ndarra
     for i, m in enumerate(start_min):
         res[i, 1:] = ig[i, m : m + horizon_min]
     return res
+
+
+def _interstitial(dp: np.ndarray) -> np.ndarray:
+    """Apply the generator's linear 10-min sensor-lag filter to a plasma difference (rows, T)."""
+    ig = np.zeros_like(dp)
+    for t in range(1, dp.shape[1]):
+        ig[:, t] = ig[:, t - 1] + (dp[:, t] - ig[:, t - 1]) / SENSOR_LAG_MIN
+    return ig
+
+
+def paired_walk_delta(inp: SimInputs, patient_idx: np.ndarray, start_min: np.ndarray, grams: np.ndarray,
+                      walk_offset_min: int = 15, walk_minutes: int = 20, walk_steps_per_min: float = 125.0,
+                      horizon_min: int = 120) -> np.ndarray:
+    """Walk effect after a meal (protocol addendum v4): glucose with meal + walk minus with meal only.
+
+    Both legs add ``grams[i]`` at ``start_min[i]`` exactly as ``paired_meal_delta`` does; the walk leg also
+    adds ``walk_steps_per_min`` steps per minute for ``walk_minutes`` starting ``walk_offset_min`` after the
+    meal, on top of the patient's own steps (the generator's activity cap still applies). Same hidden
+    parameters, schedule and stress-day draws in both legs. Returns (rows, horizon_min + 1) with the same
+    column convention as ``paired_meal_delta``.
+    """
+    patient_idx, start_min = np.asarray(patient_idx), np.asarray(start_min, dtype=int)
+    grams = np.asarray(grams, dtype=float)
+    t_end = int(start_min.max()) + horizon_min + 1
+    carbs = inp.carbs[patient_idx, :t_end].copy()
+    steps = inp.steps[patient_idx, :t_end].copy()
+    walk = steps.copy()
+    for i, (m, g) in enumerate(zip(start_min, grams, strict=True)):
+        carbs[i, m : m + MEAL_DURATION_MIN] += g / MEAL_DURATION_MIN
+        w0 = m + walk_offset_min
+        walk[i, w0 : w0 + walk_minutes] += walk_steps_per_min
+    hp = _rows(inp.hidden, patient_idx)
+    meal_only = _simulate(hp, carbs, steps, _FixedStress(inp.stress_u[patient_idx]), inp.days)
+    meal_walk = _simulate(hp, carbs, walk, _FixedStress(inp.stress_u[patient_idx]), inp.days)
+    ig = _interstitial(meal_walk - meal_only)
+    res = np.zeros((len(patient_idx), horizon_min + 1))
+    for i, m in enumerate(start_min):
+        res[i, 1:] = ig[i, m : m + horizon_min]
+    return res
