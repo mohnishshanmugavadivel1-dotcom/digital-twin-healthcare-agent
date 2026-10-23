@@ -46,7 +46,7 @@ make setup && make train && make build-frontend && make serve
 # then open http://localhost:8000/?patient=SYN-0039&start=151.833
 ```
 
-There is no public deployment and no demo video yet. A manual GitHub Pages workflow for the static snapshot ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)) is ready but has not been run.
+**Public static snapshot:** [https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). It is deployed by the manual GitHub Pages workflow ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)), and the site was confirmed loading on 2026-10-23. The public site serves whichever snapshot was last deployed; its `demo/manifest.json` shows the commit and recording time. The snapshot in this repository was recorded on 2026-10-23 from clean commit a6c1d91 (model `gt-0.1.0-s20261017-202610230926`). It includes the FHIR panel with its RiskAssessment, the low-glucose watch (risk card and What-If column), the personalisation confidence line, the What-If research note and the 15-min preset grid. There is no demo video yet.
 
 ### 90-second judge walkthrough
 
@@ -97,7 +97,7 @@ The cohort is 100 adults with type 2 diabetes (FreeStyle Libre, 15-min readings;
 | 60 min | 26.94 [24.13–29.90] | 23.18 [21.45–25.05] | **22.39** [20.80–24.05] |
 | 120 min | 40.79 [35.70–46.17] | 35.32 [31.64–39.27] | **33.62** [30.46–36.88] |
 
-Gradient boosting has lower RMSE than persistence by 3.78, 4.55 and 7.16 mg/dL (paired 95% CIs [−4.72, −2.85], [−6.14, −2.93] and [−10.10, −4.19]). It beats persistence for 20/20, 19/20 and 15/20 test patients. Leakage checks found 0 patients and 0 sessions in more than one split. An independent recomputation reproduced every metric.
+Gradient boosting has lower RMSE than persistence by 3.78, 4.55 and 7.16 mg/dL (paired 95% CIs [−4.72, −2.85], [−6.14, −2.93] and [−10.10, −4.19]). It beats persistence for 20/20, 19/20 and 15/20 test patients. Leakage checks found 0 patients and 0 sessions in more than one split. Re-running the analysis in a clean environment reproduced every metric.
 
 <img src="reports/real_data/shanghai_t2dm/public/rmse_by_horizon.svg" alt="Bar chart of held-out test RMSE with 95% confidence intervals at 30, 60 and 120 minutes for persistence, ridge and gradient boosting trained on ShanghaiT2DM glucose history" width="100%">
 
@@ -108,6 +108,42 @@ Data: ShanghaiT2DM, from "diabetes_datasets.zip" version 5 by Qinpei Zhao, Jinha
 ### 3 · Full GlucoTwin model on real patients: not yet evaluated
 
 ShanghaiT2DM records food as free text, not carbohydrate grams, and has no steps or heart rate. Ten of GlucoTwin's 33 inputs would have to be invented, so we did not run it. Its sampling is also 15 min rather than GlucoTwin's 5 min. A real-data evaluation needs a dataset with logged carbohydrates and activity.
+
+### 4 · Twin-validity research against simulator ground truth
+
+A pre-registered analysis ([protocol](experiments/twin_validity/protocol.json), [write-up](docs/research/TWIN_VALIDITY.md), [aggregates](reports/research/twin_validity.json)) replays every What-If against the **true** response of the same simulated patient: identical hidden physiology, plus exactly that meal.
+
+| Held-out test patients (12), 1,776 eligible preset-meal scenarios | +30 min | +60 min | +120 min |
+|---|---|---|---|
+| Mean true meal effect (mg/dL) | 8.7 | 35.8 | 49.0 |
+| What-If error, MAE (mg/dL) | 3.9 | 11.1 | 29.0 |
+| Cohort-average meal curve, MAE (mg/dL) | 2.3 | 9.3 | 12.8 |
+| What-If − baseline [95% CI] | +1.6 [0.3, 2.8] | +1.9 [−1.7, 5.5] | **+16.1 [8.9, 23.0]** |
+
+**Negative result, reported as measured:** a static cohort-average meal curve beats the What-If at +30 and +120 min and ties at +60 min. The What-If underestimates late meal effects (bias −28.9 mg/dL at +120 min). For example, for 35 g at the 07:55 demo moment it shows +10.7 mg/dL at +120 min, while the simulator's true effect is +65.4. Treat the What-If as a comparison of model associations, not a meal-effect estimate. Section A2 above shows the learned carb sensitivity does recover each simulated patient's gain; the trajectory model does not yet turn it into the right response shape.
+
+**Post-hoc addendum** ([write-up](docs/research/TWIN_VALIDITY.md#addendum-v2-2026-10-23-post-hoc-and-exploratory), [aggregates](reports/research/twin_and_whatif_validation.json); synthetic only, 95% patient-bootstrap CIs):
+
+- **Larger meals.** Across 20–120 g the negative result holds and grows with meal size: at +120 min the What-If MAE is 45.3 vs 20.8 for the cohort average (+24.5 [13.4, 34.8]).
+- **Where the problem lies (exploratory, v2).** A post-hoc estimator, *grams × learned sensitivity × a response curve learned from observed CGM*, scored MAE 8.5 vs 16.8 for the cohort average at +120 min, but it was worse at +30 min.
+
+**Pre-specified test of the personalised curve** ([addendum v3](docs/research/TWIN_VALIDITY.md#addendum-v3-2026-10-23-train-fitted-validation-selected-personalised-curve), [protocol](experiments/twin_validity/protocol_addendum_v3.json)):
+
+- **How it was fitted.** The shape is fitted on the 36 training patients' observed CGM. One of four candidates (median or mean shape, with or without a per-horizon scale) is selected on the 12 validation patients. Each patient's sensitivity uses only meals completed before the forecast moment. The 12 test patients were scored once, on 2,953 scenarios with paired simulator ground truth and 1,000-sample paired patient-bootstrap 95% CIs.
+- **Selected candidate.** The calibrated median shape, with validation MAE 5.43 vs 8.59 for v2's uncalibrated estimator. With a per-horizon scale, the median and mean shapes give identical predictions, so the tie went to the first in the listed order.
+
+| Test, all meal sizes | +30 min | +60 min | +120 min |
+|---|---|---|---|
+| Personalised curve, MAE / RMSE (mg/dL) | **1.8** / 2.6 | **5.3** / 7.8 | **5.9** / 9.0 |
+| Cohort-average curve (train only), MAE / RMSE | 3.1 / 4.1 | 12.5 / 16.1 | 16.8 / 22.5 |
+| Served What-If, MAE / RMSE | 5.4 / 7.5 | 17.2 / 24.5 | 37.3 / 45.4 |
+| Curve − cohort, MAE [95% CI] | −1.4 [−2.6, −0.2] | −7.2 [−11.4, −3.0] | **−10.9 [−15.4, −6.2]** |
+| Curve − What-If, MAE [95% CI] | −3.7 [−4.9, −2.7] | −12.0 [−15.1, −9.2] | **−31.4 [−38.5, −25.3]** |
+| Direction accuracy: curve / cohort / What-If | 100% / 100% / 95.9% | 100% / 100% / 99.5% | 100% / 100% / 90.9% |
+
+- **On the 20–120 g subset behind "What-If 45.3".** At +120 min the curve scores 7.3 and the cohort average 20.8 (−13.5 [−19.4, −7.6]).
+- **What this does and does not show.** The learned per-patient sensitivity carries the right information, and the served trajectory model is the bottleneck. Direction accuracy is uninformative because every true change is positive.
+- **Caveats.** The simulator's near-linear, per-patient-gain meal response is exactly the structure this estimator assumes, so these errors are a best case. This is not real-data evidence, and the curve is **not served**: the What-If table still shows the frozen model's numbers.
 
 ## How personalisation works
 
@@ -121,7 +157,22 @@ Each patient has one learned parameter: carb sensitivity *s*, the glucose rise i
 | Use | Model features `carb_sensitivity` and expected meal rise = *s* × carbs on board |
 | Example (SYN-0039) | *s₀* = 1.31 → *s* = 1.698 after 20 meals → 1.666 once the 120-min window of the 08:53 breakfast closes (10:55) |
 
-The update only uses meal responses that are complete at the current replay time. No experiment has yet isolated whether personalisation reduces forecast error, so we do not claim that it does.
+The update only uses meal responses that are complete at the current replay time.
+
+**How confident is the estimate?** The state panel shows a confidence line. For SYN-0039 at 07:55 it reads "Confidence: 87% from 20 observed meals; ± 0.16 sampling error (meal-to-meal SD 0.81)". It contains:
+
+- the share of the estimate that comes from the patient's own meals, *n* / (3 + *n*);
+- the SD of their observed meal responses;
+- a sampling standard error, SD · √*n* / (3 + *n*). This treats the prior as fixed. It is **not** a Bayesian posterior SD.
+
+These values are descriptive only (`glucotwin/twin/personal_uncertainty.py`) and are never used by a forecast.
+
+**What a pre-registered experiment shows (synthetic cohort only; [details](docs/research/TWIN_VALIDITY.md)):**
+- **The model uses it.** On the 12 test patients, replacing the learned sensitivity with the prior raises RMSE by 0.52 mg/dL at +30 min (95% CI 0.12–0.96) and 0.58 at +60 min (0.09–1.08). At +90/120 min and for event AUROC the change is within noise.
+- **It matters most after meals.** In test rows with ≥ 10 g logged in the previous hour, the prior-only arm's +60-min RMSE is 2.44 mg/dL higher (20.52 vs 22.96; 95% CI 0.81–3.85). This is post-hoc ([addendum](docs/research/TWIN_VALIDITY.md#addendum-v2-2026-10-23-post-hoc-and-exploratory)); at +120 min the difference (+1.04) is borderline.
+- **It recovers the simulator's hidden per-patient meal gain.** Correlation with the latent gain rises from r = 0.62 (prior only) to 0.95 after 3 days and 0.98–0.99 after 7–14 days. Mean absolute error falls less, from 0.243 to 0.171 mg/dL per g by day 14, because the observed estimate runs about 10% low (median ratio to the latent gain 0.90).
+
+These are simulator results, not evidence about real patients.
 
 ## Research and architecture
 
@@ -145,13 +196,16 @@ GlucoTwin is an educational research prototype. It is **not a medical device**, 
 - **No real-data validation of the full twin.** The frozen GlucoTwin model has not been evaluated on any real patients.
 - **What-If results are model associations, not physiology.** They are not a prediction of how a real person would respond. Meals under 30 g are flagged as unreliable ([§11](#11-counterfactual-simulation-and-limitations)).
 - **Support tags are diagnostics.** *No training analogue* flags unusual inputs; it is not a guaranteed out-of-distribution detector, and "within support" does not make a forecast correct.
-- **Personalisation updates a parameter.** We have not shown that this improves forecasts.
-- **Other gaps.** Indian meal presets use approximate, editable carb values. There is no real wearable integration and no sleep data. Accessibility and keyboard testing have not been done. On phones the What-If table needs a sideways swipe to show the risk columns.
+- **Personalisation is shown only in simulation.** On the synthetic cohort it measurably helps +30/60 min forecasts and recovers each patient's hidden meal gain ([research](docs/research/TWIN_VALIDITY.md)). This has not been tested on real patients.
+- **What-If underestimates late meal effects.** Against simulator ground truth it is less accurate than a cohort-average meal curve at +30 and +120 min (mean bias −28.9 mg/dL at +120 min).
+- **The simulator under-represents hypoglycaemia.** 0.37% of its CGM readings are below 70 mg/dL (876 / 238,103; 19 below 54), against a published comparator of 2.4% (docs/AUDIT_WAVE2.md F-18). The dashboard's *low-glucose watch* only reports that the 80% forecast lower bound is below 70 mg/dL. It is **not a probability** and not a validated hypoglycaemia predictor: on synthetic patients a low followed within 2 h at 33.5% of the moments it showed (test, 3,178 / 9,495) and 9.5% (validation, 208 / 2,186).
+- **FHIR export is an interoperability prototype.** Its structure was checked against FHIR R4 4.0.1 model classes. It is not certified, not profiled against ABDM/NRCeS guides and not a compliance claim.
+- **Other gaps.** Indian meal presets use approximate, editable carb values. There is no real wearable integration and no sleep data. Accessibility and keyboard testing have not been done. On phones the What-If table scrolls sideways; a swipe cue above it says so.
 
 **Next research steps:**
 - Evaluate the full twin on a governed real dataset with logged carbohydrates and activity.
-- Isolate the effect of personalisation on forecast error.
-- Replace associational What-If with an intervention-capable, validated model.
+- Repeat the personalisation ablation on real data with logged carbohydrates.
+- Replace associational What-If with an intervention-capable model whose meal response has physiological timing, and re-test it against simulator ground truth with the same protocol.
 - Carry out prospective validation before any clinical claim.
 
 ## Technical reference
@@ -233,6 +287,12 @@ A single risk score also does not show how a model's output relates to historica
 GlucoTwin explores a transparent digital-twin workflow that brings together chronological replay, glucose forecasting, uncertainty intervals, data-quality evidence, historical prediction comparisons and isolated counterfactual scenarios.
 
 The project focuses on demonstrating a reproducible research system—not establishing clinical effectiveness.
+
+**Why India.** The ICMR-INDIAB national survey estimated that 101 million people in India had diabetes in 2021 (all types; 11.4% weighted prevalence), with a further 136 million living with prediabetes ([Anjana et al., *Lancet Diabetes Endocrinol* 2023;11(7):474–489](https://doi.org/10.1016/S2213-8587(23)00119-5)). GlucoTwin's design choices follow from that setting, without claiming compliance with any of them:
+
+- Indian meal What-If presets with approximate, editable carbohydrate amounts.
+- A FHIR R4 export, because India's national guide for ABDM health records ([NRCeS FHIR Implementation Guide for ABDM](https://nrces.in/ndhm/fhir/r4/)) is built on FHIR R4. GlucoTwin is **not** profiled against or certified for that guide.
+- Synthetic data only. Real deployment would fall under the [Digital Personal Data Protection Act, 2023](https://www.indiacode.nic.in/handle/123456789/22037) (Act No. 22 of 2023), which this prototype does not address.
 
 ## 3. Healthcare use case
 
@@ -321,6 +381,23 @@ The what-if interface allows hypothetical meal scenarios to be evaluated against
 Each scenario is evaluated on a copy of the observation history. Scenarios are independent of each other and do not alter the underlying replay history.
 
 Counterfactual outputs are exploratory simulator outputs, not predictions of a real person's physiological response.
+
+### 4.7 FHIR R4 export (interoperability prototype)
+
+`GET /api/patients/{id}/fhir?hours=6` returns a deterministic FHIR R4 (4.0.1) `collection` Bundle of the synthetic patient. The dashboard shows it in a collapsible *FHIR R4 record (interoperability prototype)* panel with Download and Copy JSON buttons. Contents:
+
+- the Patient (identifier in GlucoTwin's own namespace holding the synthetic `SYN-####` ID, never an ABHA-format number; name, gender; no invented birth date);
+- Conditions coded in SNOMED CT (44054006, 59621000, 370992007);
+- MedicationStatements coded in RxNorm (metformin 6809, glimepiride 25789, sitagliptin 593411, insulin glargine 274783, ramipril 35296, atorvastatin 83367);
+- lab Observations: HbA1c LOINC 4548-4 and fasting glucose 1558-6. eGFR and LDL carry text only. The often-quoted eGFR code 33914-3 is marked *DISCOURAGED* on loinc.org and is specific to the MDRD formula, while the synthetic eGFR has no stated method, so a method-specific code would be a false claim;
+- CGM Observations (LOINC 99504-3, UCUM mg/dL) from the last *hours* the twin has received. It never includes future replay data;
+- one RiskAssessment for the twin's latest forecast. It holds the 2-hour excursion probability as `probabilityDecimal` (model output, synthetic data, not clinically calibrated). When the 80% lower bound falls below 70 mg/dL, it adds a qualitative *low-glucose watch* prediction with **no** probability field.
+
+Every resource is tagged synthetic. Structure is checked with `scripts/validate_fhir_export.py` (fhir.resources 6.4.0, R4 4.0.1 model classes, run in a separate environment); codes and determinism are checked in `tests/test_fhir_export.py`. This is not certified and not profiled against ABDM/NRCeS implementation guides.
+
+### 4.8 Low-glucose watch (lower-bound indicator)
+
+When any 80% forecast lower bound at +30–120 min is below 70 mg/dL, the risk card says so, gives the lowest bound, and lists record medications that can cause hypoglycaemia (sulfonylurea, insulin). It is labelled as the edge of a prediction interval, **not a probability**. The What-If table applies the same rule to each scenario forecast in a *Low watch* column (for example "<70 from +90m · SU/insulin"). Its measured behaviour on synthetic patients, and the simulator's low rate of hypoglycaemia (0.37% of CGM readings below 70 mg/dL), are in [docs/research/TWIN_VALIDITY.md](docs/research/TWIN_VALIDITY.md) (sections D and E).
 
 ## 5. System architecture
 
@@ -553,6 +630,8 @@ The what-if meal simulation operates on a copy of the available observation hist
 
 The interface distinguishes simulated outputs from observed and forecast values.
 
+**Ground-truth check (2026-10-23):** against paired simulator runs, the What-If is less accurate than a cohort-average meal curve at +30 and +120 min, and underestimates late effects. See [Results §4](#4--twin-validity-research-against-simulator-ground-truth).
+
 ### What the comparison means (backlog B-22)
 
 Each what-if runs the **same served forecasting models** three times at the current replay time. The physiological simulator is not involved:
@@ -648,21 +727,31 @@ The configured checks include:
 
 GitHub Actions (`.github/workflows/ci.yml`) runs the same lint, Python test, build and frontend-test steps on every push and pull request.
 
-**Results recorded on 2026-10-22 for the working tree** (uncommitted changes on top of 581b4f7):
+**Results recorded on 2026-10-23 for commit a6c1d91** (the snapshot commit then adds only the re-recorded snapshot, this README section and the rebuilt deck):
 - `make check` exit 0:
   - Ruff passed;
-  - 140 Python tests passed (1 third-party deprecation warning from the FastAPI/Starlette test client);
+  - 151 Python tests passed (1 third-party deprecation warning from the FastAPI/Starlette test client). Two Shanghai loader tests skip unless `requirements-realdata.lock` is installed; with it installed, all 151 ran;
   - the TypeScript check and production build succeeded (Vite reports its standard large-chunk size warning);
-  - 23/23 frontend tests passed, 0 skipped.
-- On 2026-10-21: `npm run build:static` exit 0.
-- Reproducibility re-runs: `glucotwin train` matched `reports/evaluation_report.json` apart from `generated_at` and `model_version`, and `glucotwin audit` matched `reports/audit_report.json` apart from `runtime_s`.
+  - 34/34 frontend tests passed, 0 skipped.
+- `scripts/export_static_demo.py` exit 0 with its built-in faithfulness checks; `npm run build:static` exit 0. Every frame, forecast and What-If is identical to the previous snapshot. The only additions are the descriptive confidence fields and the FHIR RiskAssessment (volatile IDs and the model-version label excluded).
+- `scripts/twin_validity_analysis.py` exit 0, with all three self-checks passing. `scripts/validate_twin_and_whatif.py` exit 0 (1,005 s), with exact simulator reconstruction and v1 eligibility reproduced (1,776 / 2,304) ([write-up](docs/research/TWIN_VALIDITY.md)).
+- `scripts/validate_fhir_export.py` (fhir.resources 6.4.0, FHIR R4 4.0.1): OK for both recorded exports (82 resources each, including a RiskAssessment) and for a SYN-0019 export at 16:45 that contains the low-glucose-watch prediction (81 resources).
+- Reproducibility: rebuilding the bundle with `run_pipeline` matched `reports/evaluation_report.json` apart from `generated_at` and `model_version`.
 
 Check the latest GitHub Actions run for the submitted commit before relying on these results.
 
 **Browser checks:**
 - On 2026-10-21, the script `docs/qa/browser_smoke.mjs` ran in headless Chromium at 1440 px. It passed 14/14 checks against the live app (`make serve` + `npm run preview`) and 14/14 against the static snapshot served from a sub-path, with no console errors or failed requests. The checks covered the banner, replay, the meal preset, recorded and unrecorded what-ifs, the training-support tag, stepping, the end of the replay and the evaluation tab.
 - On 2026-10-22, the same script passed 14/14 again against the static snapshot served locally under `/digital-twin-healthcare-agent/`, the sub-path a GitHub Pages project site would use. This was a local rehearsal, not a public deployment.
-- On 2026-10-22, a 390 px phone check (mobile emulation) covered 07:55, a preset What-If, 08:55 and the evaluation tab. It found the meal-preset dropdown widening the page to 443 px, fixed with one CSS rule in `frontend/src/styles.css`. After the fix all four views fit 390 px, with no console errors. On phones the What-If table scrolls sideways, with no visual cue.
+- On 2026-10-22, a 390 px phone check (mobile emulation) covered 07:55, a preset What-If, 08:55 and the evaluation tab. It found the meal-preset dropdown widening the page to 443 px, fixed with one CSS rule in `frontend/src/styles.css`. After the fix all four views fit 390 px, with no console errors. On phones the What-If table scrolls sideways; a swipe cue was added on 2026-10-23.
+- On 2026-10-23, against the rebuilt static snapshot served locally under `/digital-twin-healthcare-agent/`:
+  - `docs/qa/browser_smoke.mjs` passed 14/14;
+  - `docs/qa/browser_new_features.mjs` passed 11/11 (390 px swipe cue and no page overflow, FHIR panel, presets on the 15-min grid vs an off-grid moment, and the low-glucose note for SYN-0019 at 16:45).
+  - This run found the open FHIR panel widening a 390 px page to 748 px; one CSS rule fixed it before the final run.
+- Later on 2026-10-23, against the snapshot recorded from a6c1d91 and served locally under `/digital-twin-healthcare-agent/`:
+  - `browser_smoke.mjs` passed 14/14;
+  - `browser_new_features.mjs` passed 15/15. Four checks were new: banner headline and provenance, the personalisation confidence line, the What-If *Low watch* column, and the FHIR RiskAssessment (probability for the excursion only).
+  - There were no console errors or failed requests.
 - Accessibility and keyboard-interaction testing have not been done.
 
 ## 14. Submission artefacts
@@ -699,7 +788,7 @@ This section maps the challenge submission requirements to the repository.
 
 The repository contains an MIT licence file at `LICENSE`.
 
-`LICENSE` currently reads **"Copyright (c) 2026 GlucoTwin contributors"**. Earlier README text named an individual instead. The intended copyright holder has **not been confirmed**, and the licence file has deliberately been left unchanged until the maintainer confirms it.
+Copyright (c) 2026 Mohnish Shanmugavadivel, under the MIT licence terms in `LICENSE`.
 
 ## 17. Future work
 
@@ -722,6 +811,6 @@ Status of the official submission items (rules in [COMPETITION_COMPLIANCE.md](do
 | README: team, institution, title, problem, use case, tech stack, ML details | Done |
 | Architecture diagram (PDF) | Done: [docs/submission/GlucoTwin_Architecture.pdf](docs/submission/GlucoTwin_Architecture.pdf) |
 | Presentation (PDF) | Done: [docs/submission/GlucoTwin_Presentation.pdf](docs/submission/GlucoTwin_Presentation.pdf) |
-| Open-source licence | MIT licence file present (`LICENSE`, "GlucoTwin contributors"). Copyright holder **unconfirmed** (§16). |
+| Open-source licence | Done: MIT (`LICENSE`), copyright Mohnish Shanmugavadivel (§16) |
 | Demo video (rules say both "minimum 20 minutes" and "15–20 minutes"; confirm with the organisers) | **Not done.** No video and no link yet. Script in [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md). |
 | Submission on the Unstop platform by the team leader | **Unverified.** It cannot be confirmed from this repository. |

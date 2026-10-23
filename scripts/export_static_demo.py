@@ -38,7 +38,11 @@ OBS_LIMIT = 5000  # the dashboard's limit for observations and forecasts
 KINDS = ("cgm", "meal", "steps", "heart_rate")
 # carbs of the editable Indian meal presets (frontend/src/mealPresets.ts; a frontend test keeps them in sync)
 # plus round amounts, including sizes that the B-23 check flags
-WHATIF_GRAMS = sorted({25, 35, 36, 40, 45, 50} | {30, 60, 90, 120, 200, 300})
+PRESET_GRAMS = [25, 35, 36, 40, 45, 50]
+WHATIF_GRAMS = sorted(set(PRESET_GRAMS) | {30, 60, 90, 120, 200, 300})
+# the preset amounts are also recorded every PRESET_GRID_MIN minutes of each replay (all amounts at whatif_minutes)
+PRESET_GRID_MIN = 15
+FHIR_HOURS = 6  # CGM window of the recorded FHIR export (one export per scenario, at the replay start)
 SCENARIOS = [
     {"id": "early-warning", "patient_id": "SYN-0039", "start_offset_hours": 151.833, "duration_hours": 6.0,
      "whatif_minutes": [0, 60],
@@ -108,8 +112,13 @@ def record_scenario(c: TestClient, sc: dict) -> dict:
             st = ok(c.post(f"/api/replay/{sid}/step", json={"minutes": STEP_MIN}))
         frames.append(st)
         summaries.append(next(p for p in ok(c.get("/api/patients")) if p["patient_id"] == pid))
-        if i * STEP_MIN in sc["whatif_minutes"]:
-            for g in WHATIF_GRAMS:
+        if i == 0:
+            fhir = {"frame_index": 0, "hours": FHIR_HOURS,
+                    "bundle": ok(c.get(f"/api/patients/{pid}/fhir", params={"hours": FHIR_HOURS}))}
+        grams = (WHATIF_GRAMS if i * STEP_MIN in sc["whatif_minutes"]
+                 else PRESET_GRAMS if (i * STEP_MIN) % PRESET_GRID_MIN == 0 else [])
+        if grams:
+            for g in grams:
                 whatifs.append({"frame_index": i, "grams": g,
                                 "result": ok(c.post(f"/api/patients/{pid}/counterfactual", json={"meal_grams": g}), 201)})
         if i in probe_at:  # real API answers to the exact queries the dashboard makes at this frame
@@ -147,11 +156,18 @@ def record_scenario(c: TestClient, sc: dict) -> dict:
         raise SystemExit(f"{sc['id']}: the last recorded frame is not the end of the replay")
     return {**{k: sc[k] for k in ("id", "patient_id", "start_offset_hours", "duration_hours", "title", "description")},
             "step_minutes": STEP_MIN, "record": record, "frames": frames, "summaries": summaries,
-            "observations": observations, "forecasts": forecasts, "whatifs": whatifs,
+            "observations": observations, "forecasts": forecasts, "whatifs": whatifs, "fhir": fhir,
             "checks": {"probed_frames": sorted(probe_at), "observation_and_forecast_replay_equals_api": True,
                        "step_60_equals_step_5_frames": True,
                        "step_comparison_ignores": ["forecast_id", "session_id",
                                                    "state.version (update counter; depends on step size)"]}}
+
+
+def all_amount_frames(s: dict) -> set[int]:
+    by: dict[int, set[int]] = {}
+    for w in s["whatifs"]:
+        by.setdefault(w["frame_index"], set()).add(w["grams"])
+    return {i for i, g in by.items() if g >= set(WHATIF_GRAMS)}
 
 
 def main() -> None:
@@ -175,12 +191,15 @@ def main() -> None:
         "git_head": head, "working_tree_dirty_at_recording": dirty,
         "model_version": health["model_version"],
         "b23_joint_support_sha256": hashlib.sha256(b23.read_bytes()).hexdigest() if b23.exists() else None,
-        "whatif_grams": WHATIF_GRAMS,
+        "whatif_grams": WHATIF_GRAMS, "preset_grams": PRESET_GRAMS, "preset_grid_minutes": PRESET_GRID_MIN,
         "health": health, "model": model, "evaluation": evaluation,
         "scenarios": [{"id": s["id"], "patient_id": s["patient_id"], "start_offset_hours": s["start_offset_hours"],
                        "title": s["title"], "description": s["description"], "file": f"{s['id']}.json",
                        "start_clock": s["frames"][0]["clock"], "end_clock": s["frames"][-1]["clock"],
-                       "whatif_clocks": sorted({s["frames"][w["frame_index"]]["clock"] for w in s["whatifs"]}),
+                       # clocks with every amount recorded; preset_clocks have the preset amounts only
+                       "whatif_clocks": sorted({s["frames"][i]["clock"] for i in all_amount_frames(s)}),
+                       "preset_clocks": sorted({s["frames"][w["frame_index"]]["clock"] for w in s["whatifs"]}),
+                       "fhir_clock": s["frames"][s["fhir"]["frame_index"]]["clock"],
                        "n_frames": len(s["frames"])} for s in scenarios],
     }
     out = Path(args.out)

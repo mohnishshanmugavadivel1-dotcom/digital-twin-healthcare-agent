@@ -120,6 +120,8 @@ tr.served td { background: #f4f7ff; }
 .sim-table th[scope="colgroup"] { text-transform: none; letter-spacing: 0; font-size: 0.75rem; cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; }
 .sim-secondary { color: var(--muted); }
 .sim-qualified { color: #9aa1ab; }
+.sim-low { white-space: nowrap; }
+.sim-low-flag { color: #b45309; font-weight: 600; }
 .sim-unreliable td { color: var(--muted); }
 .sim-flag { margin-left: 6px; font-size: 10.5px; font-weight: 600; color: #8a5300; background: var(--high-bg); border-radius: 999px; padding: 0 6px; cursor: help; }
 .sim-support { color: #3d4f7a; background: #e8edf7; }
@@ -128,7 +130,18 @@ tr.served td { background: #f4f7ff; }
 .personal-rule summary { cursor: pointer; }
 .personal-rule code { font-size: 11px; }
 .static-banner { background: #fff4d6; border-bottom: 1px solid #e6c870; color: #5a4300; padding: 6px 16px; font-size: 13px; }
+.static-provenance { margin-top: 2px; }
+.static-details { display: inline; }
+.static-details summary { display: inline; cursor: pointer; text-decoration: underline dotted; }
+.static-details[open] { display: block; margin-top: 2px; }
 .sim-notes { flex-basis: 100%; margin: 0; padding-left: 16px; }
+.fhir { margin-top: 6px; font-size: 0.85rem; contain: inline-size; } /* its wide code table must not widen the header */
+.patient-header > div { min-width: 0; }
+.fhir summary { cursor: pointer; color: var(--accent, #1d4ed8); }
+.fhir-json { max-height: 220px; overflow: auto; background: #f7f7f5; border: 1px solid var(--line, #e4e2dd); border-radius: 6px; padding: 8px; font-size: 11px; white-space: pre-wrap; word-break: break-word; }
+.swipe-cue { display: none; flex-basis: 100%; margin: 0; }
+.lowbound { border-left: 3px solid #b45309; background: #fff7ed; padding: 6px 10px; margin: 6px 0; border-radius: 4px; }
+@media (max-width: 640px) { .swipe-cue { display: block; } }
 
 /* Narrow screens (phones): nothing may force horizontal page scroll; wide tables scroll inside their wrapper. */
 @media (max-width: 600px) {
@@ -165,3 +178,6 @@ tr.served td { background: #f4f7ff; }
 .ev-list li { margin-bottom: 3px; }
 .ev-past { display: flex; flex-wrap: wrap; gap: 4px 8px; margin: 3px 0; max-width: 100%; }
 .ev-past-item { background: var(--band, #f4f2ee); border-radius: 4px; padding: 1px 6px; max-width: 100%; overflow-wrap: anywhere; }
+.link-button { background: none; border: none; padding: 0; color: var(--accent, #2563eb); text-decoration: underline; cursor: pointer; font: inherit; }
+.fhir-risk { margin: 4px 0 6px; padding-left: 18px; }
+.fhir-risk li { overflow-wrap: anywhere; }

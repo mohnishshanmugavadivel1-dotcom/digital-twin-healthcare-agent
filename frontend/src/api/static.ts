@@ -10,7 +10,7 @@ import {
   type SnapshotManifest, type SnapshotScenario,
 } from "./staticReplay";
 import type {
-  CounterfactualResult, EvaluationReport, Forecast, ForecastSummary, HealthStatus, ModelCard, Observation, ObservationKind,
+  CounterfactualResult, EvaluationReport, FhirBundle, Forecast, ForecastSummary, HealthStatus, ModelCard, Observation, ObservationKind,
   PatientRecord, PatientSummary, ReplayStatus, TwinState,
 } from "./types";
 
@@ -82,8 +82,14 @@ export const staticApi = {
     const r = findWhatIf(sc, i, meal_grams);
     if (r) return r;
     const offset = sc.record.utc_offset_minutes;
-    throw new ApiError(409, missingWhatIfMessage(sc, meal_grams, (iso) => fmtDateTime(new Date(iso).getTime(), offset)));
+    throw new ApiError(409, missingWhatIfMessage(sc, meal_grams, (iso) => fmtDateTime(new Date(iso).getTime(), offset), i));
   },
   evaluation: async () => (await loadManifest()).evaluation as EvaluationReport,
   model: async () => (await loadManifest()).model as ModelCard,
+  // recorded once per scenario at the replay start; it does not advance with the replay
+  fhir: async (id: string, _hours = 6): Promise<FhirBundle> => {
+    const sc = await scenarioFor(id);
+    if (!sc.fhir) throw new ApiError(404, "This static snapshot has no recorded FHIR export.");
+    return sc.fhir.bundle;
+  },
 };
