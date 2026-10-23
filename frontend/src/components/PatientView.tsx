@@ -1,10 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api/client";
-import type { CounterfactualResult, Forecast, ForecastSummary, Observation, PatientRecord, ReplayStatus, TwinState } from "../api/types";
-import { comparisonCells, fmtDateTime, fmtOffset, hypoglycaemiaMedications, jointSupportChip, scenarioLowWatchCell, toMs } from "../format";
-import { MEAL_PRESETS, PRESET_NOTE, presetById, scenarioLabel } from "../mealPresets";
+import type { AgpSummary, CounterfactualResult, Forecast, ForecastSummary, Observation, PatientRecord, ReplayStatus, TwinState } from "../api/types";
+import { comparisonCells, fmtDateTime, fmtDelta, fmtOffset, hypoglycaemiaMedications, jointSupportChip, scenarioLowWatchCell, toMs } from "../format";
+import type { HandoverInput } from "../handover";
+import { GI_LABEL, MEAL_PRESETS, PRESET_NOTE, REGIONS, presetById, presetTitle, scenarioLabel } from "../mealPresets";
+import { AgpCard } from "./AgpCard";
 import { FhirViewer } from "./FhirViewer";
 import { GlucoseChart } from "./GlucoseChart";
+import { HandoverCard } from "./HandoverCard";
 import { RiskPanel } from "./RiskPanel";
 import { RiskTimeline } from "./RiskTimeline";
 import { SensorTimeline } from "./SensorTimeline";
@@ -39,7 +42,11 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
   const [sims, setSims] = useState<{ grams: number; label: string | null; result: CounterfactualResult }[]>([]);
   const [simBusy, setSimBusy] = useState(false);
   const [simError, setSimError] = useState<string | null>(null);
+  const [showWalk, setShowWalk] = useState(false);
+  const [agp, setAgp] = useState<AgpSummary | null>(null);
   const busy = useRef(false);
+  const handover: HandoverInput | null = useMemo(
+    () => (record && state ? { record, state, forecast, agp } : null), [record, state, forecast, agp]);
 
   const refresh = useCallback(async (status: ReplayStatus) => {
     const since = new Date(toMs(status.clock) - (WINDOW_HOURS + 1) * 3600_000).toISOString();
@@ -121,7 +128,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
             {record.medications.map((m) => <span key={m.name} className="chip" title={m.drug_class}>{m.name} {m.dose}</span>)}
           </div>
           <div className="muted small">{record.conditions.join(" · ")}</div>
-          <FhirViewer key={patientId} patientId={patientId} />
+          <FhirViewer key={patientId} patientId={patientId} handover={handover} />
           {(record.genetic_markers?.length || record.family_history_t2d != null) && (
             <div className="muted small" title="Synthetic, display-only: no simulated effect and not used by the model">
               Family history of T2D: {record.family_history_t2d ? "yes" : "no"}
@@ -165,16 +172,30 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
               onChange={(e) => setSimGrams(Math.max(1, Math.min(300, Number(e.target.value))))} aria-label="Hypothetical meal carbs in grams" /> g of carbs now?</label>
             <select className="small" value={presetId ?? ""} aria-label="Indian meal preset (approximate carbs, editable)" title={PRESET_NOTE}
                     onChange={(e) => { const p = presetById(e.target.value); setPresetId(p ? p.id : null); if (p) setSimGrams(p.carbs); }}>
-              <option value="">Meal preset (approx.)…</option>
-              {MEAL_PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}: {p.serving} ≈ {p.carbs} g</option>)}
+              <option value="">Indian meal preset (approx.)…</option>
+              {REGIONS.map((r) => (
+                <optgroup key={r} label={r}>
+                  {MEAL_PRESETS.filter((p) => p.region === r).map((p) => (
+                    <option key={p.id} value={p.id} title={presetTitle(p)}>
+                      {p.label}: {p.serving} ≈ {p.carbs} g · {GI_LABEL[p.gi]}{p.basis === "team_estimate" ? " · team est." : ""}</option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
+            {presetId && (() => {
+              const p = presetById(presetId);
+              return p ? <span className={`gi-badge gi-${p.gi.replace(" ", "-")}`} title={presetTitle(p)}>{GI_LABEL[p.gi]}
+                {p.basis === "team_estimate" && <span className="tiny"> · team estimate</span>}</span> : null;
+            })()}
+            <label className="small walk-toggle" title="Research estimate: adds a cohort-level walk effect (20 min, 2,500 steps, starting 15 min after the meal) to the personalised twin curve. The served forecast models have no causal walk input.">
+              <input type="checkbox" checked={showWalk} onChange={(e) => setShowWalk(e.target.checked)} /> compare with a post-meal walk (+20 min, 2,500 steps)</label>
             <button className="primary" onClick={() => void runSim()} disabled={simBusy || sims.length >= 4}
                     title={sims.length >= 4 ? "Comparison is limited to 4 scenarios — clear them to explore further" : "Runs on an isolated copy of the twin; the record is never changed"}>
               {simBusy ? "Simulating…" : sims.length ? "Add scenario" : "Simulate meal"}</button>
             {sims.length > 0 && <button onClick={clearSim}>Clear scenarios</button>}
             {simError && <span className="sim-error small" role="alert">Simulation failed: {simError}</span>}
             {sims.length > 0 && (<>
-              <p className="swipe-cue tiny muted" aria-hidden="true">← Swipe table for 120m &amp; risk columns →</p>
+              <p className="swipe-cue tiny muted" aria-hidden="true">← Swipe the table for more columns (no-meal comparison, low watch) →</p>
               <div className="table-wrap sim-wrap">
                 <table className="sim-table small" aria-label="Hypothetical meal scenarios: carb effect versus a zero-carb meal at the same time, and versus no meal">
                   <thead>
@@ -182,6 +203,8 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                       <th scope="col" rowSpan={2}>Meal</th>
                       <th scope="colgroup" colSpan={4} title="Scenario minus a zero-carb meal logged at the same time: both legs reset the model's time-since-meal input, so this isolates the carb content">
                         vs zero-carb meal now (primary)</th>
+                      <th scope="colgroup" colSpan={showWalk ? 3 : 2} className="sim-twin" title="Research estimate, not the served forecast: grams × this patient's learned carb sensitivity × a response shape fitted on synthetic training patients. Held-out synthetic test MAE 5.9 mg/dL at +120 min (served What-If 37.3).">
+                        Personalised twin curve (research)</th>
                       <th scope="colgroup" colSpan={2} className="sim-secondary" title="Scenario minus the forecast with no meal. Also contains the model's learned meal-timing expectation (after a long gap it anticipates a meal), so it can differ from the primary comparison">
                         vs no meal</th>
                       <th scope="col" rowSpan={2} className="sim-low" title="Whether the lower edge of the scenario forecast's 80% prediction interval falls below 70 mg/dL within 120 min. An interval edge, not a probability.">
@@ -189,6 +212,8 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                     </tr>
                     <tr>
                       <th scope="col">Δ +30 min</th><th scope="col">Δ +60 min</th><th scope="col">Δ +120 min</th><th scope="col">Excursion risk</th>
+                      <th scope="col" className="sim-twin">Δ +60 min</th><th scope="col" className="sim-twin">Δ +120 min</th>
+                      {showWalk && <th scope="col" className="sim-twin" title="Meal plus the walk; in brackets the walk's own effect">+ walk, Δ +120 min</th>}
                       <th scope="col" className="sim-secondary">Δ +60 min</th><th scope="col" className="sim-secondary">Excursion risk</th>
                     </tr>
                   </thead>
@@ -204,6 +229,20 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                             <span className="sim-flag sim-support" title={support.title}>{support.label}</span>)}</td>
                           <td>{p.d30}</td><td>{p.d60}</td><td>{p.d120}</td>
                           <td className={p.riskQualified ? "sim-qualified" : undefined} title={p.riskTitle}>{p.risk}{p.riskQualified && " *"}</td>
+                          {(() => {
+                            const tc = result.twin_curve;
+                            const span = showWalk ? 3 : 2;
+                            if (!tc) return <td className="sim-twin muted" colSpan={span} title="This server or snapshot predates the research twin curve, or the twin has no carb-sensitivity estimate yet">n/a</td>;
+                            const flag = tc.within_tested_range ? "" : " sim-twin-outside";
+                            const title = `${tc.caveat}${tc.within_tested_range ? "" : ` Outside the tested range: ${tc.outside_tested_reasons.join("; ")}.`}`;
+                            return (<>
+                              <td className={`sim-twin${flag}`} title={title}>{fmtDelta(tc.delta_glucose_mg_dl["60"])}</td>
+                              <td className={`sim-twin${flag}`} title={title}>{fmtDelta(tc.delta_glucose_mg_dl["120"])}{!tc.within_tested_range && <span className="sim-flag">untested</span>}</td>
+                              {showWalk && <td className={`sim-twin${flag}`} title={title}>{tc.with_walk_delta_glucose_mg_dl
+                                ? <>{fmtDelta(tc.with_walk_delta_glucose_mg_dl["120"])} <span className="muted tiny">(walk {fmtDelta(tc.walk_delta_glucose_mg_dl?.["120"])})</span></>
+                                : "–"}</td>}
+                            </>);
+                          })()}
                           <td className="sim-secondary">{s.d60}</td>
                           <td className={`sim-secondary${s.riskQualified ? " sim-qualified" : ""}`} title={s.riskTitle}>{s.risk}{s.riskQualified && " *"}</td>
                           <td className={`sim-low${low.flagged ? " sim-low-flag" : ""}`} title={low.title}>{low.text}</td>
@@ -239,11 +278,14 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
               "outside training support" tag means no training meal was comparable; inputs inside the training range still do not make a forecast accurate. <span className="sim-qualified">*</span> starting
               risk above 95%: change not informative. Not medical advice, not a treatment recommendation. The chart overlays the latest scenario.</div>
             <div className="muted tiny whatif-research" style={{ flexBasis: "100%" }}>
-              <b>Research check (synthetic simulator; not what this table serves):</b> against simulator ground truth at +120 min
-              (2,953 scenarios, 12 held-out patients), the served What-If above has MAE 37.3 mg/dL and a train-only cohort-average meal curve 16.8.
-              A <i>personalised carb-sensitivity response curve</i> (grams × this patient's learned sensitivity × a response shape fitted on
-              training patients, scale chosen on validation patients, test scored once) reached 5.9. The simulator's near-linear meal response
-              favours it; it is not real-data evidence and it is not served. Details: docs/research/TWIN_VALIDITY.md (addendum v3).
+              <b>Personalised twin curve column (research; synthetic simulator):</b> grams × this patient's learned carb sensitivity × a
+              response shape fitted on training patients, scale chosen on validation patients, test scored once. Against simulator ground truth
+              at +120 min (2,953 scenarios, 12 held-out patients) it had MAE 5.9 mg/dL, versus 16.8 for a train-only cohort-average curve and
+              37.3 for the served What-If columns. The simulator's near-linear meal response favours it. <b>Walk toggle:</b> a cohort-level
+              effect (the twin has no personal activity parameter) scaled by the latest CGM; held-out test MAE 4.3 mg/dL at +120 min against
+              11.6 for assuming no effect. It reflects the simulator's built-in exercise model. Neither is real-data evidence, neither changes
+              the served forecast, and "untested" marks inputs outside the 20–120 g / CGM ≤180 mg/dL test range. Details:
+              docs/research/TWIN_VALIDITY.md (addenda v3 and v4).
             </div>
           </div>
           <GlucoseChart cgm={cgm} meals={meals} forecast={forecast} scenario={sims.length ? sims[sims.length - 1].result.scenario : null}
@@ -255,6 +297,10 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                       cgm={cgm} meals={meals} steps={steps} heartRate={heartRate} forecasts={history} />
       <RiskTimeline history={history} threshold={forecast?.excursion?.alert_threshold ?? null} clockMs={clockMs}
                     offsetMin={offset} windowHours={WINDOW_HOURS} />
+      <div className="insight-row">
+        <AgpCard patientId={patientId} offset={offset} onLoad={setAgp} />
+        <HandoverCard input={handover} />
+      </div>
       <StatePanel state={state} />
     </div>
   );

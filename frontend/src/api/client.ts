@@ -1,4 +1,5 @@
 import type {
+  AgpSummary,
   CounterfactualResult, EvaluationReport, FhirBundle, Forecast, ModelCard, ForecastSummary, HealthStatus, Observation, ObservationKind,
   PatientRecord, PatientSummary, ReplayStatus, TwinState,
 } from "./types";
@@ -44,6 +45,7 @@ const liveApi = {
   evaluation: () => request<EvaluationReport>("/api/evaluation"),
   model: () => request<ModelCard>("/api/model"),
   fhir: (id: string, hours = 6) => request<FhirBundle>(`/api/patients/${id}/fhir${qs({ hours })}`),
+  agp: (id: string, days = 14) => request<AgpSummary>(`/api/patients/${id}/agp${qs({ days })}`),
 };
 
 export const api: typeof liveApi = IS_STATIC_DEMO ? staticApi : liveApi;

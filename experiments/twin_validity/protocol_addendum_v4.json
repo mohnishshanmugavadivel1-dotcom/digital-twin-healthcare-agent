@@ -1,0 +1,35 @@
+{
+  "name": "GlucoTwin twin-validity protocol, addendum v4: post-meal walk effect estimator (cohort level)",
+  "registered": "2026-10-23, written before scripts/validate_walk_whatif.py was implemented or run",
+  "status": "Pre-specified. No walk-effect estimate has been computed on any split before this file was written.",
+  "scope": "Synthetic simulator cohort only (seed 20261017; split train 36 / validation 12 / test 12 patients). Research estimator shown in the dashboard as a labelled research estimate; the frozen engine, tree models and their What-If numbers are unchanged. Not clinical evidence; not exercise advice.",
+  "why_not_the_tree_model": "The served models see activity only as steps in the 30 and 60 min BEFORE the forecast moment (features steps_30, steps_60). A walk planned after the meal is future activity that no model input represents, so a feature-perturbation walk What-If would answer a different question ('had they walked before eating'). It is therefore not built.",
+  "why_cohort_level": "The twin learns one personal parameter (carb sensitivity). It has no learned per-patient activity sensitivity, so every walk estimator here is cohort level and is labelled as such.",
+  "intervention": {
+    "meal": "g grams of true carbohydrate at the anchor minute a, spread over 15 min (as the generator does); g in {20, 25, 35, 36, 40, 45, 50, 60, 90, 120}",
+    "walk": "+125 steps/min for 20 min (2,500 steps) starting at a + 15 min, added to the patient's existing steps; the generator's activity cap (steps/100 clipped at 1.3) applies unchanged",
+    "truth": "W(h) = noiseless interstitial glucose with meal + walk minus with meal only, paired with common random numbers (same hidden parameters, schedule and stress days), at h = +30, +60, +120 min after the meal"
+  },
+  "anchors": "every patient x the 32 replay offsets of protocol v1 (OFFSETS_H), anchor = latest CGM reading at first observation + offset; eligible if that reading <= 180 mg/dL. All 10 meal sizes per anchor.",
+  "data_use": {
+    "train (36 patients)": "fits every candidate's parameters from simulator truth W(h)",
+    "validation (12 patients)": "selects one candidate by the lowest mean of validation MAEs at +30/+60/+120 min; ties resolved in the listed order",
+    "test (12 patients)": "scored once with the selected candidate"
+  },
+  "candidates": [
+    {"id": "cohort_constant", "estimate": "W_hat(h) = mean train W(h)"},
+    {"id": "cohort_by_grams", "estimate": "W_hat(g, h) = mean train W(h) for that meal size"},
+    {"id": "glucose_scaled", "estimate": "W_hat(h) = beta_h x latest CGM at the anchor, beta_h = least squares through the origin on train"}
+  ],
+  "comparators_on_test": [
+    "no walk effect (W_hat = 0): what the served tree What-If and the meal-only twin curve implicitly assume",
+    "cohort_constant (if not selected)"
+  ],
+  "metrics": ["MAE", "RMSE", "bias", "direction accuracy where |W| >= 2 mg/dL (reported with the share of negative true W)"],
+  "inference": "paired patient bootstrap over the 12 test patients, 1,000 resamples, seed 20261017, 95% percentile CIs for MAE and RMSE differences (selected minus comparator)",
+  "disclosures": [
+    "The simulator's exercise term is -ex_gain x activity x G, with ex_gain uniform 0.012-0.024 per patient; glucose_scaled mirrors that structure, so its accuracy is a best case for this simulator.",
+    "The size of any walk effect here is a property of the simulator's built-in exercise model, not evidence about real walking."
+  ],
+  "served_twin_curve": "The meal-only personalised curve served alongside the tree What-If is the addendum v3 selected estimator: delta = k_h x grams x s(t0), k_h = selected_alpha_h x c_median(h) from reports/research/twin_and_whatif_validation.json (3-decimal values, product rounding changes predictions by < 0.6%). It is a research estimate, flagged 'outside tested range' when grams are outside 20-120 g or the latest CGM is above 180 mg/dL (the v3 test conditions)."
+}
