@@ -40,7 +40,8 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
     <p style="font-size:26px;max-width:980px;margin-top:6px">A continuously updated virtual Type 2 diabetes patient that estimates, up to 2 hours ahead,
       the risk that a post-meal glucose excursion is about to begin, and shows a doctor why.</p>
     <p style="margin-top:36px"><b>Team:</b> team mono · <b>College / incubator:</b> Amrita Vishwa Vidyapeetham, Chennai<br>
-      <b>Members:</b> Mohnish Shanmugavadivel (sole member)</p>
+      <b>Registered team:</b> Mohnish Shanmugavadivel (Team Leader, primary/sole developer) · Sachithanantham V (Registered Team Member)<br>
+      <span style="font-size:15px;color:#5b6472">Implementation and experiments: Mohnish Shanmugavadivel</span></p>
     <div class="banner" style="margin-top:28px;max-width:980px">Research and educational prototype on <b>synthetic patients only</b>. Not a medical device.
       Outputs are not diagnoses or treatment instructions.</div>
   </div>
@@ -286,10 +287,10 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
     </div>
     <ul class="small" style="margin-top:0;font-size:17px">
       <li><b>Twin curve beside the served What-If.</b> SYN-0039, 35 g at 07:55, +120 min: served {{tc_served}}, twin curve {{tc_curve}}, paired-simulator truth {{tc_truth}}. Test MAE {{d_mae}} vs {{d_wi}}.</li>
-      <li><b>Post-meal walk toggle</b> (20 min, 2,500 steps): cohort-level effect; test MAE {{walk_mae}} vs {{walk_none}} for "no effect" at +120 min. Not passed through the tree models (they only see past steps).</li>
-      <li><b>24 regional Indian dishes</b> (South 10 · North 5 · West 5 · East 2 · Snacks 2): 11 cited, 13 team estimates; indicative GI badges (2008 GI tables). The model sees grams only.</li>
+      <li><b>Post-meal walk toggle</b> (20 min, 2,500 steps): cohort-level effect; test MAE {{walk_mae}} vs {{walk_none}} for "no effect" at +120 min. Not fed to the tree models.</li>
+      <li><b>24 regional Indian dishes</b> (South 10 · North 5 · West 5 · East 2 · Snacks 2): 11 cited, 13 team estimates; indicative GI badges. A swap finder ranks lower-carb presets by the twin curve (in effect, by grams).</li>
       <li><b>AGP card:</b> time in ranges, GMI, CV, hourly percentiles; flags data below the 14-day / 70% minimum.</li>
-      <li><b>Handover note:</b> fixed template; a parser checks every number traces to the record, state or forecast, else the note is withheld. Describes, never instructs.</li>
+      <li><b>Clinician + Atithi (patient) notes:</b> fixed templates; one parser traces every number to the twin, else the note is withheld. Describe, never prescribe.</li>
       <li><b>FHIR in:</b> <code>POST /api/fhir/Bundle</code> validates R4 Observations (CGM 99504-3; 14749-6 with a lab-code warning; HR 8867-4; HbA1c 4548-4). Nothing stored; not certified.</li>
     </ul>
   </div>
@@ -418,7 +419,7 @@ make check     # lint + tests + build</pre>
   <div style="margin-top:150px">
     <h1>Thank you</h1>
     <p style="font-size:24px">GlucoTwin: a transparent, reproducible digital-twin prototype for early warning of post-meal hyperglycaemia.</p>
-    <p><b>Team:</b> team mono · Amrita Vishwa Vidyapeetham, Chennai · Mohnish Shanmugavadivel</p>
+    <p><b>Team:</b> team mono · Mohnish Shanmugavadivel (Team Leader, primary/sole developer) · Sachithanantham V (Registered Team Member) — Amrita Vishwa Vidyapeetham, Chennai</p>
     <div class="banner" style="max-width:900px;margin-top:24px">All results are from synthetic patients. Not a medical device. Not clinical validation.</div>
   </div>
   <div class="foot"><span>GlucoTwin v0.2</span><span>16</span></div>

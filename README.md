@@ -1,6 +1,6 @@
 # GlucoTwin — a living glucose digital twin for type 2 diabetes
 
-**Submission ID:** team_mono_Amrita_Vishwa_Vidyapeetham_Chennai
+**Team / Submission Folder:** team_mono_Amrita_Vishwa_Vidyapeetham_Chennai
 
 **Happiest Health Digital Twin Challenge 2026 · Prototype & Code Submission · team mono**
 
@@ -204,7 +204,7 @@ These are simulator results, not evidence about real patients.
 | [Counterfactual audit](reports/counterfactual_audit.json) · [§11](#11-counterfactual-simulation-and-limitations) | What-If comparisons over 2,934 scenarios |
 | [API and data contracts](docs/API_CONTRACTS.md) | Schemas and event definition |
 
-Team: **team mono**, Amrita Vishwa Vidyapeetham, Chennai (Mohnish Shanmugavadivel).
+Team: **team mono** · Mohnish Shanmugavadivel (Team Leader, primary/sole developer) · Sachithanantham V (Registered Team Member) — Amrita Vishwa Vidyapeetham, Chennai.
 
 ## Limitations and intended use
 
@@ -459,6 +459,28 @@ The patient view and the FHIR panel show a handover note built by a fixed templa
 - **The grounding check.** A separate parser re-reads the finished note, extracts every number and checks that each one is a value of a field that line describes, or a stated threshold. The card shows the result, for example "Verified: 100% of numbers trace to the twin record, state or forecast". If any number does not trace, the note is withheld.
 - **What it does not show.** The check shows faithful copying, not forecast accuracy. A swap between two in-scope values on the same line would not be detected.
 - **Content limits.** The note describes model output and never gives treatment instructions; a unit test rejects instruction verbs.
+
+### 4.12 Automated gentle meal-swap finder (twin-curve search)
+
+Inside the What-If lab, a card searches the Indian presets automatically whenever the meal being considered (the latest scenario) is large (≥ 60 g) or its simulated excursion risk reaches the model's alert threshold. It can also be run on demand. Its label reads: *"Deterministic Twin Scenario Search (ranked by Personalised Twin Curve inside training support; educational simulation, not a clinical prescription)."*
+
+- **Search.** Every preset with fewer grams than the meal being considered is simulated at the same moment.
+- **Exclusions.** A preset is dropped if it is under 30 g (the served model flags those meals as unreliable), outside B-23 training support, outside the twin curve's tested range, or if its scenario forecast trips the low watch (80% lower bound below 70 mg/dL).
+- **Ranking and display.** The survivors are ranked by the personalised twin curve's rise at +120 min. The top 3 are shown with the meal-plus-walk value, and *Load* puts an option into the What-If input.
+- **What the ranking really is.** The curve receives only grams (grams × personal sensitivity × a shared shape), so its order is the same as ordering by carbohydrate grams. GI badges are context only. The walk effect depends on the latest CGM, so it is the same for every option. The card states all of this.
+- **Content limits.** It never mentions insulin or medicines.
+- **Demo example.** SYN-0039 at 07:55, considering rajma chawal (68 g, twin curve +116.5 mg/dL at +120 min). The top 3 are khaman dhokla 32 g (+54.8), idli with sambar 35 g (+60.0) and rava upma 35 g (+60.0), each with the low watch not triggered.
+- **Code and tests.** Logic in `frontend/src/swapFinder.ts`; unit tests in `frontend/tests/swapFinder.test.ts`.
+
+### 4.13 Atithi (patient) plain-language companion summary
+
+Happiest Health calls the people it serves *atithis* (guests) and describes its approach as "more educating than medicating" ([Tribune/PTI, 10 Oct 2025](https://www.tribuneindia.com/news/business/happiest-health-launches-happiest-ayurveda-clinic)). The patient view adds a collapsible companion card in plain language, built by a fixed template in `frontend/src/handover.ts`. It has three parts:
+
+- your glucose now and over the next 2 hours;
+- what your digital twin learned about your meals (personal carb sensitivity and the most recent meal);
+- a gentle option to discuss with your doctor, quoting the What-If meal-and-walk comparison and the top-ranked swap.
+
+It uses **the same numeric grounding verifier** as the clinician note, with its own line scopes: if any number does not trace to the twin record, state, forecast or the What-If research estimate, the card refuses to render. In the demo with rajma chawal considered, 20/20 numbers trace. It describes and never prescribes. Unit tests (`frontend/tests/atithi.test.ts`) reject dosing or medication-change wording and check that tampered numbers are caught.
 
 ## 5. System architecture
 
@@ -828,6 +850,7 @@ This section maps the challenge submission requirements to the repository.
 | AI/ML model and evaluation details | This README and linked model documentation |
 | Architecture diagram in PDF format | [GlucoTwin Architecture PDF](docs/submission/GlucoTwin_Architecture.pdf) |
 | Project presentation in PDF format | [GlucoTwin Presentation PDF](docs/submission/GlucoTwin_Presentation.pdf) |
+| `<TeamName>_<CollegeName>` submission folder | [`team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/`](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/) holds copies of both PDFs ([architecture](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Architecture.pdf), [presentation](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Presentation.pdf)), identical to the files in `docs/submission/`, which stay in place so existing links keep working. |
 | Demo video | **Not recorded yet; no link.** The rules state both "minimum 20 minutes" and "15–20 minutes", so the length must be confirmed with the organisers. Script and shot list with two cuts (18:30 and 23:00): [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md). |
 | Real-data research results (aggregate only) | [public/SUMMARY.md](reports/real_data/shanghai_t2dm/public/SUMMARY.md) · protocol: [docs/research/SHANGHAI_T2DM_EXPERIMENT.md](docs/research/SHANGHAI_T2DM_EXPERIMENT.md) |
 | Static demo (recorded snapshot) | Published on GitHub Pages: [live snapshot](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). Build instructions: [docs/STATIC_DEMO.md](docs/STATIC_DEMO.md). |
@@ -840,9 +863,9 @@ This section maps the challenge submission requirements to the repository.
 |---|---|
 | Team name | team mono |
 | Institution | Amrita Vishwa Vidyapeetham, Chennai |
-| Team size | 1 |
-| Team member | Mohnish Shanmugavadivel |
-| Role | Solo student developer |
+| Registered team (Unstop) | Mohnish Shanmugavadivel (Team Leader, primary/sole developer) · Sachithanantham V (Registered Team Member) — Amrita Vishwa Vidyapeetham, Chennai |
+| Team size | 2 registered members |
+| Contributions | All implementation, experiments, evaluation and documentation in this repository were carried out by Mohnish Shanmugavadivel. Sachithanantham V is listed because he is on the official Unstop registration, which cannot be changed after signup. |
 | Team leader contact | Provided to the organisers on the Unstop platform (not published here) |
 
 ## 16. Open-source licence
