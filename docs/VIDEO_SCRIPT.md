@@ -32,7 +32,7 @@ cd frontend && npm ci && npm run build:static && npm run preview:static   # http
   - [README.md](../README.md), rendered locally or on GitHub once it has been pushed;
   - [rmse_by_horizon.svg](../reports/real_data/shanghai_t2dm/public/rmse_by_horizon.svg);
   - the architecture PDF and the presentation PDF.
-- The deck was regenerated on 2026-10-23 from `docs/submission/src/presentation.template.html` (`scripts/build_presentation.py`, then `scripts/export_submission_pdfs.mjs`). Slide 10 now says SYN-0019 was warned late: the alert fires at 14:50, 45 min before the first reading above 180. Earlier copies said "Missed". Slide 13 shows the collected test count (140), not 76. Slide 9 shows the current 07:55 screenshot. If you use an older copy of the PDF, do not show slides 9, 10 or 13.
+- The deck was regenerated on 2026-10-23 from `docs/submission/src/presentation.template.html` (`scripts/build_presentation.py`, then `scripts/export_submission_pdfs.mjs`). It now has **15 slides**. New slide 9, *Twin validity against simulator ground truth*, covers personalisation recovery, the post-meal improvement, the confidence line, the served What-If negative result, the train-fitted personalised curve, the FHIR RiskAssessment and the low-glucose watch; every number is filled from the research reports. Later slides moved up by one: dashboard 10, demo moments 11 (SYN-0019 warned late at 14:50, 45 min before 180), safety 12, impact 13, engineering 14 (151 Python tests, 34 frontend tests), thank you 15. Do not show an older copy of the PDF.
 - If any on-screen value differs from this script, **stop**. Never narrate a number you cannot see.
 
 **Alternative: the live app** (`make setup && make train && make serve`). `make train` rewrites `reports/evaluation_report.json` with only `generated_at` and `model_version` changing. Afterwards, run `git diff --stat reports/` and restore with `git checkout -- reports/` before any commit. Live values should match this script, but re-verify them before recording.
@@ -85,7 +85,7 @@ If a take runs short, pause longer on the evidence card in module 4 rather than 
 | 10 | 15:15–16:45 | 1:30 | README "Results at a glance" §2 + `rmse_by_horizon.svg` | Show the table, the chart and the attribution line | "Real data (ShanghaiT2DM) · glucose-history models · NOT the GlucoTwin model" |
 | X3 | (B only) | 1:30 | Terminal | `make check`; show 140 passed, 23/23 frontend | "Reproducible: one seed, `make check`" |
 | 11 | 16:45–18:00 | 1:15 | README "Limitations and intended use" | Scroll | "Not clinically validated · next: real data with carbs and activity" |
-| 12 | 18:00–18:30 | 0:30 | Deck slide 14 (thank you) | Static | Repo link · "Synthetic patients · not a medical device" |
+| 12 | 18:00–18:30 | 0:30 | Deck slide 15 (thank you) | Static | Repo link · "Synthetic patients · not a medical device" |
 
 ## 4. Narration and expected screen values
 
@@ -123,7 +123,7 @@ Screen: personalised-parameter panel shows **1.70 mg/dL per g**, prior **1.31**,
 
 > "This is what makes it a twin rather than a generic model. Farah's carb sensitivity, how much her glucose rises per gram of carbohydrate, started at 1.31 from her HbA1c. After 20 of her own meals it is 1.70: her responses are steeper than her record suggested. Anil, a different synthetic patient, started at 1.25 and has come down to 1.11 over 33 meals. The rule is simple and visible: each eligible meal contributes its observed rise per gram, shrunk towards the record-based prior with the weight of three pseudo-meals. In our simulator it measurably helps forecasts, which I'll show in a moment; we have not tested that on real patients. It makes the twin's state patient-specific, and you'll see it update live in a minute."
 
-**5+ (Cut C, +0:30).** Screen: the confidence line under the parameter reads **"Confidence: 87% from 20 observed meals; ± 0.16 sampling error (meal-to-meal SD 0.81)"**. Then show the README section *How personalisation works*, bullet "It matters most after meals" (**+2.44 mg/dL**, CI **0.81–3.85**).
+**5+ (Cut C, +0:30).** Screen: the confidence line under the parameter reads **"Confidence: 87% from 20 observed meals; ± 0.16 sampling error (meal-to-meal SD 0.81)"**. Then show deck slide 9 (or the README section *How personalisation works*, bullet "It matters most after meals"): **+2.44 mg/dL**, CI **0.81–3.85**.
 
 > "How much should you trust that 1.70? The twin tells you: 87% of it comes from Farah's own 20 meals, with a sampling error of about plus or minus 0.16. That's a spread, not a probability. And does personalisation help? In the simulator, in the hour after a logged meal, switching it off raises the 60-minute forecast error by 2.44 mg/dL, with a 95% interval of 0.81 to 3.85. That analysis was added after our first results, and it's simulator evidence only."
 
@@ -135,9 +135,9 @@ Screen (still 07:55): choose preset **Idli with sambar** (2 idli + 1 small bowl 
 
 Optional comparison for Cut B (SYN-0019 at 13:45, same preset): **7% → 20%**, Δ+60 **+25.4**. "Same meal, different twin, different predicted response."
 
-**6+ (Cut C, +0:40).** Screen: scroll the What-If table right to the **Low watch** column (every recorded row shows **–**; hover one for the tooltip). Then read the grey *Research check* note under the table: served What-If **37.3**, cohort average **16.8**, personalised curve **8.5** mg/dL MAE at +120 min.
+**6+ (Cut C, +0:40).** Screen: scroll the What-If table right to the **Low watch** column (every recorded row shows **–**; hover one for the tooltip). Then read the grey *Research check* note under the table: served What-If **37.3**, cohort average **16.8**, personalised curve **5.9** mg/dL MAE at +120 min.
 
-> "The last column is a low-glucose watch for each scenario. Adding carbs lifts the forecast, so it stays clear here; you'll see the watch fire on the risk card for a patient on a sulfonylurea and insulin. Now honesty about the What-If. We replayed every scenario against the simulator's true response. At two hours the served What-If is off by 37 mg/dL on average, worse than a simple cohort-average curve at 17. But a curve built from this patient's learned sensitivity gets 8.5. So the learned parameter carries the right information; our forecasting model doesn't yet use it well. That curve is research, designed after we saw the problem, and it is not what the table serves."
+> "The last column is a low-glucose watch for each scenario. Adding carbs lifts the forecast, so it stays clear here; you'll see the watch fire on the risk card for a patient on a sulfonylurea and insulin. Now honesty about the What-If. We replayed every scenario against the simulator's true response. At two hours the served What-If is off by 37 mg/dL on average, worse than a simple cohort-average curve at 17. But a curve built from this patient's learned sensitivity, fitted on training patients and tested once, gets about 6. So the learned parameter carries the right information; our forecasting model doesn't yet use it well. That curve is research, and it is not what the table serves."
 
 Optional, if time allows: SYN-0019 deep link, **+1 h** three times → **16:45**: the risk card shows "Low-glucose watch: the 80% forecast lower bound falls below 70 mg/dL from **+120 min** (lowest **69 mg/dL**)", listing **Glimepiride (sulfonylurea)** and **Insulin glargine (basal insulin)**. Return to the hero deep link before module F.
 
@@ -197,4 +197,4 @@ Screen: terminal, `make check`. Show Ruff passing, **151 passed** and **34/34** 
 - [ ] Check the duration against the cut the organisers confirmed (A: about 18:30; B: at least 20:30 before any trim; C: between 20:15 and 20:30).
 - [ ] Upload as **unlisted** (or a recorded PPT, if the organisers allow it), then open the link in a logged-out browser.
 - [ ] Only then add the link to README §14 and §18 and to `docs/COMPETITION_COMPLIANCE.md`.
-- [ ] Fix or regenerate deck slides 10 and 13 before submitting the PDF, or explain the corrections in the video.
+- [ ] Submit the 15-slide PDF regenerated on 2026-10-23 (slide 9 is twin validity).

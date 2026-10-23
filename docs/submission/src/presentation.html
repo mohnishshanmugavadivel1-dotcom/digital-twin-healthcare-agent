@@ -225,6 +225,37 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
   <div class="foot"><span>Source: reports/audit_report.json (deterministic; 1000 patient-level bootstrap resamples)</span><span>8</span></div>
 </section>
 
+<!-- twin validity -->
+<section class="slide" style="padding:36px 52px 36px">
+  <h2 style="margin-bottom:10px">Twin validity against simulator ground truth <span class="tag">synthetic only · 95% patient-bootstrap CIs</span></h2>
+  <div class="cols3">
+    <div>
+      <h3>Does it learn the person?</h3>
+      <ul class="small">
+        <li>Hidden per-patient meal gain recovered: r = 0.62 (record prior) → 0.95 after 3 days → 0.98 at 14 days.</li>
+        <li><b>After meals it matters:</b> switching personalisation off raises +60-min RMSE by <b>+2.44 mg/dL</b> (0.81–3.85; 20.52 → 22.96), in 6,266 test moments with ≥ 10 g logged in the past hour <span class="muted">(post-hoc)</span>.</li>
+        <li>Confidence shown on screen, e.g. SYN-0039: <b>87%</b> from 20 own meals, ± 0.16 sampling error (not a probability).</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Is the What-If right?</h3>
+      <ul class="small">
+        <li><b>Served What-If (negative result):</b> at +120 min, MAE 45.3 vs 20.8 mg/dL for a cohort-average curve (difference +24.5 [+13.4, +34.8]; 20–120 g).</li>
+        <li><b>Train-fitted personalised curve</b> (shape from 36 training patients' observed CGM; variant chosen on 12 validation patients: median shape, validation-calibrated; scored once on 12 test patients): +120 min MAE <b>5.9</b> vs cohort 16.8 (difference −10.9 [−15.4, −6.2]) and served What-If 37.3.</li>
+        <li class="muted">+30 / +60 min: curve 1.8 / 5.3 vs cohort 3.1 / 12.5. Research estimator, not served; the simulator's near-linear meal response favours it.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Interoperability and safety signals</h3>
+      <ul class="small">
+        <li><b>FHIR R4 record</b> (one click, Copy/Download): 2 Condition · 3 MedicationStatement · 75 Observation · 1 Patient · 1 RiskAssessment. RiskAssessment carries the excursion probability (probabilityDecimal 0.215 at the replay start). Own synthetic ID, never ABHA; not ABDM-certified.</li>
+        <li><b>Low-glucose watch</b>: flags when the 80% lower bound falls below 70 mg/dL (risk card and each What-If row), with sulfonylurea/insulin context. Not a probability: on test patients a low followed in 33.5% of flagged moments.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="foot"><span>Sources: reports/research/twin_validity.json, twin_and_whatif_validation.json, frontend/static-demo/demo/*.json</span><span>9</span></div>
+</section>
+
 <!-- 9 -->
 <section class="slide" style="padding:30px 48px 36px">
   <h2 style="margin-bottom:8px">Clinician dashboard: what the doctor sees</h2>
@@ -242,7 +273,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
         Learned model associations, not physiology; meals under 30 g flagged unreliable.</li>
     </ul>
   </div>
-  <div class="foot"><span>Recorded static snapshot of the current build (responses recorded from the real API), held-out synthetic patient SYN-0039 at 07:55 with three what-if meals</span><span>9</span></div>
+  <div class="foot"><span>Recorded static snapshot of the current build (responses recorded from the real API), held-out synthetic patient SYN-0039 at 07:55 with three what-if meals</span><span>10</span></div>
 </section>
 
 <!-- 10 -->
@@ -269,7 +300,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <p class="tiny muted">Deep link /?patient=SYN-0019&amp;start=253.667 · Of 298 test onsets, 205 (69%) had a sustained warning and 272 had an alert at some point in the prior 2 h. scripts/find_demo_scenario.py lists 53 daytime onsets (08:00–21:59, ≥ 30 h into the data) whose alert was off at the last reading before onset.</p>
     </div>
   </div>
-  <div class="foot"><span>Synthetic data only · not a medical device</span><span>10</span></div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>11</span></div>
 </section>
 
 <!-- 11 -->
@@ -300,7 +331,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       </ul>
     </div>
   </div>
-  <div class="foot"><span>Synthetic data only · not a medical device · research: docs/research/TWIN_VALIDITY.md</span><span>11</span></div>
+  <div class="foot"><span>Synthetic data only · not a medical device · research: docs/research/TWIN_VALIDITY.md</span><span>12</span></div>
 </section>
 
 <!-- 12 -->
@@ -327,7 +358,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       </ol>
     </div>
   </div>
-  <div class="foot"><span>Synthetic data only · not a medical device</span><span>12</span></div>
+  <div class="foot"><span>Synthetic data only · not a medical device</span><span>13</span></div>
 </section>
 
 <!-- 13 -->
@@ -339,7 +370,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <ul class="small">
         <li>Python 3.11 · NumPy · pandas · scikit-learn · Pydantic v2 contracts · FastAPI</li>
         <li>React 19 + TypeScript + Recharts (Vite)</li>
-        <li>pytest (151 tests) · ruff · GitHub Actions CI · pinned requirements.lock / package-lock.json</li>
+        <li>pytest (151 tests) · 34 frontend tests · ruff · GitHub Actions CI · pinned requirements.lock / package-lock.json</li>
       </ul>
       <h3 style="margin-top:18px">Reproduce</h3>
       <pre style="font-size:15px;background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px">make setup
@@ -359,7 +390,7 @@ make check     # lint + tests + build</pre>
       </ul>
     </div>
   </div>
-  <div class="foot"><span>github.com/mohnishshanmugavadivel1-dotcom/digital-twin-healthcare-agent</span><span>13</span></div>
+  <div class="foot"><span>github.com/mohnishshanmugavadivel1-dotcom/digital-twin-healthcare-agent</span><span>14</span></div>
 </section>
 
 <!-- 14 -->
@@ -370,6 +401,6 @@ make check     # lint + tests + build</pre>
     <p><b>Team:</b> team mono · Amrita Vishwa Vidyapeetham, Chennai · Mohnish Shanmugavadivel</p>
     <div class="banner" style="max-width:900px;margin-top:24px">All results are from synthetic patients. Not a medical device. Not clinical validation.</div>
   </div>
-  <div class="foot"><span>GlucoTwin v0.2</span><span>14</span></div>
+  <div class="foot"><span>GlucoTwin v0.2</span><span>15</span></div>
 </section>
 </body></html>

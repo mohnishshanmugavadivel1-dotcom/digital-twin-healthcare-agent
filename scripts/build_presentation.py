@@ -28,6 +28,51 @@ def rng(vals, fmt) -> str:
     return f"{fmt(min(vals))}–{fmt(max(vals))}"
 
 
+def twin_validity_values() -> dict[str, str]:
+    """Tokens for the twin-validity slide, read from the research reports and the recorded static snapshot."""
+    tv = json.loads((ROOT / "reports/research/twin_validity.json").read_text())
+    tw = json.loads((ROOT / "reports/research/twin_and_whatif_validation.json").read_text())
+    snap = json.loads((ROOT / "frontend/static-demo/demo/early-warning.json").read_text())
+    rec = {x["day"]: x["pearson_r"] for x in tv["A2_latent_sensitivity_recovery"]["test_patients"]}
+    pm = tw["A_post_meal_personalisation_ablation"]["by_horizon"]["60"]
+    wi = tw["B_whatif_extra_grams"]["by_horizon"]["120"]
+    d = tw["D_train_fitted_validation_selected_curve"]
+    dt = d["test_all_grams"]
+    personal = snap["frames"][0]["state"]["personal"]
+    entries = snap["fhir"]["bundle"]["entry"]
+    kinds: dict[str, int] = {}
+    for e in entries:
+        kinds[e["resource"]["resourceType"]] = kinds.get(e["resource"]["resourceType"], 0) + 1
+    probs = [p["probabilityDecimal"] for e in entries if e["resource"]["resourceType"] == "RiskAssessment"
+             for p in e["resource"]["prediction"] if "probabilityDecimal" in p]
+    names = {"median_uncal": "median shape, no calibration", "mean_uncal": "mean shape, no calibration",
+             "median_cal": "median shape, validation-calibrated", "mean_cal": "mean shape, validation-calibrated"}
+    def f2(x: float) -> str:
+        return f"{x:+.1f}".replace("-", "\u2212")
+
+    def ci2(pair: list[float]) -> str:
+        return ", ".join(f"{x:+.1f}".replace("-", "\u2212") for x in pair)
+
+    return {
+        "rec_r0": f"{rec[0]:.2f}", "rec_r3": f"{rec[3]:.2f}", "rec_r14": f"{rec[14]:.2f}",
+        "pm_diff": f"{pm['rmse']['ablated_minus_served']:+.2f}", "pm_ci": ci(pm["rmse"]["ci95_patient_bootstrap"], "{:.2f}"),
+        "pm_served": f"{pm['rmse']['served']:.2f}", "pm_abl": f"{pm['rmse']['ablated']:.2f}", "pm_rows": f"{pm['n_rows']:,}",
+        "conf_w": pct(personal["observed_weight"]), "conf_n": str(personal["meals_used"]),
+        "conf_se": f"{personal['sampling_se_mg_dl_per_g']:.2f}",
+        "wi_mae": f"{wi['whatif']['mae']:.1f}", "co_mae": f"{wi['baseline']['mae']:.1f}",
+        "wi_diff": f2(wi["mae_whatif_minus_baseline"]), "wi_ci": ci2(wi["mae_whatif_minus_baseline_ci95"]),
+        "d_sel": names[d["validation"]["selected"]],
+        "d_mae": f"{dt['120']['curve']['mae']:.1f}", "d_co": f"{dt['120']['cohort_average']['mae']:.1f}",
+        "d_wi": f"{dt['120']['served_whatif']['mae']:.1f}",
+        "d_diff": f2(dt["120"]["vs_cohort_average"]["mae_diff"]), "d_ci": ci2(dt["120"]["vs_cohort_average"]["mae_diff_ci95"]),
+        "d_mae30": f"{dt['30']['curve']['mae']:.1f}", "d_mae60": f"{dt['60']['curve']['mae']:.1f}",
+        "d_co30": f"{dt['30']['cohort_average']['mae']:.1f}", "d_co60": f"{dt['60']['cohort_average']['mae']:.1f}",
+        "fhir_counts": " · ".join(f"{n} {k}" for k, n in sorted(kinds.items())),
+        "fhir_p": f"probabilityDecimal {probs[0]:.3f} at the replay start" if probs else "none recorded",
+        "lb_ppv": f'{100 * tv["D_lower_bound_below_70_rule"]["test"]["all"]["ppv"]:.1f}%',
+    }
+
+
 def main() -> None:
     a = json.loads((ROOT / "reports/audit_report.json").read_text())
     ev = json.loads((ROOT / "reports/evaluation_report.json").read_text())
@@ -67,6 +112,8 @@ def main() -> None:
         "stress_auroc": f"{st['auroc_logistic_regression']:.3f}", "stress_sus": pct(st["logistic_event_sensitivity_sustained"]),
         "stress_rmse30": f"{st['rmse30_hist_gradient_boosting']:.1f}", "stress_30": pct(st["logistic_event_sensitivity_lead_ge_30min"]),
         "n_tests": str(sum(per_file)) if per_file else "?",
+        "n_frontend": str(sum(len(re.findall(r"^\s*test\(", f.read_text(), re.M)) for f in (ROOT / "frontend/tests").glob("*.ts"))),
+        **twin_validity_values(),
     }
     html = (SRC / "presentation.template.html").read_text()
     for k, v in vals.items():

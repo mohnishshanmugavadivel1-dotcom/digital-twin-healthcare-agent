@@ -239,11 +239,11 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
               "outside training support" tag means no training meal was comparable; inputs inside the training range still do not make a forecast accurate. <span className="sim-qualified">*</span> starting
               risk above 95%: change not informative. Not medical advice, not a treatment recommendation. The chart overlays the latest scenario.</div>
             <div className="muted tiny whatif-research" style={{ flexBasis: "100%" }}>
-              <b>Research check (synthetic simulator, post-hoc; not what this table serves):</b> against simulator ground truth at +120 min
-              (2,953 scenarios, 12 held-out patients), the served What-If above has MAE 37.3 mg/dL and a cohort-average meal curve 16.8. An
-              exploratory <i>personalised carb-sensitivity response curve</i> (grams × this patient's learned sensitivity × a response shape
-              learned from observed CGM) reached 8.5. It was designed after the What-If's shortfall was known, the simulator favours it, and it is
-              not served. Details: docs/research/TWIN_VALIDITY.md (addendum v2).
+              <b>Research check (synthetic simulator; not what this table serves):</b> against simulator ground truth at +120 min
+              (2,953 scenarios, 12 held-out patients), the served What-If above has MAE 37.3 mg/dL and a train-only cohort-average meal curve 16.8.
+              A <i>personalised carb-sensitivity response curve</i> (grams × this patient's learned sensitivity × a response shape fitted on
+              training patients, scale chosen on validation patients, test scored once) reached 5.9. The simulator's near-linear meal response
+              favours it; it is not real-data evidence and it is not served. Details: docs/research/TWIN_VALIDITY.md (addendum v3).
             </div>
           </div>
           <GlucoseChart cgm={cgm} meals={meals} forecast={forecast} scenario={sims.length ? sims[sims.length - 1].result.scenario : null}
