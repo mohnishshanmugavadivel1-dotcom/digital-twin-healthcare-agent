@@ -125,8 +125,25 @@ A pre-registered analysis ([protocol](experiments/twin_validity/protocol.json), 
 **Post-hoc addendum** ([write-up](docs/research/TWIN_VALIDITY.md#addendum-v2-2026-10-23-post-hoc-and-exploratory), [aggregates](reports/research/twin_and_whatif_validation.json); synthetic only, 95% patient-bootstrap CIs):
 
 - **Larger meals.** Across 20–120 g the negative result holds and grows with meal size: at +120 min the What-If MAE is 45.3 vs 20.8 for the cohort average (+24.5 [13.4, 34.8]).
-- **Where the problem lies.** An exploratory estimator, *grams × learned sensitivity × a response curve learned from observed CGM*, beats the cohort average at +120 min: **MAE 8.5 vs 16.8 mg/dL** (−8.2 [−14.0, −2.9]). The served What-If scores 37.3 on the same 2,953 scenarios. It ties at +60 min and is worse at +30 min. So the personalised parameter carries the right information and the trajectory model is the bottleneck.
-- **Caveats.** The estimator was designed after we saw the negative result, the simulator's near-linear meal response favours it, and it is **not served**.
+- **Where the problem lies (exploratory, v2).** A post-hoc estimator, *grams × learned sensitivity × a response curve learned from observed CGM*, scored MAE 8.5 vs 16.8 for the cohort average at +120 min, but it was worse at +30 min.
+
+**Pre-specified test of the personalised curve** ([addendum v3](docs/research/TWIN_VALIDITY.md#addendum-v3-2026-10-23-train-fitted-validation-selected-personalised-curve), [protocol](experiments/twin_validity/protocol_addendum_v3.json)):
+
+- **How it was fitted.** The shape is fitted on the 36 training patients' observed CGM. One of four candidates (median or mean shape, with or without a per-horizon scale) is selected on the 12 validation patients. Each patient's sensitivity uses only meals completed before the forecast moment. The 12 test patients were scored once, on 2,953 scenarios with paired simulator ground truth and 1,000-sample paired patient-bootstrap 95% CIs.
+- **Selected candidate.** The calibrated median shape, with validation MAE 5.43 vs 8.59 for v2's uncalibrated estimator. With a per-horizon scale, the median and mean shapes give identical predictions, so the tie went to the first in the listed order.
+
+| Test, all meal sizes | +30 min | +60 min | +120 min |
+|---|---|---|---|
+| Personalised curve, MAE / RMSE (mg/dL) | **1.8** / 2.6 | **5.3** / 7.8 | **5.9** / 9.0 |
+| Cohort-average curve (train only), MAE / RMSE | 3.1 / 4.1 | 12.5 / 16.1 | 16.8 / 22.5 |
+| Served What-If, MAE / RMSE | 5.4 / 7.5 | 17.2 / 24.5 | 37.3 / 45.4 |
+| Curve − cohort, MAE [95% CI] | −1.4 [−2.6, −0.2] | −7.2 [−11.4, −3.0] | **−10.9 [−15.4, −6.2]** |
+| Curve − What-If, MAE [95% CI] | −3.7 [−4.9, −2.7] | −12.0 [−15.1, −9.2] | **−31.4 [−38.5, −25.3]** |
+| Direction accuracy: curve / cohort / What-If | 100% / 100% / 95.9% | 100% / 100% / 99.5% | 100% / 100% / 90.9% |
+
+- **On the 20–120 g subset behind "What-If 45.3".** At +120 min the curve scores 7.3 and the cohort average 20.8 (−13.5 [−19.4, −7.6]).
+- **What this does and does not show.** The learned per-patient sensitivity carries the right information, and the served trajectory model is the bottleneck. Direction accuracy is uninformative because every true change is positive.
+- **Caveats.** The simulator's near-linear, per-patient-gain meal response is exactly the structure this estimator assumes, so these errors are a best case. This is not real-data evidence, and the curve is **not served**: the What-If table still shows the frozen model's numbers.
 
 ## How personalisation works
 

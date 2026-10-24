@@ -177,4 +177,52 @@ CIs are 95% from 1,000 paired patient-bootstrap resamples.
 - **The bottleneck is the trajectory model, not the personalised parameter.** Scaling a simple observed-data curve by the learned sensitivity beats a cohort average fitted on simulator truth at +120 min, and beats the same curve without personalisation (8.5 vs 14.6).
 - **The result is favoured by the simulator.** Its meal effect is close to linear in grams (true +120-min effect 1.23–1.30 mg/dL per g across 20–120 g) and scales with a per-patient gain, which is the structure this estimator assumes. Real meals (fat, fibre, glycaemic index, insulin timing) would not be.
 - **It loses at +30 min** and **ties at +60 min**.
-- **It was designed after we saw that the served What-If underestimates late effects.** It is a candidate for a future pre-registered test, not a validated method, and it is not served.
+- **It was designed after we saw that the served What-If underestimates late effects.** It is a candidate for a future pre-registered test, not a validated method, and it is not served. [Addendum v3](#addendum-v3-2026-10-23-train-fitted-validation-selected-personalised-curve) runs that test: shape fitted on train, candidate selected on validation, test scored once.
+
+## Addendum v3 (2026-10-23): train-fitted, validation-selected personalised curve
+
+**Protocol:** [`experiments/twin_validity/protocol_addendum_v3.json`](../../experiments/twin_validity/protocol_addendum_v3.json), written before section D of `scripts/validate_twin_and_whatif.py` was implemented or run. **Aggregates:** `D_train_fitted_validation_selected_curve` in [`reports/research/twin_and_whatif_validation.json`](../../reports/research/twin_and_whatif_validation.json). Synthetic simulator only. Not served.
+
+**What changed from v2 section C.** v2 picked its estimator after seeing test results. v3 fixes how each patient split is used before scoring:
+
+- **Train (36 patients)** fits the response-curve shape c(h) from **observed** CGM after isolated logged meals. It also fits the comparator, a cohort-average curve: the mean true Δ per (grams, horizon) over training patients.
+- **Validation (12 patients; 2,820 scenarios; truth from the paired simulator counterfactual)** chooses one of four candidates, {median, mean shape} × {no calibration, per-horizon least-squares scale α_h}. The choice is the lowest mean MAE across +30/60/120 min.
+- **Test (12 patients; the same 2,953 scenarios as v2 section C)** was scored once.
+- **Estimator:** Δ̂ = α_h × grams × s(patient, t0) × c(h). Here s is `personal_carb_sensitivity` computed only from meals whose 120-min window closed at or before t0.
+
+**Validation selection:**
+
+| Candidate | Validation MAE +30 / +60 / +120 | Mean |
+|---|---|---|
+| median shape, no calibration (v2's estimator) | 4.92 / 9.30 / 11.56 | 8.59 |
+| mean shape, no calibration | 8.83 / 11.19 / 14.89 | 11.64 |
+| **median shape, calibrated (selected)** | 1.54 / 5.26 / 9.50 | **5.43** |
+| mean shape, calibrated | 1.54 / 5.26 / 9.50 | 5.43 |
+
+- **Calibration makes the shape irrelevant.** With a per-horizon scale α_h, the median and mean shapes give identical predictions, because α_h absorbs c(h). The calibrated estimator is in effect grams × s × a validation-fitted coefficient per horizon (1.74 × 0.097, 1.22 × 0.588 and 1.11 × 0.905 at +30/60/120 min). The tie went to the median, as the listed order specifies.
+- **Not a repeat of v2.** The selected candidate's test numbers are a first look. v2 had already reported test results for the uncalibrated median.
+
+**Test, all 10 meal sizes (2,953 scenarios, 12 patients; 1,000-sample paired patient bootstrap, 95% CIs):**
+
+| Horizon | Mean true Δ | Curve MAE / RMSE | Cohort average (train) MAE / RMSE | Served What-If MAE / RMSE | Curve − cohort, MAE [CI] | Curve − cohort, RMSE [CI] | Curve − What-If, MAE [CI] |
+|---|---|---|---|---|---|---|---|
+| +30 min | 11.7 | **1.8** / 2.6 | 3.1 / 4.1 | 5.4 / 7.5 | −1.39 [−2.63, −0.15] | −1.48 [−2.77, −0.26] | −3.69 [−4.87, −2.70] |
+| +60 min | 48.3 | **5.3** / 7.8 | 12.5 / 16.1 | 17.2 / 24.5 | −7.21 [−11.37, −2.99] | −8.24 [−12.45, −3.82] | −11.97 [−15.07, −9.19] |
+| +120 min | 65.4 | **5.9** / 9.0 | 16.8 / 22.5 | 37.3 / 45.4 | −10.86 [−15.44, −6.17] | −13.46 [−17.97, −8.41] | −31.42 [−38.45, −25.32] |
+
+**On the 20/40/60/90/120 g subset** (1,473 scenarios, the set behind v2's "What-If 45.3"), at +120 min:
+
+- MAE: curve 7.3, cohort average 20.8, served What-If 45.3.
+- Curve − cohort: −13.55 [−19.37, −7.63].
+- Curve − What-If: −38.00 [−46.70, −30.56].
+
+**Direction accuracy:**
+
+- The curve and the cohort average both score 100% at every horizon, and the served What-If scores 95.9% / 99.5% / 90.9%.
+- These numbers carry no information. Every true Δ is positive, so any estimator that always predicts a rise scores 100%.
+
+**Interpretation, with caveats:**
+
+- **Each patient split had one role before scoring.** The pre-specified estimator beats the train-only cohort average at all three horizons; every CI excludes zero. It also beats the served What-If at every horizon. The v2 weakness at +30 min came from the uncalibrated shape. One validation-fitted scale per horizon removes it.
+- **Simulator structure, not real-world evidence.** In this simulator the meal effect is close to linear in grams and scales with a per-patient gain. That is exactly what the estimator assumes, so these errors are a best case. Real meals (fat, fibre, glycaemic index, medication timing) would not behave like this. Real-data validation of the twin is still not done.
+- **Not served.** The dashboard's What-If table still shows the frozen tree model's feature-perturbation numbers. The research note under the table reports this result as research.
