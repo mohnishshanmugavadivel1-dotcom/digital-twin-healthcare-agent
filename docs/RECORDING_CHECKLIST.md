@@ -1,7 +1,7 @@
 # Recording checklist: one continuous take, ≥ 20 minutes (hard requirement)
 
 Companion to [DEMO_SCRIPT.md](DEMO_SCRIPT.md). Every expected value below was re-verified against the
-running API and dashboard on **2026-10-20** (fresh deterministic training, model `gt-0.1.0-s…`, 52/52 tests).
+running API and dashboard on **2026-10-20** (fresh deterministic training, model `gt-0.1.0-s…`, 62/62 tests).
 Target length **23:00** so editing cannot push the video under 20:00. **No video has been recorded yet.**
 
 ## Pre-flight (finish ≥ 10 min before recording)
@@ -25,7 +25,7 @@ Target length **23:00** so editing cannot push the video under 20:00. **No video
 | 8:30–13:30 | 5:00 | **HERO** deep link | Beat sheet below. |
 | 13:30–15:30 | 2:00 | **FAILURE** deep link | Beat sheet below. |
 | 15:30–17:30 | 2:00 | Evaluation tab + deck 7–8 | Patient-level split 36/12/12; test evaluated once; RMSE **10.4/17.2/25.9**; AUROC **0.884 (0.839–0.923)** served logistic vs GB **0.936**; false alerts **1.4/day**; coverage **0.76–0.80**; audit: sustained warnings **69% (0.48–0.83)**, stress test and ablations. |
-| 17:30–19:30 | 2:00 | Terminal | `make check` (ruff + **52 tests** + frontend build, ~13 s), then `.venv/bin/glucotwin audit --quick`; mention mutation-based leakage tests and the clean-clone reproduction from the wave-2 audit. |
+| 17:30–19:30 | 2:00 | Terminal | `make check` (ruff + **62 tests** + frontend build, ~13 s), then `.venv/bin/glucotwin audit --quick`; mention mutation-based leakage tests and the clean-clone reproduction from the wave-2 audit. |
 | 19:30–21:30 | 2:00 | Deck slides 11–12 | Safety boundaries (no instructions, never 100%/0%, local demo ≠ real data), limitations, validation roadmap without overclaiming. |
 | 21:30–23:00 | 1:30 | Deck slide 14 | Recap, repo link, thanks. Closing line repeats the synthetic-data disclaimer. |
 
