@@ -1,5 +1,7 @@
 # ML baseline and validation plan (Agent C)
 
+> **Note (Historical Sprint Record):** This document is preserved as an engineering development log from earlier waves. For final release metrics (161 Python tests, 50 frontend tests, 83 browser checks, and validated twin-curve / real-data benchmarks), see the root [README.md](../README.md).
+
 ## Task definitions
 
 | Task | Definition | Where |
