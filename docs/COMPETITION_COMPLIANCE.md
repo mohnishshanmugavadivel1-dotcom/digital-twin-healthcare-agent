@@ -46,7 +46,7 @@ claim it affects predictions:** the simulator gives it no physiological effect, 
 | **Minimum 20-minute video**, recorded as a PowerPoint presentation or as an unlisted YouTube video | Script: `docs/DEMO_SCRIPT.md` (planned 22–24 min). **No video exists yet** | ❌ **NEEDS TEAM (recording)** |
 | Open-source licence details | `LICENSE` (MIT) + README | ⚠️ MIT chosen; copyright holder still "GlucoTwin contributors" — **pending the owner's confirmation of the institutional IP policy before final submission** |
 | Architecture diagram in PDF/PPT format | `docs/submission/GlucoTwin_Architecture.pdf` | ✅ (generated and visually checked) |
-| Presentation in PDF/PPT format with project details and outcome | `docs/submission/GlucoTwin_Presentation.pdf` | ✅ (team details slide has placeholders) |
+| Presentation in PDF/PPT format with project details and outcome | `docs/submission/GlucoTwin_Presentation.pdf` | ✅ (team details filled on the title and closing slides, 2026-10-18) |
 
 Submission instructions (OFFICIAL):
 
