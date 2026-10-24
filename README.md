@@ -2,8 +2,13 @@
 
 ## TL;DR (60-Second Judge's Summary)
 
-**Demo video:** https://www.youtube.com/playlist?list=PLcX1MXnpsia4
+**Demo video:** https://www.youtube.com/watch?v=iVYfoRzdT8M
+
 (recording script: [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md)) · **Live demo (static snapshot, no install):** <https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/> · **Submission PDFs:** [`team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/`](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/) — [16-slide deck](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Presentation.pdf) · [architecture](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Architecture.pdf)
+
+## 🚀 Live Deployment
+The interactive dashboard is deployed and running live on Hugging Face Spaces:
+🔗 [Launch Live App on Hugging Face](https://huggingface.co/spaces/Mohnish2007/digital-twin-healthcare-agent)
 
 | What | Result (held-out test patients; source in brackets) |
 |---|---|
