@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import type { CounterfactualResult, Forecast, ForecastSummary, Observation, PatientRecord, ReplayStatus, TwinState } from "../api/types";
-import { comparisonCells, fmtDateTime, fmtOffset, toMs } from "../format";
+import { comparisonCells, fmtDateTime, fmtOffset, jointSupportChip, toMs } from "../format";
+import { MEAL_PRESETS, PRESET_NOTE, presetById, scenarioLabel } from "../mealPresets";
 import { GlucoseChart } from "./GlucoseChart";
 import { RiskPanel } from "./RiskPanel";
 import { RiskTimeline } from "./RiskTimeline";
@@ -33,7 +34,8 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
   const [showPast, setShowPast] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [simGrams, setSimGrams] = useState(60);
-  const [sims, setSims] = useState<{ grams: number; result: CounterfactualResult }[]>([]);
+  const [presetId, setPresetId] = useState<string | null>(null);
+  const [sims, setSims] = useState<{ grams: number; label: string | null; result: CounterfactualResult }[]>([]);
   const [simBusy, setSimBusy] = useState(false);
   const [simError, setSimError] = useState<string | null>(null);
   const busy = useRef(false);
@@ -68,10 +70,11 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
     setSimError(null);
     try {
       const result = await api.counterfactual(patientId, simGrams);
-      setSims((prev) => [...prev.slice(-3), { grams: simGrams, result }]); // keep the last 4 scenarios
+      const label = scenarioLabel(simGrams, presetId);
+      setSims((prev) => [...prev.slice(-3), { grams: simGrams, label, result }]); // keep the last 4 scenarios
     } catch (e) { setSimError(errText(e)); } // local to the strip: a failed simulation must not blank the workspace
     finally { setSimBusy(false); }
-  }, [patientId, simGrams]);
+  }, [patientId, simGrams, presetId]);
 
   const clearSim = useCallback(() => { setSims([]); setSimError(null); }, []);
 
@@ -157,6 +160,11 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
             <b className="sim-tag">SIMULATED</b>
             <label className="small">What if the patient eats <input type="number" min={1} max={300} value={simGrams}
               onChange={(e) => setSimGrams(Math.max(1, Math.min(300, Number(e.target.value))))} aria-label="Hypothetical meal carbs in grams" /> g of carbs now?</label>
+            <select className="small" value={presetId ?? ""} aria-label="Indian meal preset (approximate carbs, editable)" title={PRESET_NOTE}
+                    onChange={(e) => { const p = presetById(e.target.value); setPresetId(p ? p.id : null); if (p) setSimGrams(p.carbs); }}>
+              <option value="">Meal preset (approx.)…</option>
+              {MEAL_PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}: {p.serving} ≈ {p.carbs} g</option>)}
+            </select>
             <button className="primary" onClick={() => void runSim()} disabled={simBusy || sims.length >= 4}
                     title={sims.length >= 4 ? "Comparison is limited to 4 scenarios — clear them to explore further" : "Runs on an isolated copy of the twin; the record is never changed"}>
               {simBusy ? "Simulating…" : sims.length ? "Add scenario" : "Simulate meal"}</button>
@@ -179,12 +187,14 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                     </tr>
                   </thead>
                   <tbody>
-                    {sims.map(({ grams, result }) => {
+                    {sims.map(({ grams, label, result }) => {
                       const p = comparisonCells(result.primary), s = comparisonCells(result.secondary);
+                      const support = jointSupportChip(result.joint_support);
                       return (
                         <tr key={`${result.as_of}-${grams}`} className={result.small_meal_unreliable ? "sim-unreliable" : undefined}>
-                          <td>{grams} g{result.small_meal_unreliable && (
-                            <span className="sim-flag" title="Meals under 30 g are unreliable in this model: few training meals are that small and the audited small-meal differences are unstable">unreliable &lt;30 g</span>)}</td>
+                          <td>{grams} g{label && <span className="muted tiny sim-label">{label}</span>}{result.small_meal_unreliable && (
+                            <span className="sim-flag" title="Meals under 30 g are unreliable in this model: few training meals are that small and the audited small-meal differences are unstable">unreliable &lt;30 g</span>)}{support && (
+                            <span className="sim-flag sim-support" title={support.title}>{support.label}</span>)}</td>
                           <td>{p.d30}</td><td>{p.d60}</td><td>{p.d120}</td>
                           <td className={p.riskQualified ? "sim-qualified" : undefined} title={p.riskTitle}>{p.risk}{p.riskQualified && " *"}</td>
                           <td className="sim-secondary">{s.d60}</td>
@@ -217,7 +227,8 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
             })()}
             <div className="muted tiny" style={{ flexBasis: "100%" }}>Each scenario is computed independently on a copy of the observation history — the hypothetical
               meal is never added to the patient record, and scenarios do not affect each other or the replay. Differences are <b>learned associations</b> of
-              forecasting models trained on synthetic simulator data, not causal physiological effects (backlog B-22). <span className="sim-qualified">*</span> starting
+              forecasting models trained on synthetic simulator data, not causal physiological effects (backlog B-22). Meal presets: {PRESET_NOTE} An
+              "outside training support" tag means no training meal was comparable; inputs inside the training range still do not make a forecast accurate. <span className="sim-qualified">*</span> starting
               risk above 95%: change not informative. Not medical advice, not a treatment recommendation. The chart overlays the latest scenario.</div>
           </div>
           <GlucoseChart cgm={cgm} meals={meals} forecast={forecast} scenario={sims.length ? sims[sims.length - 1].result.scenario : null}

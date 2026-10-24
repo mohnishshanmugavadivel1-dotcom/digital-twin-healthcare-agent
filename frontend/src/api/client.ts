@@ -3,10 +3,13 @@ import type {
   PatientRecord, PatientSummary, ReplayStatus, TwinState,
 } from "./types";
 import { formatApiError } from "../format";
+import { ApiError } from "./errors";
+import { staticApi } from "./static";
 
-export class ApiError extends Error {
-  constructor(public status: number, message: string) { super(message); }
-}
+export { ApiError };
+
+/** `npm run build:static` builds the recorded-snapshot demo; every other build talks to the live API. */
+export const IS_STATIC_DEMO = import.meta.env.MODE === "static";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(path, { headers: { "Content-Type": "application/json" }, ...init });
@@ -23,7 +26,7 @@ const qs = (params: Record<string, string | number | undefined>) => {
   return e.length ? "?" + new URLSearchParams(e.map(([k, v]) => [k, String(v)])).toString() : "";
 };
 
-export const api = {
+const liveApi = {
   health: () => request<HealthStatus>("/api/health"),
   patients: () => request<PatientSummary[]>("/api/patients"),
   patient: (id: string) => request<PatientRecord>(`/api/patients/${id}`),
@@ -41,3 +44,5 @@ export const api = {
   evaluation: () => request<EvaluationReport>("/api/evaluation"),
   model: () => request<ModelCard>("/api/model"),
 };
+
+export const api: typeof liveApi = IS_STATIC_DEMO ? staticApi : liveApi;

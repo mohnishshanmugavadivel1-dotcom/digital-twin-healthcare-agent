@@ -1,0 +1,376 @@
+{
+ "kind": "glucotwin-static-demo-snapshot/1",
+ "notice": "Static recorded snapshot of the GlucoTwin research prototype. Every response was recorded from the real API; nothing is computed live. Synthetic patients only. Not a medical device.",
+ "recorded_at": "2026-10-21T16:21:22+00:00",
+ "generator": "scripts/export_static_demo.py",
+ "git_head": "581b4f7111e18c6842426cf44fa982486ed7417e",
+ "working_tree_dirty_at_recording": true,
+ "model_version": "gt-0.1.0-s20261017-202610211601",
+ "b23_joint_support_sha256": "8ce57f36bf1a19add2587993fd1a587ba31849c5584ddd5f48cf7f4a26235dd2",
+ "whatif_grams": [
+  25,
+  30,
+  35,
+  36,
+  40,
+  45,
+  50,
+  60,
+  90,
+  120,
+  200,
+  300
+ ],
+ "health": {
+  "status": "ok",
+  "schema_version": "0.2.0",
+  "model_version": "gt-0.1.0-s20261017-202610211601",
+  "patients_available": 12,
+  "data_is_synthetic": true
+ },
+ "model": {
+  "model_version": "gt-0.1.0-s20261017-202610211601",
+  "trained_at": "2026-10-21T16:01:25.587876Z",
+  "feature_names": [
+   "glucose",
+   "delta_15",
+   "delta_30",
+   "delta_60",
+   "accel_15",
+   "mean_60",
+   "std_60",
+   "max_180",
+   "min_180",
+   "mean_24h",
+   "tar_24h",
+   "carbs_30",
+   "carbs_60",
+   "carbs_120",
+   "carbs_on_board",
+   "minutes_since_meal",
+   "expected_meal_rise",
+   "carb_sensitivity",
+   "steps_30",
+   "steps_60",
+   "hr_rel_30",
+   "tod_sin",
+   "tod_cos",
+   "age_years",
+   "bmi",
+   "hba1c_percent",
+   "fasting_glucose_mg_dl",
+   "diabetes_duration_years",
+   "egfr",
+   "med_sulfonylurea",
+   "med_basal_insulin",
+   "med_biguanide",
+   "med_dpp4_inhibitor"
+  ],
+  "event_model": "logistic_regression",
+  "trajectory_model": "hist_gradient_boosting",
+  "alert_threshold": 0.35,
+  "interval_level": 0.8,
+  "target_definition": "Onset of a hyperglycaemic excursion (>= 3 consecutive CGM readings > 180 mg/dL, i.e. >= 15 min) within the next 120 min, predicted at times when the latest reading is <= 180 mg/dL.",
+  "training_data": "glucotwin-synthetic-t2d v0.1.0, seed 20261017, 142821 train rows",
+  "intended_use": "Research and education demo of a glucose digital twin. Not for clinical use.",
+  "limitations": [
+   "Trained and evaluated only on synthetic patients from a simplified simulator.",
+   "Performance on real patients is unknown and likely lower.",
+   "Excursion risk is only issued when current glucose is <= 180 mg/dL.",
+   "Explanations are associative (logistic-regression contributions), not causal."
+  ]
+ },
+ "evaluation": {
+  "schema_version": "0.2.0",
+  "generated_at": "2026-10-17T18:29:26.415338Z",
+  "model_version": "gt-0.1.0-s20261017-202610171829",
+  "dataset": {
+   "name": "glucotwin-synthetic-t2d",
+   "version": "0.1.0",
+   "seed": 20261017,
+   "is_synthetic": true,
+   "n_patients": 60,
+   "days_per_patient": 14,
+   "split_patients": {
+    "test": 12,
+    "train": 36,
+    "validation": 12
+   },
+   "split_samples": {
+    "test": 47582,
+    "train": 142821,
+    "validation": 47700
+   }
+  },
+  "target_definition": "Onset of a hyperglycaemic excursion (>= 3 consecutive CGM readings > 180 mg/dL, i.e. >= 15 min) within the next 120 min, predicted at times when the latest reading is <= 180 mg/dL.",
+  "split_protocol": "Patient-level split 60/20/20 (train/validation/test) by seeded permutation; no patient in two splits. Features use observations <= t only; labels use (t, t+120 min]. Threshold, conformal intervals and served-model choice are fitted on validation; test is evaluated once.",
+  "trajectory": [
+   {
+    "model": "persistence",
+    "horizon_min": 30,
+    "n": 47105,
+    "mae_mg_dl": 13.457764568517142,
+    "rmse_mg_dl": 18.651962961642162,
+    "mard_percent": 10.105181052451059,
+    "clarke_a_pct": 87.9588154123766,
+    "clarke_ab_pct": 99.35887909988324,
+    "interval_coverage": null
+   },
+   {
+    "model": "persistence",
+    "horizon_min": 60,
+    "n": 46884,
+    "mae_mg_dl": 22.475002132923812,
+    "rmse_mg_dl": 31.41677543427755,
+    "mard_percent": 16.178341178791257,
+    "clarke_a_pct": 67.80564798225407,
+    "clarke_ab_pct": 98.48135824588346,
+    "interval_coverage": null
+   },
+   {
+    "model": "persistence",
+    "horizon_min": 90,
+    "n": 46705,
+    "mae_mg_dl": 29.90360775077615,
+    "rmse_mg_dl": 40.673398693868116,
+    "mard_percent": 21.44411160345559,
+    "clarke_a_pct": 53.51247189808371,
+    "clarke_ab_pct": 97.62766299111443,
+    "interval_coverage": null
+   },
+   {
+    "model": "persistence",
+    "horizon_min": 120,
+    "n": 46560,
+    "mae_mg_dl": 35.290678694158075,
+    "rmse_mg_dl": 46.57638342687362,
+    "mard_percent": 25.646270187478454,
+    "clarke_a_pct": 45.199742268041234,
+    "clarke_ab_pct": 96.69888316151203,
+    "interval_coverage": null
+   },
+   {
+    "model": "damped_trend",
+    "horizon_min": 30,
+    "n": 47105,
+    "mae_mg_dl": 12.984140852515978,
+    "rmse_mg_dl": 17.37205702974578,
+    "mard_percent": 10.18030532851128,
+    "clarke_a_pct": 87.83356331599617,
+    "clarke_ab_pct": 99.47776244560026,
+    "interval_coverage": null
+   },
+   {
+    "model": "damped_trend",
+    "horizon_min": 60,
+    "n": 46884,
+    "mae_mg_dl": 22.400742056262075,
+    "rmse_mg_dl": 31.137277229407996,
+    "mard_percent": 16.356336562054462,
+    "clarke_a_pct": 68.02320621107414,
+    "clarke_ab_pct": 98.71811278901119,
+    "interval_coverage": null
+   },
+   {
+    "model": "damped_trend",
+    "horizon_min": 90,
+    "n": 46705,
+    "mae_mg_dl": 31.05691196336219,
+    "rmse_mg_dl": 42.52405535006288,
+    "mard_percent": 22.165163930029774,
+    "clarke_a_pct": 53.148485172893686,
+    "clarke_ab_pct": 97.52489026870784,
+    "interval_coverage": null
+   },
+   {
+    "model": "damped_trend",
+    "horizon_min": 120,
+    "n": 46560,
+    "mae_mg_dl": 37.769977328173965,
+    "rmse_mg_dl": 50.41683336682984,
+    "mard_percent": 27.207336443047758,
+    "clarke_a_pct": 44.07646048109966,
+    "clarke_ab_pct": 95.7495704467354,
+    "interval_coverage": null
+   },
+   {
+    "model": "ridge",
+    "horizon_min": 30,
+    "n": 47105,
+    "mae_mg_dl": 8.416416797498233,
+    "rmse_mg_dl": 11.211514763246404,
+    "mard_percent": 6.816580326636481,
+    "clarke_a_pct": 96.19148710327991,
+    "clarke_ab_pct": 99.48837703003927,
+    "interval_coverage": null
+   },
+   {
+    "model": "ridge",
+    "horizon_min": 60,
+    "n": 46884,
+    "mae_mg_dl": 12.435566362251773,
+    "rmse_mg_dl": 17.041842518120074,
+    "mard_percent": 9.82181506768772,
+    "clarke_a_pct": 88.3904956914939,
+    "clarke_ab_pct": 98.91007593208771,
+    "interval_coverage": null
+   },
+   {
+    "model": "ridge",
+    "horizon_min": 90,
+    "n": 46705,
+    "mae_mg_dl": 17.5443762601023,
+    "rmse_mg_dl": 23.63938842573341,
+    "mard_percent": 13.802893934042645,
+    "clarke_a_pct": 75.80130607001392,
+    "clarke_ab_pct": 98.44128037683332,
+    "interval_coverage": null
+   },
+   {
+    "model": "ridge",
+    "horizon_min": 120,
+    "n": 46560,
+    "mae_mg_dl": 21.300734387071454,
+    "rmse_mg_dl": 27.92247082678235,
+    "mard_percent": 16.8780611082026,
+    "clarke_a_pct": 66.84063573883161,
+    "clarke_ab_pct": 98.21091065292096,
+    "interval_coverage": null
+   },
+   {
+    "model": "hist_gradient_boosting",
+    "horizon_min": 30,
+    "n": 47105,
+    "mae_mg_dl": 7.989129566658942,
+    "rmse_mg_dl": 10.398652705315333,
+    "mard_percent": 6.534307296205444,
+    "clarke_a_pct": 96.77741216431377,
+    "clarke_ab_pct": 99.18267699819552,
+    "interval_coverage": 0.7824647065067403
+   },
+   {
+    "model": "hist_gradient_boosting",
+    "horizon_min": 60,
+    "n": 46884,
+    "mae_mg_dl": 12.873603840307306,
+    "rmse_mg_dl": 17.207745442716003,
+    "mard_percent": 10.63972460835481,
+    "clarke_a_pct": 85.97815886016551,
+    "clarke_ab_pct": 98.76930296049825,
+    "interval_coverage": 0.7575078918181043
+   },
+   {
+    "model": "hist_gradient_boosting",
+    "horizon_min": 90,
+    "n": 46705,
+    "mae_mg_dl": 16.814005764130272,
+    "rmse_mg_dl": 22.859530895865728,
+    "mard_percent": 13.774240354013717,
+    "clarke_a_pct": 78.36848303179531,
+    "clarke_ab_pct": 98.52906541055562,
+    "interval_coverage": 0.7798950861792099
+   },
+   {
+    "model": "hist_gradient_boosting",
+    "horizon_min": 120,
+    "n": 46560,
+    "mae_mg_dl": 19.095145260414498,
+    "rmse_mg_dl": 25.903112546989572,
+    "mard_percent": 15.61838994775162,
+    "clarke_a_pct": 73.80798969072166,
+    "clarke_ab_pct": 98.37199312714776,
+    "interval_coverage": 0.797852233676976
+   }
+  ],
+  "event": [
+   {
+    "model": "trend_rule",
+    "n": 40789,
+    "prevalence": 0.1462894407806026,
+    "auroc": 0.6545328057210337,
+    "auprc": 0.3236597390314184,
+    "brier": null,
+    "threshold": 0.05,
+    "sensitivity": 0.44126026478967656,
+    "specificity": 0.7414278329791512,
+    "ppv": 0.22626106384807082,
+    "event_sensitivity": 1.0,
+    "median_lead_time_min": 60.0,
+    "false_alert_episodes_per_patient_day": 6.279761904761905
+   },
+   {
+    "model": "logistic_regression",
+    "n": 40789,
+    "prevalence": 0.1462894407806026,
+    "auroc": 0.8840048578787105,
+    "auprc": 0.6675965786370335,
+    "brier": 0.08150424128617806,
+    "threshold": 0.35,
+    "sensitivity": 0.665158371040724,
+    "specificity": 0.9020734018723795,
+    "ppv": 0.5378777612142567,
+    "event_sensitivity": 0.912751677852349,
+    "median_lead_time_min": 95.0,
+    "false_alert_episodes_per_patient_day": 1.3630952380952381
+   },
+   {
+    "model": "hist_gradient_boosting",
+    "n": 40789,
+    "prevalence": 0.1462894407806026,
+    "auroc": 0.9358426984699422,
+    "auprc": 0.7557256886620447,
+    "brier": 0.0688497792174412,
+    "threshold": 0.32,
+    "sensitivity": 0.7834757834757835,
+    "specificity": 0.9008959852966515,
+    "ppv": 0.5753138075313807,
+    "event_sensitivity": 0.9563758389261745,
+    "median_lead_time_min": 120.0,
+    "false_alert_episodes_per_patient_day": 1.0654761904761905
+   }
+  ],
+  "served_models": {
+   "trajectory": "hist_gradient_boosting",
+   "event": "logistic_regression",
+   "trajectory_selection": "lowest mean validation RMSE: persistence=39.7, damped_trend=40.4, ridge=23.0, hist_gradient_boosting=19.8",
+   "event_selection": "logistic regression served for transparent, grouped additive explanations; alternatives reported for comparison"
+  },
+  "notes": [
+   "All patients are synthetic; metrics describe the simulator, not real-world performance.",
+   "Glucose targets are the simulated CGM (with sensor noise), i.e. what a clinician would see.",
+   "Alert thresholds chosen on validation (max F1): {'trend_rule': 0.05, 'logistic_regression': 0.35, 'hist_gradient_boosting': 0.32}.",
+   "Prediction intervals: split-conformal, nominal 80%, fitted on validation residuals."
+  ]
+ },
+ "scenarios": [
+  {
+   "id": "early-warning",
+   "patient_id": "SYN-0039",
+   "start_offset_hours": 151.833,
+   "title": "Early warning before an excursion, plus the what-if lab",
+   "description": "Replay starts at 07:55 (glucose 94 mg/dL, excursion risk about 22%, no alert). Step forward to see the alert fire at 08:55, right after the logged 140 g breakfast, 85 min before glucose first exceeds 180 mg/dL (10:20). What-ifs are recorded at 07:55 and 08:55 (2 min after the breakfast: larger hypothetical meals then fall outside training support because the model counts carbs over the last 30 min).",
+   "file": "early-warning.json",
+   "start_clock": "2026-03-08T02:25:00Z",
+   "end_clock": "2026-03-08T08:25:00Z",
+   "whatif_clocks": [
+    "2026-03-08T02:25:00Z",
+    "2026-03-08T03:25:00Z"
+   ],
+   "n_frames": 73
+  },
+  {
+   "id": "unlogged-meal",
+   "patient_id": "SYN-0019",
+   "start_offset_hours": 253.667,
+   "title": "Weakness: no meal logged, so the alert waits for the rise",
+   "description": "Glucose rises with no logged meal. Risk stays below the 35% alert threshold until the rise has begun: the alert fires at 14:50 (glucose 93 mg/dL, up from 70 at 14:35), 45 min before glucose first exceeds 180 mg/dL (15:35). With a logged meal (first scenario) the warning comes earlier. Stepping in 1-hour jumps skips the alert (14:45: 31%); the risk-history panel still shows it. What-ifs are recorded at 13:45 only.",
+   "file": "unlogged-meal.json",
+   "start_clock": "2026-03-12T08:15:00Z",
+   "end_clock": "2026-03-12T14:15:00Z",
+   "whatif_clocks": [
+    "2026-03-12T08:15:00Z"
+   ],
+   "n_frames": 73
+  }
+ ]
+}

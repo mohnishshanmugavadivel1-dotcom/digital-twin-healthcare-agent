@@ -229,7 +229,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
 <section class="slide" style="padding:30px 48px 36px">
   <h2 style="margin-bottom:8px">Clinician dashboard: what the doctor sees</h2>
   <div style="display:grid;grid-template-columns:640px 1fr;gap:28px;align-items:start">
-    <img class="shot" src="../../screenshots/dashboard.png" alt="dashboard">
+    <img class="shot" src="../../screenshots/dashboard.png" alt="dashboard" style="max-height:580px;object-fit:cover;object-position:top">
     <ul class="small" style="margin-top:0">
       <li><b>Patient list:</b> held-out test patients, latest glucose, latest risk.</li>
       <li><b>Record header:</b> labs, medications, history.</li>
@@ -242,12 +242,12 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
         Learned model associations, not physiology; meals under 30 g flagged unreliable.</li>
     </ul>
   </div>
-  <div class="foot"><span>Screenshot of the running build, held-out patient SYN-0039 at 08:55</span><span>9</span></div>
+  <div class="foot"><span>Recorded static snapshot of the current build (responses recorded from the real API), held-out synthetic patient SYN-0039 at 07:55 with three what-if meals</span><span>9</span></div>
 </section>
 
 <!-- 10 -->
 <section class="slide">
-  <h2>Two demo moments: one success, one failure</h2>
+  <h2>Two demo moments: an early warning and a late one</h2>
   <div class="cols">
     <div class="card ok">
       <h3>SYN-0039 · Sun 8 Mar (held-out patient)</h3>
@@ -263,7 +263,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <h3>SYN-0019 · Thu 12 Mar (held-out patient)</h3>
       <ul class="small">
         <li>14:45: glucose 88 mg/dL, risk 31%, just <b>below</b> the 35% threshold. <b>No meal logged.</b></li>
-        <li>About 15:45: glucose crosses 180, peaking at about 191. <b>Missed.</b></li>
+        <li>14:50: glucose rising fast, risk 36%: the alert fires, only 45 min before the first reading above 180 (15:35); peak about 191. <b>Warned, but late.</b></li>
         <li>Unlogged meals are the main failure mode: removing meal features costs the most AUROC, and the stress test cuts lead time.</li>
       </ul>
       <p class="tiny muted">Deep link /?patient=SYN-0019&amp;start=253.667 · 53 missed daytime onsets are listed by scripts/find_demo_scenario.py</p>
@@ -338,7 +338,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <ul class="small">
         <li>Python 3.11 · NumPy · pandas · scikit-learn · Pydantic v2 contracts · FastAPI</li>
         <li>React 19 + TypeScript + Recharts (Vite)</li>
-        <li>pytest (76 tests) · ruff · GitHub Actions CI · pinned requirements.lock / package-lock.json</li>
+        <li>pytest (140 tests) · ruff · GitHub Actions CI · pinned requirements.lock / package-lock.json</li>
       </ul>
       <h3 style="margin-top:18px">Reproduce</h3>
       <pre style="font-size:15px;background:#0f172a;color:#e2e8f0;padding:14px;border-radius:10px">make setup

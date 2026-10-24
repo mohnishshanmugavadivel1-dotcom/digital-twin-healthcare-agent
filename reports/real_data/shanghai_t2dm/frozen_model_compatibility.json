@@ -1,0 +1,193 @@
+{
+  "basis": "documented schema only; the archive had NOT been inspected locally when this was generated",
+  "documentation": "Zhao et al., Scientific Data 10 (2023), Data Records + Methods; https://doi.org/10.1038/s41597-023-01940-7",
+  "production_model_features": 33,
+  "status_counts": {
+    "available": 2,
+    "needs_inspection": 10,
+    "not_recorded": 10,
+    "out_of_distribution": 11
+  },
+  "not_recorded_features": [
+    "carb_sensitivity",
+    "carbs_120",
+    "carbs_30",
+    "carbs_60",
+    "carbs_on_board",
+    "expected_meal_rise",
+    "hr_rel_30",
+    "minutes_since_meal",
+    "steps_30",
+    "steps_60"
+  ],
+  "by_feature": {
+    "glucose": {
+      "group": "glucose_level",
+      "status": "out_of_distribution",
+      "reason": "Computable from CGM, but the production pipeline assumes a 5-min grid (labels.to_grid) and was trained on 5-min synthetic CGM. ShanghaiT2DM CGM is documented as every 15 min (FreeStyle Libre H), so windowed statistics use about 4-5 instead of 12-13 readings per hour."
+    },
+    "mean_60": {
+      "group": "glucose_level",
+      "status": "out_of_distribution",
+      "reason": "Computable from CGM, but the production pipeline assumes a 5-min grid (labels.to_grid) and was trained on 5-min synthetic CGM. ShanghaiT2DM CGM is documented as every 15 min (FreeStyle Libre H), so windowed statistics use about 4-5 instead of 12-13 readings per hour."
+    },
+    "std_60": {
+      "group": "glucose_level",
+      "status": "out_of_distribution",
+      "reason": "Computable from CGM, but the production pipeline assumes a 5-min grid (labels.to_grid) and was trained on 5-min synthetic CGM. ShanghaiT2DM CGM is documented as every 15 min (FreeStyle Libre H), so windowed statistics use about 4-5 instead of 12-13 readings per hour."
+    },
+    "max_180": {
+      "group": "glucose_level",
+      "status": "out_of_distribution",
+      "reason": "Computable from CGM, but the production pipeline assumes a 5-min grid (labels.to_grid) and was trained on 5-min synthetic CGM. ShanghaiT2DM CGM is documented as every 15 min (FreeStyle Libre H), so windowed statistics use about 4-5 instead of 12-13 readings per hour."
+    },
+    "min_180": {
+      "group": "glucose_level",
+      "status": "out_of_distribution",
+      "reason": "Computable from CGM, but the production pipeline assumes a 5-min grid (labels.to_grid) and was trained on 5-min synthetic CGM. ShanghaiT2DM CGM is documented as every 15 min (FreeStyle Libre H), so windowed statistics use about 4-5 instead of 12-13 readings per hour."
+    },
+    "delta_15": {
+      "group": "glucose_trend",
+      "status": "out_of_distribution",
+      "reason": "Computable at 15/30/60 min from 15-min readings, but the production code interpolates the 5-min grid (limit 3 steps) and shifts by grid steps; inputs would differ in kind from training."
+    },
+    "delta_30": {
+      "group": "glucose_trend",
+      "status": "out_of_distribution",
+      "reason": "Computable at 15/30/60 min from 15-min readings, but the production code interpolates the 5-min grid (limit 3 steps) and shifts by grid steps; inputs would differ in kind from training."
+    },
+    "delta_60": {
+      "group": "glucose_trend",
+      "status": "out_of_distribution",
+      "reason": "Computable at 15/30/60 min from 15-min readings, but the production code interpolates the 5-min grid (limit 3 steps) and shifts by grid steps; inputs would differ in kind from training."
+    },
+    "accel_15": {
+      "group": "glucose_trend",
+      "status": "out_of_distribution",
+      "reason": "Computable at 15/30/60 min from 15-min readings, but the production code interpolates the 5-min grid (limit 3 steps) and shifts by grid steps; inputs would differ in kind from training."
+    },
+    "carbs_30": {
+      "group": "meals",
+      "status": "not_recorded",
+      "reason": "Requires carbohydrate GRAMS per logged meal. The dataset documents 'self-reported time and weighed food intake', i.e. foods and weights, not carbohydrate grams. Deriving grams would need a food-composition table (an estimate, not a recording). Leaving them empty makes the production pipeline compute carbs = 0 / no recent meal, which asserts that the patient did not eat."
+    },
+    "carbs_60": {
+      "group": "meals",
+      "status": "not_recorded",
+      "reason": "Requires carbohydrate GRAMS per logged meal. The dataset documents 'self-reported time and weighed food intake', i.e. foods and weights, not carbohydrate grams. Deriving grams would need a food-composition table (an estimate, not a recording). Leaving them empty makes the production pipeline compute carbs = 0 / no recent meal, which asserts that the patient did not eat."
+    },
+    "carbs_120": {
+      "group": "meals",
+      "status": "not_recorded",
+      "reason": "Requires carbohydrate GRAMS per logged meal. The dataset documents 'self-reported time and weighed food intake', i.e. foods and weights, not carbohydrate grams. Deriving grams would need a food-composition table (an estimate, not a recording). Leaving them empty makes the production pipeline compute carbs = 0 / no recent meal, which asserts that the patient did not eat."
+    },
+    "carbs_on_board": {
+      "group": "meals",
+      "status": "not_recorded",
+      "reason": "Requires carbohydrate GRAMS per logged meal. The dataset documents 'self-reported time and weighed food intake', i.e. foods and weights, not carbohydrate grams. Deriving grams would need a food-composition table (an estimate, not a recording). Leaving them empty makes the production pipeline compute carbs = 0 / no recent meal, which asserts that the patient did not eat."
+    },
+    "minutes_since_meal": {
+      "group": "meals",
+      "status": "not_recorded",
+      "reason": "Requires carbohydrate GRAMS per logged meal. The dataset documents 'self-reported time and weighed food intake', i.e. foods and weights, not carbohydrate grams. Deriving grams would need a food-composition table (an estimate, not a recording). Leaving them empty makes the production pipeline compute carbs = 0 / no recent meal, which asserts that the patient did not eat."
+    },
+    "expected_meal_rise": {
+      "group": "meals",
+      "status": "not_recorded",
+      "reason": "Requires carbohydrate GRAMS per logged meal. The dataset documents 'self-reported time and weighed food intake', i.e. foods and weights, not carbohydrate grams. Deriving grams would need a food-composition table (an estimate, not a recording). Leaving them empty makes the production pipeline compute carbs = 0 / no recent meal, which asserts that the patient did not eat."
+    },
+    "carb_sensitivity": {
+      "group": "meals",
+      "status": "not_recorded",
+      "reason": "Requires carbohydrate GRAMS per logged meal. The dataset documents 'self-reported time and weighed food intake', i.e. foods and weights, not carbohydrate grams. Deriving grams would need a food-composition table (an estimate, not a recording). Leaving them empty makes the production pipeline compute carbs = 0 / no recent meal, which asserts that the patient did not eat."
+    },
+    "steps_30": {
+      "group": "activity",
+      "status": "not_recorded",
+      "reason": "Requires step counts and heart rate. Neither is documented for ShanghaiT2DM. The production pipeline would emit steps = 0 (asserting inactivity) and a missing heart-rate feature."
+    },
+    "steps_60": {
+      "group": "activity",
+      "status": "not_recorded",
+      "reason": "Requires step counts and heart rate. Neither is documented for ShanghaiT2DM. The production pipeline would emit steps = 0 (asserting inactivity) and a missing heart-rate feature."
+    },
+    "hr_rel_30": {
+      "group": "activity",
+      "status": "not_recorded",
+      "reason": "Requires step counts and heart rate. Neither is documented for ShanghaiT2DM. The production pipeline would emit steps = 0 (asserting inactivity) and a missing heart-rate feature."
+    },
+    "mean_24h": {
+      "group": "history_24h",
+      "status": "out_of_distribution",
+      "reason": "Computable from CGM; same sampling-density caveat."
+    },
+    "tar_24h": {
+      "group": "history_24h",
+      "status": "out_of_distribution",
+      "reason": "Computable from CGM; same sampling-density caveat."
+    },
+    "tod_sin": {
+      "group": "time_of_day",
+      "status": "available",
+      "reason": "Computable from the recorded local wall-clock timestamps."
+    },
+    "tod_cos": {
+      "group": "time_of_day",
+      "status": "available",
+      "reason": "Computable from the recorded local wall-clock timestamps."
+    },
+    "age_years": {
+      "group": "record",
+      "status": "needs_inspection",
+      "reason": "Age, BMI, HbA1c, fasting plasma glucose, diabetes duration and eGFR are documented in the summary sheet (headers and units unpublished; fasting glucose may need mmol/L conversion). The 4 binary medication-class features need a manual mapping from recorded drug names, which is unverified."
+    },
+    "bmi": {
+      "group": "record",
+      "status": "needs_inspection",
+      "reason": "Age, BMI, HbA1c, fasting plasma glucose, diabetes duration and eGFR are documented in the summary sheet (headers and units unpublished; fasting glucose may need mmol/L conversion). The 4 binary medication-class features need a manual mapping from recorded drug names, which is unverified."
+    },
+    "hba1c_percent": {
+      "group": "record",
+      "status": "needs_inspection",
+      "reason": "Age, BMI, HbA1c, fasting plasma glucose, diabetes duration and eGFR are documented in the summary sheet (headers and units unpublished; fasting glucose may need mmol/L conversion). The 4 binary medication-class features need a manual mapping from recorded drug names, which is unverified."
+    },
+    "fasting_glucose_mg_dl": {
+      "group": "record",
+      "status": "needs_inspection",
+      "reason": "Age, BMI, HbA1c, fasting plasma glucose, diabetes duration and eGFR are documented in the summary sheet (headers and units unpublished; fasting glucose may need mmol/L conversion). The 4 binary medication-class features need a manual mapping from recorded drug names, which is unverified."
+    },
+    "diabetes_duration_years": {
+      "group": "record",
+      "status": "needs_inspection",
+      "reason": "Age, BMI, HbA1c, fasting plasma glucose, diabetes duration and eGFR are documented in the summary sheet (headers and units unpublished; fasting glucose may need mmol/L conversion). The 4 binary medication-class features need a manual mapping from recorded drug names, which is unverified."
+    },
+    "egfr": {
+      "group": "record",
+      "status": "needs_inspection",
+      "reason": "Age, BMI, HbA1c, fasting plasma glucose, diabetes duration and eGFR are documented in the summary sheet (headers and units unpublished; fasting glucose may need mmol/L conversion). The 4 binary medication-class features need a manual mapping from recorded drug names, which is unverified."
+    },
+    "med_sulfonylurea": {
+      "group": "record",
+      "status": "needs_inspection",
+      "reason": "Age, BMI, HbA1c, fasting plasma glucose, diabetes duration and eGFR are documented in the summary sheet (headers and units unpublished; fasting glucose may need mmol/L conversion). The 4 binary medication-class features need a manual mapping from recorded drug names, which is unverified."
+    },
+    "med_basal_insulin": {
+      "group": "record",
+      "status": "needs_inspection",
+      "reason": "Age, BMI, HbA1c, fasting plasma glucose, diabetes duration and eGFR are documented in the summary sheet (headers and units unpublished; fasting glucose may need mmol/L conversion). The 4 binary medication-class features need a manual mapping from recorded drug names, which is unverified."
+    },
+    "med_biguanide": {
+      "group": "record",
+      "status": "needs_inspection",
+      "reason": "Age, BMI, HbA1c, fasting plasma glucose, diabetes duration and eGFR are documented in the summary sheet (headers and units unpublished; fasting glucose may need mmol/L conversion). The 4 binary medication-class features need a manual mapping from recorded drug names, which is unverified."
+    },
+    "med_dpp4_inhibitor": {
+      "group": "record",
+      "status": "needs_inspection",
+      "reason": "Age, BMI, HbA1c, fasting plasma glucose, diabetes duration and eGFR are documented in the summary sheet (headers and units unpublished; fasting glucose may need mmol/L conversion). The 4 binary medication-class features need a manual mapping from recorded drug names, which is unverified."
+    }
+  },
+  "verdict": "INCOMPATIBLE",
+  "decision": "No frozen-model evaluation on ShanghaiT2DM: 10 of 33 production inputs (meal carbohydrate grams; steps; heart rate) have no recorded source, and running the model would require fabricating them (0 g carbs, 0 steps). In addition the CGM sampling (15 min) differs from the training data (5 min). Persistence and a separately trained CGM-only real-data model are evaluated instead.",
+  "would_change_if": "the inspected workbooks contained recorded carbohydrate grams AND step counts AND heart rate (rechecked automatically against the real headers by the audit stage)"
+}

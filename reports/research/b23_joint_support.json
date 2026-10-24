@@ -1,0 +1,933 @@
+{
+  "artifact": "B-23 joint training-support analysis",
+  "status": "research artifact; synthetic data; not a clinical or OOD guarantee",
+  "bundle": {
+    "model_version": "gt-0.1.0-s20261017-202610211601",
+    "training_data": "glucotwin-synthetic-t2d v0.1.0, seed 20261017, 142821 train rows",
+    "cohort_params": {
+      "n_patients": 60,
+      "days": 14,
+      "seed": 20261017
+    }
+  },
+  "reference_population": "every logged meal of the split, with the joint inputs evaluated at the instant it was logged (glucotwin.joint_support.meal_event_rows; same formulas as features.py). Every what-if scenario is a meal-now situation. Format 2 used feature rows < 5 min after a meal and silently dropped meals followed by a CGM dropout.",
+  "logged_meal_events": {
+    "train": 1647,
+    "validation": 532,
+    "test": 539
+  },
+  "features": [
+    "carbs_30",
+    "carbs_60",
+    "carbs_120",
+    "carbs_on_board",
+    "expected_meal_rise"
+  ],
+  "identity_checked": {
+    "expected_meal_rise_equals_sensitivity_x_cob_max_abs_error": 0.0
+  },
+  "fresh_meal_rows": {
+    "train": {
+      "n_rows": 1647,
+      "n_patients": 36,
+      "missing_or_nonfinite": 0
+    },
+    "validation": {
+      "n_rows": 532,
+      "n_patients": 12,
+      "missing_or_nonfinite": 0
+    },
+    "test": {
+      "n_rows": 539,
+      "n_patients": 12,
+      "missing_or_nonfinite": 0
+    }
+  },
+  "train_marginals": {
+    "carbs_30": {
+      "p0": 6.0,
+      "p1": 12.0,
+      "p5": 19.0,
+      "p25": 41.0,
+      "p50": 61.0,
+      "p75": 81.0,
+      "p95": 116.0,
+      "p99": 153.62,
+      "p100": 203.0,
+      "mean": 63.426,
+      "sd": 30.429,
+      "n": 1647
+    },
+    "carbs_60": {
+      "p0": 6.0,
+      "p1": 12.0,
+      "p5": 19.0,
+      "p25": 41.0,
+      "p50": 61.0,
+      "p75": 81.0,
+      "p95": 116.0,
+      "p99": 153.62,
+      "p100": 203.0,
+      "mean": 63.426,
+      "sd": 30.429,
+      "n": 1647
+    },
+    "carbs_120": {
+      "p0": 6.0,
+      "p1": 12.0,
+      "p5": 19.3,
+      "p25": 42.0,
+      "p50": 61.0,
+      "p75": 81.0,
+      "p95": 116.7,
+      "p99": 155.54,
+      "p100": 203.0,
+      "mean": 63.8,
+      "sd": 30.475,
+      "n": 1647
+    },
+    "carbs_on_board": {
+      "p0": 10.0,
+      "p1": 12.46,
+      "p5": 21.0,
+      "p25": 42.0,
+      "p50": 61.0,
+      "p75": 81.0,
+      "p95": 116.097,
+      "p99": 155.54,
+      "p100": 203.0,
+      "mean": 64.014,
+      "sd": 30.122,
+      "n": 1647
+    },
+    "expected_meal_rise": {
+      "p0": 12.74,
+      "p1": 17.576,
+      "p5": 29.414,
+      "p25": 57.484,
+      "p50": 83.211,
+      "p75": 115.806,
+      "p95": 173.098,
+      "p99": 235.756,
+      "p100": 379.871,
+      "mean": 90.631,
+      "sd": 46.61,
+      "n": 1647
+    },
+    "carb_sensitivity": {
+      "p0": 0.848,
+      "p1": 0.928,
+      "p5": 1.055,
+      "p25": 1.252,
+      "p50": 1.411,
+      "p75": 1.529,
+      "p95": 1.919,
+      "p99": 2.036,
+      "p100": 2.243,
+      "mean": 1.418,
+      "sd": 0.247,
+      "n": 1647
+    }
+  },
+  "constraints": {
+    "train": {
+      "share_carbs_60_eq_carbs_30": 1.0,
+      "share_carbs_120_eq_carbs_30": 0.9933,
+      "rows_prior_carbs_30_60_gt0": 0,
+      "rows_prior_carbs_60_120_gt0": 11,
+      "older_carbs_on_board": {
+        "p0": 0.0,
+        "p1": 0.0,
+        "p5": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p95": 2.983,
+        "p99": 16.66,
+        "p100": 44.4,
+        "mean": 0.587,
+        "sd": 3.066,
+        "n": 1647
+      }
+    },
+    "validation": {
+      "share_carbs_60_eq_carbs_30": 1.0,
+      "share_carbs_120_eq_carbs_30": 0.9944,
+      "rows_prior_carbs_30_60_gt0": 0,
+      "rows_prior_carbs_60_120_gt0": 3,
+      "older_carbs_on_board": {
+        "p0": 0.0,
+        "p1": 0.0,
+        "p5": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p95": 0.883,
+        "p99": 19.644,
+        "p100": 35.283,
+        "mean": 0.549,
+        "sd": 3.18,
+        "n": 532
+      }
+    },
+    "test": {
+      "share_carbs_60_eq_carbs_30": 1.0,
+      "share_carbs_120_eq_carbs_30": 0.9703,
+      "rows_prior_carbs_30_60_gt0": 0,
+      "rows_prior_carbs_60_120_gt0": 16,
+      "older_carbs_on_board": {
+        "p0": 0.0,
+        "p1": 0.0,
+        "p5": 0.0,
+        "p25": 0.0,
+        "p50": 0.0,
+        "p75": 0.0,
+        "p95": 9.289,
+        "p99": 35.3,
+        "p100": 55.9,
+        "mean": 1.388,
+        "sd": 6.074,
+        "n": 539
+      }
+    }
+  },
+  "conditioning": {
+    "raw5_correlation": {
+      "carbs_30|carbs_60": 1.0,
+      "carbs_30|carbs_120": 0.9876,
+      "carbs_30|carbs_on_board": 0.9949,
+      "carbs_30|expected_meal_rise": 0.9146,
+      "carbs_60|carbs_120": 0.9876,
+      "carbs_60|carbs_on_board": 0.9949,
+      "carbs_60|expected_meal_rise": 0.9146,
+      "carbs_120|carbs_on_board": 0.9933,
+      "carbs_120|expected_meal_rise": 0.9148,
+      "carbs_on_board|expected_meal_rise": 0.9197
+    },
+    "raw5_cov_eigenvalues": [
+      5.226e-13,
+      3.622,
+      15.49,
+      222.5,
+      5619.0
+    ],
+    "raw5_standardized_eigenvalues": [
+      -2.154e-16,
+      0.003968,
+      0.0167,
+      0.1287,
+      4.851
+    ],
+    "raw5_condition_number": 1.075e+16,
+    "stat2_correlation": {
+      "train": -0.0374,
+      "validation": -0.072,
+      "test": -0.0566
+    },
+    "stat2_condition_number": 9.734
+  },
+  "rejected_raw5_ridge_mahalanobis": {
+    "note": "threshold = split-conformal alpha=0.01 on validation fresh-meal rows; verdicts depend on the arbitrary ridge constant",
+    "sweep": [
+      {
+        "ridge_lambda": 1e-08,
+        "threshold": 8.93,
+        "share_60g_whatifs_flagged": 0.1888
+      },
+      {
+        "ridge_lambda": 1e-06,
+        "threshold": 8.929,
+        "share_60g_whatifs_flagged": 0.1888
+      },
+      {
+        "ridge_lambda": 0.0001,
+        "threshold": 8.798,
+        "share_60g_whatifs_flagged": 0.1894
+      },
+      {
+        "ridge_lambda": 0.01,
+        "threshold": 5.187,
+        "share_60g_whatifs_flagged": 0.1919
+      },
+      {
+        "ridge_lambda": 0.1,
+        "threshold": 4.39,
+        "share_60g_whatifs_flagged": 0.1193
+      },
+      {
+        "ridge_lambda": 1.0,
+        "threshold": 2.75,
+        "share_60g_whatifs_flagged": 0.0341
+      }
+    ]
+  },
+  "shipped_envelope": {
+    "method": "a scenario is 'no training analogue' when any decorrelated coordinate lies outside the range observed on meal-now training rows (+ small tolerance); no tuned threshold",
+    "coordinates": [
+      "meal_carbs",
+      "carb_sensitivity",
+      "expected_meal_rise",
+      "prior_carbs_30_60",
+      "prior_carbs_60_120",
+      "older_carbs_on_board"
+    ],
+    "reason_coordinates": [
+      "meal_carbs",
+      "expected_meal_rise",
+      "prior_carbs_30_60",
+      "prior_carbs_60_120",
+      "older_carbs_on_board"
+    ],
+    "design_change_disclosure": "carb_sensitivity was initially also a reason (outside training [min, max]). After seeing that it flagged one TEST patient whose sensitivity (0.846) is 0.002 below the training minimum (0.848), it was removed as a reason because a what-if meal does not change it (patient-level, not scenario-level). This choice was informed by test data, so the test flag rates below are not fully untouched evidence.",
+    "rule_selection_disclosure": [
+      "The bounds are fitted on training meals only and no threshold was tuned on test outcomes, but the rule design was not chosen blind to held-out data:",
+      "the calibrated 2-D Mahalanobis/kNN alternative was rejected partly because of its false-warning rate on TEST patients;",
+      "carb_sensitivity was removed as a reason after a TEST boundary flag was seen (see above);",
+      "the raw 5-D Mahalanobis demonstration used VALIDATION rows;",
+      "the reference set changed from CGM feature rows (format 2, which silently missed 25 training meals) to every logged training meal event (format 3) after the format-2 validation/test rates had been seen. The change was prompted by a code review of training-data coverage, not by outcomes, and the coordinates and tolerances were not changed.",
+      "Therefore the validation/test flag rates are not untouched held-out estimates of the final rule."
+    ],
+    "timing_behaviour": "The check is non-monotonic in time since the last logged meal: a meal < 30 min after another merges into 'meal now' (carbs_30), so it is flagged only if the combined grams or expected rise exceed training; 30-60 min after a meal it is always flagged (no training meal had a meal 30-60 min before it, prior_carbs_30_60 max = 0, reflecting the synthetic generator's meal schedule); 60-120 min after, it depends on the earlier meal's size. This is accurate about training support but says nothing specific about forecast error.",
+    "training_range": {
+      "meal_carbs": [
+        6.0,
+        203.0
+      ],
+      "carb_sensitivity": [
+        0.848,
+        2.243
+      ],
+      "expected_meal_rise": [
+        12.74,
+        379.871
+      ],
+      "prior_carbs_30_60": [
+        0.0,
+        0.0
+      ],
+      "prior_carbs_60_120": [
+        0.0,
+        81.0
+      ],
+      "older_carbs_on_board": [
+        0.0,
+        44.4
+      ]
+    },
+    "sparse_above_p99": {
+      "meal_carbs": 153.62,
+      "carb_sensitivity": 2.036,
+      "expected_meal_rise": 235.756,
+      "prior_carbs_30_60": 0.0,
+      "prior_carbs_60_120": 0.0,
+      "older_carbs_on_board": 16.66
+    },
+    "expected_exceedance_if_exchangeable": "for one coordinate, a new exchangeable row exceeds the training max with probability 1/(n+1) = 0.00061; rows are clustered by patient, so measured rates on new patients are the relevant evidence",
+    "validation_real_meals_flag_rate": {
+      "rate": 0.0038,
+      "n_rows": 532,
+      "n_patients": 12,
+      "ci95_patient_bootstrap": [
+        0.0,
+        0.0092
+      ],
+      "per_patient_rate_max": 0.0217,
+      "patients_with_any_flag": 2
+    },
+    "test_real_meals_flag_rate": {
+      "rate": 0.0148,
+      "n_rows": 539,
+      "n_patients": 12,
+      "ci95_patient_bootstrap": [
+        0.0073,
+        0.023
+      ],
+      "per_patient_rate_max": 0.05,
+      "patients_with_any_flag": 7
+    },
+    "test_real_meals_by_reason": {
+      "meal_carbs_above": 0,
+      "meal_carbs_below": 0,
+      "expected_meal_rise_above": 0,
+      "prior_carbs_30_60_above": 0,
+      "prior_carbs_60_120_above": 8,
+      "older_carbs_on_board_above": 2
+    },
+    "validation_real_meals_by_reason": {
+      "meal_carbs_above": 1,
+      "meal_carbs_below": 0,
+      "expected_meal_rise_above": 0,
+      "prior_carbs_30_60_above": 0,
+      "prior_carbs_60_120_above": 1,
+      "older_carbs_on_board_above": 0
+    },
+    "stability_train_patient_bootstrap": {
+      "n_refits": 200,
+      "mean_verdict_flip_rate_on_whatifs": 0.011,
+      "p95_verdict_flip_rate": 0.043,
+      "whatif_sizes_used": [
+        30,
+        60,
+        120
+      ]
+    }
+  },
+  "evaluated_not_shipped_calibrated_2d_distance": {
+    "coordinates": [
+      "log carbs_30",
+      "log(expected_meal_rise / carbs_on_board)"
+    ],
+    "ledoit_wolf_shrinkage": 0.00404,
+    "condition_number": 9.548,
+    "patient_level_calibration": {
+      "n_validation_patients": 12,
+      "note": "carb sensitivity is a per-patient trait, so rows of a new patient are not exchangeable with calibration rows. Patient-level split conformal at alpha needs ceil((m+1)(1-alpha)) <= m patients: with m=12 the smallest feasible alpha is 1/13 = 0.077."
+    },
+    "alpha_0.01": {
+      "mahalanobis_threshold": 2.8582,
+      "knn_k10_threshold": 0.7041,
+      "validation_flag_rate_mahalanobis": 0.0075,
+      "test_flag_rate_mahalanobis": {
+        "rate": 0.0668,
+        "n_rows": 539,
+        "n_patients": 12,
+        "ci95_patient_bootstrap": [
+          0.0038,
+          0.1816
+        ],
+        "per_patient_rate_max": 0.6889,
+        "patients_with_any_flag": 5
+      },
+      "test_flag_rate_knn_k10": {
+        "rate": 0.0482,
+        "n_rows": 539,
+        "n_patients": 12,
+        "ci95_patient_bootstrap": [
+          0.0056,
+          0.1126
+        ],
+        "per_patient_rate_max": 0.3556,
+        "patients_with_any_flag": 5
+      },
+      "test_per_patient_mahalanobis": [
+        {
+          "flag_rate": 0.689,
+          "median_sensitivity": 0.846,
+          "n": 45
+        },
+        {
+          "flag_rate": 0.038,
+          "median_sensitivity": 1.588,
+          "n": 52
+        },
+        {
+          "flag_rate": 0.023,
+          "median_sensitivity": 0.926,
+          "n": 43
+        },
+        {
+          "flag_rate": 0.023,
+          "median_sensitivity": 1.11,
+          "n": 44
+        },
+        {
+          "flag_rate": 0.021,
+          "median_sensitivity": 1.023,
+          "n": 47
+        },
+        {
+          "flag_rate": 0.0,
+          "median_sensitivity": 1.436,
+          "n": 42
+        },
+        {
+          "flag_rate": 0.0,
+          "median_sensitivity": 1.129,
+          "n": 45
+        },
+        {
+          "flag_rate": 0.0,
+          "median_sensitivity": 1.158,
+          "n": 45
+        },
+        {
+          "flag_rate": 0.0,
+          "median_sensitivity": 1.793,
+          "n": 45
+        },
+        {
+          "flag_rate": 0.0,
+          "median_sensitivity": 1.37,
+          "n": 40
+        },
+        {
+          "flag_rate": 0.0,
+          "median_sensitivity": 1.36,
+          "n": 47
+        },
+        {
+          "flag_rate": 0.0,
+          "median_sensitivity": 1.312,
+          "n": 44
+        }
+      ],
+      "stability_patient_bootstrap_refit": {
+        "n_refits": 200,
+        "mahalanobis_threshold_p5_p95": [
+          2.654,
+          3.292
+        ],
+        "knn_threshold_p5_p95": [
+          0.541,
+          1.062
+        ],
+        "mahalanobis_mean_verdict_flip_rate_on_whatifs": 0.0317,
+        "knn_mean_verdict_flip_rate_on_whatifs": 0.043
+      }
+    },
+    "alpha_0.05": {
+      "mahalanobis_threshold": 2.419,
+      "knn_k10_threshold": 0.4093,
+      "validation_flag_rate_mahalanobis": 0.047,
+      "test_flag_rate_mahalanobis": {
+        "rate": 0.1558,
+        "n_rows": 539,
+        "n_patients": 12,
+        "ci95_patient_bootstrap": [
+          0.0387,
+          0.3139
+        ],
+        "per_patient_rate_max": 0.8444,
+        "patients_with_any_flag": 11
+      },
+      "test_flag_rate_knn_k10": {
+        "rate": 0.1391,
+        "n_rows": 539,
+        "n_patients": 12,
+        "ci95_patient_bootstrap": [
+          0.0336,
+          0.29
+        ],
+        "per_patient_rate_max": 0.8222,
+        "patients_with_any_flag": 8
+      },
+      "test_per_patient_mahalanobis": [
+        {
+          "flag_rate": 0.844,
+          "median_sensitivity": 0.846,
+          "n": 45
+        },
+        {
+          "flag_rate": 0.558,
+          "median_sensitivity": 0.926,
+          "n": 43
+        },
+        {
+          "flag_rate": 0.149,
+          "median_sensitivity": 1.023,
+          "n": 47
+        },
+        {
+          "flag_rate": 0.091,
+          "median_sensitivity": 1.11,
+          "n": 44
+        },
+        {
+          "flag_rate": 0.058,
+          "median_sensitivity": 1.588,
+          "n": 52
+        },
+        {
+          "flag_rate": 0.044,
+          "median_sensitivity": 1.129,
+          "n": 45
+        },
+        {
+          "flag_rate": 0.044,
+          "median_sensitivity": 1.793,
+          "n": 45
+        },
+        {
+          "flag_rate": 0.025,
+          "median_sensitivity": 1.37,
+          "n": 40
+        },
+        {
+          "flag_rate": 0.024,
+          "median_sensitivity": 1.436,
+          "n": 42
+        },
+        {
+          "flag_rate": 0.022,
+          "median_sensitivity": 1.158,
+          "n": 45
+        },
+        {
+          "flag_rate": 0.021,
+          "median_sensitivity": 1.36,
+          "n": 47
+        },
+        {
+          "flag_rate": 0.0,
+          "median_sensitivity": 1.312,
+          "n": 44
+        }
+      ],
+      "stability_patient_bootstrap_refit": {
+        "n_refits": 200,
+        "mahalanobis_threshold_p5_p95": [
+          2.075,
+          2.855
+        ],
+        "knn_threshold_p5_p95": [
+          0.367,
+          0.705
+        ],
+        "mahalanobis_mean_verdict_flip_rate_on_whatifs": 0.0405,
+        "knn_mean_verdict_flip_rate_on_whatifs": 0.061
+      }
+    },
+    "training_patient_median_sensitivity_range": [
+      0.938,
+      1.985
+    ]
+  },
+  "whatif_sweep_test_patients": {
+    "baselines": "test-patient feature rows at :00 and :30 with finite inputs; analytic meal-now transform (carbs_30/60/120 and COB + g; expected_meal_rise = carb_sensitivity x new COB), verified against the engine in tests/test_joint_support.py",
+    "n_baselines": 7936,
+    "by_meal_grams": {
+      "10": {
+        "n": 7936,
+        "flagged": 0.1058,
+        "flagged_by_joint_coordinate_only": 0.1058,
+        "by_reason": {
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          0.081,
+          0.123
+        ]
+      },
+      "20": {
+        "n": 7936,
+        "flagged": 0.1058,
+        "flagged_by_joint_coordinate_only": 0.1058,
+        "by_reason": {
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          0.081,
+          0.123
+        ]
+      },
+      "30": {
+        "n": 7936,
+        "flagged": 0.1058,
+        "flagged_by_joint_coordinate_only": 0.1058,
+        "by_reason": {
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          0.081,
+          0.123
+        ]
+      },
+      "45": {
+        "n": 7936,
+        "flagged": 0.1061,
+        "flagged_by_joint_coordinate_only": 0.1058,
+        "by_reason": {
+          "meal_carbs_above": 0.0003,
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          0.081,
+          0.123
+        ]
+      },
+      "60": {
+        "n": 7936,
+        "flagged": 0.1067,
+        "flagged_by_joint_coordinate_only": 0.1058,
+        "by_reason": {
+          "meal_carbs_above": 0.0009,
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          0.083,
+          0.127
+        ]
+      },
+      "90": {
+        "n": 7936,
+        "flagged": 0.1085,
+        "flagged_by_joint_coordinate_only": 0.1058,
+        "by_reason": {
+          "meal_carbs_above": 0.0026,
+          "expected_meal_rise_above": 0.0001,
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          0.084,
+          0.13
+        ]
+      },
+      "120": {
+        "n": 7936,
+        "flagged": 0.1216,
+        "flagged_by_joint_coordinate_only": 0.1058,
+        "by_reason": {
+          "meal_carbs_above": 0.0158,
+          "expected_meal_rise_above": 0.0013,
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          0.09,
+          0.145
+        ]
+      },
+      "150": {
+        "n": 7936,
+        "flagged": 0.1478,
+        "flagged_by_joint_coordinate_only": 0.1058,
+        "by_reason": {
+          "meal_carbs_above": 0.042,
+          "expected_meal_rise_above": 0.0074,
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          0.113,
+          0.168
+        ]
+      },
+      "180": {
+        "n": 7936,
+        "flagged": 0.1687,
+        "flagged_by_joint_coordinate_only": 0.108,
+        "by_reason": {
+          "meal_carbs_above": 0.0607,
+          "expected_meal_rise_above": 0.0232,
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          0.131,
+          0.21
+        ]
+      },
+      "240": {
+        "n": 7936,
+        "flagged": 1.0,
+        "flagged_by_joint_coordinate_only": 0.0,
+        "by_reason": {
+          "meal_carbs_above": 1.0,
+          "expected_meal_rise_above": 0.2019,
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          1.0,
+          1.0
+        ]
+      },
+      "300": {
+        "n": 7936,
+        "flagged": 1.0,
+        "flagged_by_joint_coordinate_only": 0.0,
+        "by_reason": {
+          "meal_carbs_above": 1.0,
+          "expected_meal_rise_above": 0.548,
+          "prior_carbs_30_60_above": 0.0672,
+          "prior_carbs_60_120_above": 0.0339,
+          "older_carbs_on_board_above": 0.0629
+        },
+        "per_patient_flagged_min_max": [
+          1.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "constructed_cases": [
+    {
+      "case": "typical: 60 g meal now, median sensitivity",
+      "inputs": {
+        "carbs_30": 60.0,
+        "carbs_60": 60.0,
+        "carbs_120": 60.0,
+        "carbs_on_board": 60.0,
+        "expected_meal_rise": 84.66
+      },
+      "each_input_within_training_marginal_range": {
+        "carbs_30": true,
+        "carbs_60": true,
+        "carbs_120": true,
+        "carbs_on_board": true,
+        "expected_meal_rise": true
+      },
+      "status": "within_training_support",
+      "reasons": []
+    },
+    {
+      "case": "each input in range, jointly unusual: 60 g now after a 40 g meal 45 min ago",
+      "inputs": {
+        "carbs_30": 60.0,
+        "carbs_60": 100.0,
+        "carbs_120": 100.0,
+        "carbs_on_board": 90.0,
+        "expected_meal_rise": 126.99
+      },
+      "each_input_within_training_marginal_range": {
+        "carbs_30": true,
+        "carbs_60": true,
+        "carbs_120": true,
+        "carbs_on_board": true,
+        "expected_meal_rise": true
+      },
+      "status": "no_training_analogue",
+      "reasons": [
+        "prior_carbs_30_60_above"
+      ]
+    },
+    {
+      "case": "meal size and sensitivity each in training range, product (expected_meal_rise) above max: 190 g at sensitivity 2.1",
+      "inputs": {
+        "carbs_30": 190.0,
+        "carbs_60": 190.0,
+        "carbs_120": 190.0,
+        "carbs_on_board": 190.0,
+        "expected_meal_rise": 399.0
+      },
+      "each_input_within_training_marginal_range": {
+        "carbs_30": true,
+        "carbs_60": true,
+        "carbs_120": true,
+        "carbs_on_board": true,
+        "expected_meal_rise": false
+      },
+      "status": "no_training_analogue",
+      "reasons": [
+        "expected_meal_rise_above"
+      ]
+    },
+    {
+      "case": "each input in range, jointly unusual: 50 g now with 45 g older carbs on board",
+      "inputs": {
+        "carbs_30": 50.0,
+        "carbs_60": 50.0,
+        "carbs_120": 95.0,
+        "carbs_on_board": 95.0,
+        "expected_meal_rise": 134.04
+      },
+      "each_input_within_training_marginal_range": {
+        "carbs_30": true,
+        "carbs_60": true,
+        "carbs_120": true,
+        "carbs_on_board": true,
+        "expected_meal_rise": true
+      },
+      "status": "no_training_analogue",
+      "reasons": [
+        "older_carbs_on_board_above"
+      ]
+    },
+    {
+      "case": "marginally outside: 260 g",
+      "inputs": {
+        "carbs_30": 260.0,
+        "carbs_60": 260.0,
+        "carbs_120": 260.0,
+        "carbs_on_board": 260.0,
+        "expected_meal_rise": 366.86
+      },
+      "each_input_within_training_marginal_range": {
+        "carbs_30": false,
+        "carbs_60": false,
+        "carbs_120": false,
+        "carbs_on_board": false,
+        "expected_meal_rise": true
+      },
+      "status": "no_training_analogue",
+      "reasons": [
+        "meal_carbs_above"
+      ]
+    }
+  ],
+  "descriptive_error_association_test_real_meals": {
+    "rows": "test-patient forecasts issued < 5 min after a logged meal (minutes_since_meal < 5)",
+    "note": "test labels used descriptively only, after every fitting/threshold choice; tiny flagged n; rows are patient-clustered, so p-values are optimistic",
+    "by_horizon_min": {
+      "60": {
+        "n": 526,
+        "n_flagged": 8,
+        "mae_envelope_flagged": 22.83,
+        "mae_envelope_not_flagged": 16.75,
+        "spearman_rho_2d_distance_vs_abs_error": 0.05,
+        "p_value": 0.25
+      },
+      "120": {
+        "n": 525,
+        "n_flagged": 7,
+        "mae_envelope_flagged": 17.45,
+        "mae_envelope_not_flagged": 17.12,
+        "spearman_rho_2d_distance_vs_abs_error": 0.052,
+        "p_value": 0.239
+      }
+    }
+  },
+  "model": {
+    "training_data": "glucotwin-synthetic-t2d v0.1.0, seed 20261017, 142821 train rows",
+    "lo": {
+      "meal_carbs": 6.0,
+      "carb_sensitivity": 0.8478903160586678,
+      "expected_meal_rise": 12.739756994112945,
+      "prior_carbs_30_60": 0.0,
+      "prior_carbs_60_120": 0.0,
+      "older_carbs_on_board": 0.0
+    },
+    "hi": {
+      "meal_carbs": 203.0,
+      "carb_sensitivity": 2.243037867858131,
+      "expected_meal_rise": 379.870976845198,
+      "prior_carbs_30_60": 0.0,
+      "prior_carbs_60_120": 81.0,
+      "older_carbs_on_board": 44.400000000000006
+    },
+    "sparse_above": {
+      "meal_carbs": 153.6199999999999,
+      "carb_sensitivity": 2.0359571282174844,
+      "expected_meal_rise": 235.7557345230077,
+      "prior_carbs_30_60": 0.0,
+      "prior_carbs_60_120": 0.0,
+      "older_carbs_on_board": 16.659555555555556
+    },
+    "n_train_rows": 1647,
+    "n_train_patients": 36,
+    "format": "b23-joint-support/3"
+  },
+  "reproducibility": {
+    "script": "scripts/b23_joint_support_analysis.py",
+    "seed": 20261021,
+    "bootstrap_reps": 2000,
+    "refit_reps": 200,
+    "model_sha256": "2939ed113bc82b5c03b86c126f1bbf9d686d4990cfbaf9f925c327d59b449efe"
+  }
+}
