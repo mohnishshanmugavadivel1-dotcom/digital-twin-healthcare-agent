@@ -147,18 +147,22 @@
   <text x="1106" y="749" class="s">sustained warnings, ablations, seeds, stress test</text>
   <text x="1106" y="778" class="m">Synthetic results only; not clinical validation</text>
 
-  <!-- planned -->
-  <rect class="plan" x="30" y="642" width="260" height="226" rx="10"/>
-  <text x="46" y="668" class="t" fill="#64748b">Planned (not built)</text>
-  <text x="46" y="692" class="s">• Open-data check (ShanghaiT2DM,</text>
-  <text x="46" y="709" class="s">  CC BY 4.0)</text>
-  <text x="46" y="729" class="s">• HGB + TreeSHAP event model</text>
-  <text x="46" y="749" class="s">• HRV, sleep stages streams</text>
-  <text x="46" y="769" class="s">• Activity / walk what-if</text>
-  <text x="46" y="789" class="s">• Database, auth, audit log,</text>
-  <text x="46" y="806" class="s">  FHIR export</text>
-  <text x="46" y="826" class="s">• Hypoglycaemia as 2nd event</text>
-  <text x="46" y="852" class="m">See docs/BACKLOG.md</text>
+  <!-- implemented since the original plan (tested) -->
+  <rect class="box off" x="30" y="642" width="260" height="118"/>
+  <text x="46" y="668" class="t">Now implemented</text>
+  <text x="46" y="692" class="s">• ShanghaiT2DM glucose-history</text>
+  <text x="56" y="709" class="s">study (real T2D CGM data)</text>
+  <text x="46" y="729" class="s">• +20-min walk curve (research)</text>
+  <text x="46" y="749" class="s">• FHIR R4 export + ingest</text>
+
+  <!-- future work -->
+  <rect class="plan" x="30" y="768" width="260" height="128" rx="10"/>
+  <text x="46" y="792" class="t" fill="#64748b">Future work (not built)</text>
+  <text x="46" y="814" class="s">• Sleep / HRV streams</text>
+  <text x="46" y="832" class="s">• Full 33-input real-data validation</text>
+  <text x="46" y="850" class="s">• HGB + TreeSHAP event model</text>
+  <text x="46" y="868" class="s">• Database, auth, audit log</text>
+  <text x="46" y="886" class="s">• Hypoglycaemia event model</text>
 
   <!-- arrows -->
   <path class="a" d="M160,240 L160,280"/>
