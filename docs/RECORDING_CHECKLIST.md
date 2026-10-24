@@ -57,3 +57,4 @@ Target length **23:00** so editing cannot push the video under 20:00. **No video
 - [ ] Add the link to the README "Submission artefacts" table (replacing "_link to be added after recording_").
 - [ ] Update `docs/COMPETITION_COMPLIANCE.md` video row and `docs/DEMO_SCRIPT.md` line 5.
 - [ ] Re-check the repo is public and every link in the README opens logged-out.
+- [ ] If you ran `glucotwin audit --quick` on camera: afterwards run `git checkout -- reports/audit_report.json` — `--quick` writes a reduced report (no multi-seed section) that must not replace the committed full-audit artifact.

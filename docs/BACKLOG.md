@@ -27,6 +27,8 @@ P2 = after submission (jury round).
 | B-16 | P2 | Hypoglycaemia (< 70) as a second event; simulator calibration for TBR (currently 0.4% vs 2.4% published) | A + C | – | M |
 | B-17 | P2 | Sleep stream (duration, awakenings) from the wearable, with its effect on insulin sensitivity in the simulator | A + D | – | M |
 | B-18 | P2 | FHIR R4 export of PatientRecord / Observation for interoperability | B + D | – | M |
+| B-21 | P2 | Mid-replay connection loss currently replaces the workspace with the full-screen retry card (loud but destructive); make it an inline recoverable banner. Needs browser testing (no browser in the dev sandbox). | E | – | S |
+| B-22 | P2 | Verified what-if artifact (2026-10-20, live): a small hypothetical meal can produce a NEGATIVE Δ60 (20 g → −12.0 mg/dL vs 60 g → +41.1 at SYN-0039 07:55) when it lands inside another logged meal's learned meal-response window — the scenario leg recomputes meal responses and the collision perturbs the response features. Engine frozen per sprint guardrails; the dashboard shows an explicit artifact note. Post-submission: exclude the hypothetical meal from meal-response learning or clamp the scenario recomputation. | D | – | M |
 
 ## Dependency graph (what can run in parallel next)
 
@@ -70,3 +72,5 @@ go through B (the architect) with a schema version bump.
 | R7 | Pickle bundle loading | Low | Medium | Local-only artefacts, documented; switch to skops/ONNX if distributed |
 | R8 | Lows under-represented (TBR 0.4%) | High | Low (hyper is the target) | B-16 |
 | R9 | No auth on the API | Low (local demo) | High if deployed | Documented; not for real data |
+
+Ingest invariance (chunk-size batching, duplicate re-delivery, session supersede, step-past-end clamping) is pinned by tests since 2026-10-20 (`tests/test_engine_invariance.py`, `tests/test_api.py`).

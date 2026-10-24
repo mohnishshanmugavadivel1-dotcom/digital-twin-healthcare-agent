@@ -83,3 +83,28 @@ def test_replay_bounds_rejected_not_500(client, service):
     pid = service.demo_patient_ids()[0]
     assert client.post("/api/replay", json={"patient_id": pid, "start_offset_hours": 1e12}).status_code == 422
     assert client.post("/api/replay", json={"patient_id": pid, "duration_hours": 1e15}).status_code == 422
+
+
+def test_step_past_end_is_safe_and_idempotent(client, service):
+    """Stepping beyond the session end must clamp, never rewind, error, or resurrect data."""
+    pid = service.demo_patient_ids()[0]
+    st = client.post("/api/replay", json={"patient_id": pid, "duration_hours": 1}).json()
+    sid = st["session_id"]
+    st1 = client.post(f"/api/replay/{sid}/step", json={"minutes": 120}).json()
+    assert st1["finished"] is True
+    st2 = client.post(f"/api/replay/{sid}/step", json={"minutes": 30}).json()
+    assert st2["finished"] is True and st2["clock"] == st1["clock"]
+    assert st2["state"]["observations_ingested"] == st1["state"]["observations_ingested"]
+    assert client.delete(f"/api/replay/{sid}").status_code == 204
+    assert client.delete(f"/api/replay/{sid}").status_code == 404
+
+
+def test_one_active_replay_per_patient(client, service):
+    """A new replay for the same patient supersedes the previous session (no leaked sessions)."""
+    pid = service.demo_patient_ids()[0]
+    s1 = client.post("/api/replay", json={"patient_id": pid, "duration_hours": 1}).json()["session_id"]
+    s2 = client.post("/api/replay", json={"patient_id": pid, "duration_hours": 1}).json()["session_id"]
+    assert s1 != s2
+    assert client.get(f"/api/replay/{s1}").status_code == 404
+    assert client.get(f"/api/replay/{s2}").status_code == 200
+    assert client.delete(f"/api/replay/{s2}").status_code == 204
