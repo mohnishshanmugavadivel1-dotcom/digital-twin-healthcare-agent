@@ -33,6 +33,7 @@ from glucotwin.contracts import (
     ReplayStep,
     TwinState,
 )
+from glucotwin.fhir_export import patient_bundle
 from glucotwin.models.bundle import ModelBundle
 from glucotwin.service import NotFound, TwinService
 
@@ -85,6 +86,23 @@ def build_router(svc: TwinService) -> APIRouter:
         eng = svc.engine(pid)
         with svc.lock:
             return eng.ingest(batch.observations, forecast_mode="every")
+
+    @r.get("/patients/{pid}/fhir")
+    def get_fhir(pid: str, hours: float = Query(6.0, gt=0, le=24)) -> dict:
+        """FHIR R4 collection Bundle for this SYNTHETIC patient (interoperability prototype, not certified).
+
+        CGM readings are limited to the last ``hours`` of what the twin has received (never future replay data).
+        """
+        record = svc.record(pid)
+        eng = svc.engine(pid)
+        with svc.lock:
+            hist = eng.history_frame(None)
+            latest = eng.latest_forecast
+        cgm = hist[(hist["kind"] == "cgm") & hist["value"].notna()]
+        if len(cgm):
+            cgm = cgm[cgm["timestamp"] > cgm["timestamp"].max() - pd.Timedelta(hours=hours)]
+        return patient_bundle(record, ((t.to_pydatetime(), float(v)) for t, v in zip(cgm["timestamp"], cgm["value"],
+                                                                                    strict=True)), forecast=latest)
 
     @r.get("/patients/{pid}/state", response_model=TwinState)
     def get_state(pid: str):

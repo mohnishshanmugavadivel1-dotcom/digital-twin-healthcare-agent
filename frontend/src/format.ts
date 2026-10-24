@@ -160,3 +160,52 @@ export function personalRuleText(p: { carb_sensitivity_mg_dl_per_g: number; carb
   return `s = (${K} × prior ${p.carb_sensitivity_prior.toFixed(2)} + ${n} × observed mean ≈ ${observedMean.toFixed(2)}) / (${K} + ${n}) = ` +
     `${p.carb_sensitivity_mg_dl_per_g.toFixed(2)} mg/dL per g; the observed meals carry ${Math.round(w * 100)}% of the weight.`;
 }
+
+/**
+ * How much the estimate rests on observed meals (glucotwin.twin.personal_uncertainty). The ± figure is a sampling
+ * standard error from meal-to-meal variation (prior treated as fixed), not a posterior SD. Null when not reported.
+ */
+export function personalUncertaintyText(p: { meals_used: number; observed_weight?: number | null;
+  response_sd_mg_dl_per_g?: number | null; sampling_se_mg_dl_per_g?: number | null }): string | null {
+  if (p.observed_weight === undefined || p.observed_weight === null) return null;
+  const w = `${Math.round(p.observed_weight * 100)}% from ${p.meals_used} observed meal${p.meals_used === 1 ? "" : "s"}`;
+  if (p.sampling_se_mg_dl_per_g === undefined || p.sampling_se_mg_dl_per_g === null || p.response_sd_mg_dl_per_g == null)
+    return p.meals_used === 0 ? "Confidence: prior only (no observed meal yet)." : `Confidence: ${w}; too few meals for a spread estimate.`;
+  return `Confidence: ${w}; ± ${p.sampling_se_mg_dl_per_g.toFixed(2)} sampling error ` +
+    `(meal-to-meal SD ${p.response_sd_mg_dl_per_g.toFixed(2)}).`;
+}
+
+/**
+ * Low-glucose lower-bound indicator. It reports one fact about the served forecast: whether the LOWER edge of the
+ * model's prediction interval at +30..+120 min falls below 70 mg/dL. It is not a probability of hypoglycaemia.
+ * Audit of this exact rule on synthetic held-out patients: reports/research/twin_validity.json (section D).
+ */
+export const LOW_GLUCOSE_MG_DL = 70;
+export interface LowerBoundLow { horizon_min: number; lowest_mg_dl: number }
+export function lowerBoundBelow(points: { horizon_min: number; lower_mg_dl: number }[], limit = LOW_GLUCOSE_MG_DL): LowerBoundLow | null {
+  const below = points.filter((p) => p.horizon_min >= 30 && p.horizon_min <= 120 && p.lower_mg_dl < limit);
+  if (!below.length) return null;
+  const first = below.reduce((a, b) => (b.horizon_min < a.horizon_min ? b : a));
+  return { horizon_min: first.horizon_min, lowest_mg_dl: Math.min(...below.map((p) => p.lower_mg_dl)) };
+}
+
+/**
+ * What-If table cell: does the scenario forecast's 80% lower bound fall below 70 mg/dL at +30..+120 min?
+ * A flag on an interval edge, never a probability; medication is context only.
+ */
+export function scenarioLowWatchCell(points: { horizon_min: number; lower_mg_dl: number }[] | undefined,
+  hypoMeds: string[]): { text: string; title: string; flagged: boolean } {
+  const lb = points && points.length ? lowerBoundBelow(points) : null;
+  const meds = hypoMeds.length ? ` Record lists ${hypoMeds.join(", ")}, which can cause hypoglycaemia.` : "";
+  if (!lb) return { text: "–", flagged: false,
+    title: "Lower edge of this scenario's 80% prediction interval stays at or above 70 mg/dL through +120 min. Not a guarantee." };
+  return { text: `<70 from +${lb.horizon_min}m${hypoMeds.length ? " · SU/insulin" : ""}`, flagged: true,
+    title: `Lower edge of this scenario's 80% prediction interval falls below 70 mg/dL from +${lb.horizon_min} min ` +
+      `(lowest ${Math.round(lb.lowest_mg_dl)} mg/dL). Not a probability of hypoglycaemia.${meds}` };
+}
+
+/** Record medications whose class can cause hypoglycaemia (sulfonylureas, insulin). Display context only. */
+const HYPO_CLASSES: Record<string, string> = { sulfonylurea: "sulfonylurea", basal_insulin: "basal insulin" };
+export function hypoglycaemiaMedications(meds: { name: string; drug_class: string }[]): string[] {
+  return meds.filter((m) => m.drug_class in HYPO_CLASSES).map((m) => `${m.name} (${HYPO_CLASSES[m.drug_class]})`);
+}

@@ -71,8 +71,18 @@ export interface TwinState {
     window_hours: number; n_readings: number; mean_mg_dl: number | null; cv_percent: number | null;
     time_in_range_pct: number | null; time_above_range_pct: number | null; time_below_range_pct: number | null;
   };
-  personal: { carb_sensitivity_mg_dl_per_g: number; carb_sensitivity_prior: number; meals_used: number };
+  personal: {
+    carb_sensitivity_mg_dl_per_g: number; carb_sensitivity_prior: number; meals_used: number;
+    // additive, descriptive only; absent in older snapshots
+    observed_weight?: number | null; response_sd_mg_dl_per_g?: number | null; sampling_se_mg_dl_per_g?: number | null;
+  };
   data_quality: { cgm_completeness_3h: number; minutes_since_last_cgm: number | null; stale: boolean; gaps_over_30min_24h: number };
+}
+
+/** FHIR R4 collection Bundle from GET /api/patients/{id}/fhir (synthetic patient; interoperability prototype). */
+export interface FhirBundle {
+  resourceType: "Bundle"; id: string; type: string; timestamp?: string;
+  entry: { fullUrl: string; resource: { resourceType: string; [k: string]: unknown } }[];
 }
 
 export interface ForecastPoint { horizon_min: number; timestamp: ISODate; glucose_mg_dl: number; lower_mg_dl: number; upper_mg_dl: number }

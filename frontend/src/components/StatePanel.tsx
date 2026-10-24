@@ -1,5 +1,5 @@
 import type { TwinState } from "../api/types";
-import { ARROWS, ARROW_TEXT, glucoseClass, num, pct, personalRuleText } from "../format";
+import { ARROWS, ARROW_TEXT, glucoseClass, num, pct, personalRuleText, personalUncertaintyText } from "../format";
 
 export function StatePanel({ state }: { state: TwinState | null }) {
   if (!state) return null;
@@ -37,6 +37,11 @@ export function StatePanel({ state }: { state: TwinState | null }) {
         <div className="stat-label">Personalised parameter</div>
         <div className="small">Carb sensitivity <b>{p.carb_sensitivity_mg_dl_per_g.toFixed(2)}</b> mg/dL per g</div>
         <div className="muted small">Started from record-based prior {p.carb_sensitivity_prior.toFixed(2)}; learned from {p.meals_used} observed meals.</div>
+        {personalUncertaintyText(p) && (
+          <div className="small personal-confidence" title="Sampling standard error from meal-to-meal variation, prior treated as fixed. Not a posterior SD; descriptive only, not used by any forecast.">
+            {personalUncertaintyText(p)}
+          </div>
+        )}
         <details className="personal-rule small">
           <summary>How this parameter updates</summary>
           <div className="tiny">

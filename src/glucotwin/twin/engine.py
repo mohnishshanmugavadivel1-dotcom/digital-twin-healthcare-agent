@@ -58,6 +58,7 @@ from glucotwin.features import (
 )
 from glucotwin.labels import to_grid
 from glucotwin.models.bundle import ModelBundle
+from glucotwin.twin.personal_uncertainty import carb_sensitivity_uncertainty
 
 log = logging.getLogger(__name__)
 
@@ -355,6 +356,7 @@ class TwinEngine:
         prior = carb_sensitivity_prior(self.record)
         responses = self._responses(self.history_frame())
         sens, k = personal_carb_sensitivity(responses, prior, pd.DatetimeIndex([now]))
+        unc = carb_sensitivity_uncertainty(responses, now)
 
         recent3 = cgm_t[cgm_t > now - pd.Timedelta(hours=3)] if cgm_v.size else []
         day_t = cgm_t[cgm_t > now - pd.Timedelta(hours=24)] if cgm_v.size else pd.DatetimeIndex([])
@@ -370,7 +372,10 @@ class TwinEngine:
             mean_heart_rate_30min=round(float(hr_recent.mean()), 1) if hr_recent.size else None,
             summary_24h=summary,
             personal=PersonalParameters(carb_sensitivity_mg_dl_per_g=round(float(sens[0]), 3),
-                                        carb_sensitivity_prior=round(prior, 3), meals_used=int(k[0])),
+                                        carb_sensitivity_prior=round(prior, 3), meals_used=int(k[0]),
+                                        observed_weight=round(unc.observed_weight, 3),
+                                        response_sd_mg_dl_per_g=None if unc.response_sd is None else round(unc.response_sd, 3),
+                                        sampling_se_mg_dl_per_g=None if unc.sampling_se is None else round(unc.sampling_se, 3)),
             data_quality=DataQuality(
                 cgm_completeness_3h=round(min(len(recent3) / 36.0, 1.0), 3),
                 minutes_since_last_cgm=None if mins_since_cgm is None else round(mins_since_cgm, 1),

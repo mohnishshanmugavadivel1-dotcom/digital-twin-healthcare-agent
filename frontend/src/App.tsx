@@ -51,13 +51,21 @@ export default function App() {
       </div>
       {IS_STATIC_DEMO && (
         <div className="static-banner" role="note" aria-label="Static snapshot notice">
-          <b>Static recorded snapshot, not a live system.</b> Every response below was recorded from the real GlucoTwin API by{" "}
-          <code>scripts/export_static_demo.py</code>{snapshot && <> (model {snapshot.model_version}, recorded {snapshot.recorded_at.slice(0, 10)},
-          commit {snapshot.git_head.slice(0, 7)}{snapshot.working_tree_dirty_at_recording ? " plus uncommitted changes" : ""})</>}.
-          Nothing is computed in your browser; what-ifs exist only for the recorded moments and amounts.
-          {snapshot && <> Scenarios: {snapshot.scenarios.map((sc, i) => (
-            <span key={sc.id}>{i > 0 && " · "}<a href={`?patient=${sc.patient_id}`} title={sc.description}>{sc.title}</a></span>))}.</>}
-          {" "}For the full interactive app, run it locally (<code>make setup train serve</code>).
+          <div className="static-headline"><b>Interactive Static Demo Snapshot (GitHub Pages)</b> · Precomputed from the GlucoTwin Engine ·
+            Explore Featured Clinical Scenarios, Indian Meal What-If Presets &amp; ABDM FHIR R4 Records</div>
+          <div className="static-provenance tiny">Static recorded snapshot, not a live system: precomputed by <code>scripts/export_static_demo.py</code> from
+            the real GlucoTwin API{snapshot && <> (model {snapshot.model_version}, commit {snapshot.git_head.slice(0, 7)}{snapshot.working_tree_dirty_at_recording ? " plus uncommitted changes" : ""},
+            recorded {snapshot.recorded_at.slice(0, 10)})</>}. Nothing is computed in your browser. Synthetic patients only; the FHIR
+            export is an R4 interoperability prototype, not ABDM-certified or profiled against NRCeS guides.{" "}
+            <details className="static-details">
+              <summary>What was recorded</summary>
+              Meal presets every {snapshot?.preset_grid_minutes ?? 15} min of each replay, and every amount ({snapshot?.whatif_grams.join(", ")} g)
+              at the marked moments; other requests say they were not recorded instead of guessing. The FHIR export is recorded once, at the
+              replay start. {snapshot && <>Scenarios: {snapshot.scenarios.map((sc, i) => (
+                <span key={sc.id}>{i > 0 && " · "}<a href={`?patient=${sc.patient_id}`} title={sc.description}>{sc.title}</a></span>))}. </>}
+              For the full interactive app, run it locally (<code>make setup train serve</code>).
+            </details>
+          </div>
         </div>
       )}
       {error && <div className="card error">{IS_STATIC_DEMO ? "Snapshot could not be loaded" : "Backend unreachable"}: {error}</div>}

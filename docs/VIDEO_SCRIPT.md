@@ -8,8 +8,9 @@
 |---|---|---|---|
 | **A: core** | 1–12 | **18:30** | "15–20 minutes" |
 | **B: extended** | 1–12 plus X1–X3 | **23:00** (stays over 20:00 even after trimming) | "minimum 20 minutes" |
+| **C: 20-minute (recommended)** | 1–12 with modules 5 and 6 extended (5+, 6+) and module F added | **20:20** (target window 20:15–20:30) | either reading: just over 20 minutes |
 
-Every on-screen value below comes from the **recorded static snapshot** (`frontend/static-demo/demo/*.json`). It was recorded from the real API with model `gt-0.1.0-s20261017-202610211601` on 2026-10-21 and checked against the dashboard on 2026-10-22. Times are patient-local (UTC+05:30). All patients are synthetic.
+Every on-screen value below comes from the **recorded static snapshot** (`frontend/static-demo/demo/*.json`). It was first recorded on 2026-10-21 and re-recorded on 2026-10-23 from a clean commit; `manifest.json` names the model and commit. Every frame, forecast and What-If in the re-recording is identical to the 2026-10-21 values used here. Only additive fields were added: the confidence line, the FHIR RiskAssessment and per-scenario lower bounds. Times are patient-local (UTC+05:30). All patients are synthetic.
 
 This file supersedes the scene timings in [DEMO_SCRIPT.md](DEMO_SCRIPT.md) and [RECORDING_CHECKLIST.md](RECORDING_CHECKLIST.md). Those files contain values from earlier builds and one outdated claim (SYN-0019 "missed").
 
@@ -42,10 +43,31 @@ cd frontend && npm ci && npm run build:static && npm run preview:static   # http
 2. "Every patient in the dashboard is synthetic."
 3. "The What-If results are learned associations of the model, not physiology and not advice."
 4. "Our real-data results are for simpler glucose-history models. The full GlucoTwin model has not been tested on real patients."
+5. (Cut C) "The low-glucose watch is the edge of a prediction interval, not a probability, and our research numbers come from the simulator."
 
 ## 3. Shot list
 
 Clock times are for **Cut A**. In Cut B, insert X1 after module 3, X2 after X1, and X3 after module 10; every later module shifts accordingly.
+
+**Cut C clock (20:20):**
+
+| # | Module | Clock | Duration |
+|---|---|---|---|
+| 1 | Cold open | 0:00–0:45 | 0:45 |
+| 2 | Problem and product | 0:45–2:15 | 1:30 |
+| 3 | Why a twin | 2:15–4:00 | 1:45 |
+| 4 | The live state at 07:55 | 4:00–6:00 | 2:00 |
+| 5+ | Patient-specific update, plus confidence and post-meal evidence | 6:00–8:30 | 2:30 |
+| 6+ | What-If, plus the Low watch column and research check | 8:30–11:40 | 3:10 |
+| F | FHIR R4 record | 11:40–12:20 | 0:40 |
+| 7 | Early warning | 12:20–14:20 | 2:00 |
+| 8 | Unlogged meal | 14:20–15:35 | 1:15 |
+| 9 | Synthetic benchmark | 15:35–17:05 | 1:30 |
+| 10 | Real data | 17:05–18:35 | 1:30 |
+| 11 | Limitations | 18:35–19:50 | 1:15 |
+| 12 | Close | 19:50–20:20 | 0:30 |
+
+If a take runs short, pause longer on the evidence card in module 4 rather than adding claims. Stop the recording between 20:15 and 20:30.
 
 | # | Cut A clock | Dur. | Screen | Action | On-screen caption |
 |---|---|---|---|---|---|
@@ -99,7 +121,11 @@ Screen (07:55): Farah N. (synthetic) **SYN-0039**, 32 y, HbA1c **6.1%**. Glucose
 
 Screen: personalised-parameter panel shows **1.70 mg/dL per g**, prior **1.31**, **20** observed meals. Then click **Anil S. (synthetic)** in the sidebar (deep link SYN-0019): parameter **1.11**, prior **1.25**, **33** meals. Then return to the hero deep link.
 
-> "This is what makes it a twin rather than a generic model. Farah's carb sensitivity, how much her glucose rises per gram of carbohydrate, started at 1.31 from her HbA1c. After 20 of her own meals it is 1.70: her responses are steeper than her record suggested. Anil, a different synthetic patient, started at 1.25 and has come down to 1.11 over 33 meals. The rule is simple and visible: each eligible meal contributes its observed rise per gram, shrunk towards the record-based prior with the weight of three pseudo-meals. We have not shown that this personalisation improves forecast accuracy, so we don't claim it does. It makes the twin's state patient-specific, and you'll see it update live in a minute."
+> "This is what makes it a twin rather than a generic model. Farah's carb sensitivity, how much her glucose rises per gram of carbohydrate, started at 1.31 from her HbA1c. After 20 of her own meals it is 1.70: her responses are steeper than her record suggested. Anil, a different synthetic patient, started at 1.25 and has come down to 1.11 over 33 meals. The rule is simple and visible: each eligible meal contributes its observed rise per gram, shrunk towards the record-based prior with the weight of three pseudo-meals. In our simulator it measurably helps forecasts, which I'll show in a moment; we have not tested that on real patients. It makes the twin's state patient-specific, and you'll see it update live in a minute."
+
+**5+ (Cut C, +0:30).** Screen: the confidence line under the parameter reads **"Confidence: 87% from 20 observed meals; ± 0.16 sampling error (meal-to-meal SD 0.81)"**. Then show the README section *How personalisation works*, bullet "It matters most after meals" (**+2.44 mg/dL**, CI **0.81–3.85**).
+
+> "How much should you trust that 1.70? The twin tells you: 87% of it comes from Farah's own 20 meals, with a sampling error of about plus or minus 0.16. That's a spread, not a probability. And does personalisation help? In the simulator, in the hour after a logged meal, switching it off raises the 60-minute forecast error by 2.44 mg/dL, with a 95% interval of 0.81 to 3.85. That analysis was added after our first results, and it's simulator evidence only."
 
 ### Module 6 — Supported What-If (2:30)
 
@@ -108,6 +134,18 @@ Screen (still 07:55): choose preset **Idli with sambar** (2 idli + 1 small bowl 
 > "Now the clinician's question: what if she eats two idli with sambar right now? About 35 grams; the preset values are approximate and editable. The comparison is against eating a zero-carb meal at the same moment, which isolates the carbohydrate. Predicted risk goes from 7 to 52%, and the forecast at plus 60 is about 30 mg/dL higher. A heavier 120-gram meal takes the risk above 99%. Now 300 grams. Look at the tag: 'outside training support'. No training meal was comparable, and the twin tells you so instead of silently extrapolating. That tag is a diagnostic, not a guarantee; being inside the training range doesn't make a forecast right either. And these differences are what the model has learned in simulation, not physiology and not dietary advice."
 
 Optional comparison for Cut B (SYN-0019 at 13:45, same preset): **7% → 20%**, Δ+60 **+25.4**. "Same meal, different twin, different predicted response."
+
+**6+ (Cut C, +0:40).** Screen: scroll the What-If table right to the **Low watch** column (every recorded row shows **–**; hover one for the tooltip). Then read the grey *Research check* note under the table: served What-If **37.3**, cohort average **16.8**, personalised curve **8.5** mg/dL MAE at +120 min.
+
+> "The last column is a low-glucose watch for each scenario. Adding carbs lifts the forecast, so it stays clear here; you'll see the watch fire on the risk card for a patient on a sulfonylurea and insulin. Now honesty about the What-If. We replayed every scenario against the simulator's true response. At two hours the served What-If is off by 37 mg/dL on average, worse than a simple cohort-average curve at 17. But a curve built from this patient's learned sensitivity gets 8.5. So the learned parameter carries the right information; our forecasting model doesn't yet use it well. That curve is research, designed after we saw the problem, and it is not what the table serves."
+
+Optional, if time allows: SYN-0019 deep link, **+1 h** three times → **16:45**: the risk card shows "Low-glucose watch: the 80% forecast lower bound falls below 70 mg/dL from **+120 min** (lowest **69 mg/dL**)", listing **Glimepiride (sulfonylurea)** and **Insulin glargine (basal insulin)**. Return to the hero deep link before module F.
+
+### Module F — FHIR R4 record (Cut C, 0:40)
+
+Screen (SYN-0039): click **FHIR R4 record (interoperability prototype)** under the patient header. It is a collapsible panel, not a pop-up. It shows **82** resources: **1 Patient, 2 Condition, 3 MedicationStatement, 75 Observation, 1 RiskAssessment**. The code table includes LOINC **99504-3** (CGM) and SNOMED **44054006** (type 2 diabetes). The RiskAssessment line reads "Hyperglycaemic excursion … probabilityDecimal **0.215**". Click **Copy JSON**, then point at **Download JSON**.
+
+> "The twin can hand its record to other systems. One click gives a FHIR R4 bundle: the synthetic patient, conditions, medications, labs, CGM, and a RiskAssessment with the excursion probability. A low-glucose watch, when present, goes in as a qualitative flag with no probability attached. India's ABDM health-record guide is built on FHIR R4, but this export is a prototype: it is not profiled against that guide and not certified. The ID is our own synthetic one, never an ABHA number."
 
 ### Module 7 — Early warning and the live update (2:00)
 
@@ -142,13 +180,13 @@ Screen: README "Results at a glance" §2, then `rmse_by_horizon.svg`. Keep the a
 
 ### X3 — Reproducibility (Cut B, 1:30)
 
-Screen: terminal, `make check`. Show Ruff passing, **140 passed** and **23/23** frontend tests. Re-verify the counts on the day; never read out a number that is not on screen.
+Screen: terminal, `make check`. Show Ruff passing, **151 passed** and **34/34** frontend tests (counts from 2026-10-23). Re-verify the counts on the day; never read out a number that is not on screen.
 
-> "Everything is reproducible from one seed. `make check` runs linting, 140 Python tests (including leakage and replay-never-reveals-the-future tests), the TypeScript build and 23 frontend tests."
+> "Everything is reproducible from one seed. `make check` runs linting, 151 Python tests (including leakage and replay-never-reveals-the-future tests), the TypeScript build and 34 frontend tests."
 
 ### Module 11 — Limitations and next steps (1:15)
 
-> "To be clear about limits: GlucoTwin is not clinically validated and gives no diagnoses or treatment advice. The dashboard and the headline metrics are synthetic. The real-data results are for glucose-history models only, from one region and one sensor. The full twin has not been evaluated on real patients. What-If results are model associations. Next steps: evaluate the full twin on a governed real dataset that records carbohydrates and activity; test whether personalisation actually reduces error; and only then think about prospective validation."
+> "To be clear about limits: GlucoTwin is not clinically validated and gives no diagnoses or treatment advice. The dashboard and the headline metrics are synthetic. The real-data results are for glucose-history models only, from one region and one sensor. The full twin has not been evaluated on real patients. What-If results are model associations. Next steps: evaluate the full twin on a governed real dataset that records carbohydrates and activity; test whether the simulator gains from personalisation hold on real people; rebuild the What-If around the personalised response curve and pre-register that test; and only then think about prospective validation."
 
 ### Module 12 — Close (0:30)
 
@@ -156,7 +194,7 @@ Screen: terminal, `make check`. Show Ruff passing, **140 passed** and **23/23** 
 
 ## 5. After recording
 
-- [ ] Check the duration against the cut the organisers confirmed (A: about 18:30; B: at least 20:30 before any trim).
+- [ ] Check the duration against the cut the organisers confirmed (A: about 18:30; B: at least 20:30 before any trim; C: between 20:15 and 20:30).
 - [ ] Upload as **unlisted** (or a recorded PPT, if the organisers allow it), then open the link in a logged-out browser.
 - [ ] Only then add the link to README §14 and §18 and to `docs/COMPETITION_COMPLIANCE.md`.
 - [ ] Fix or regenerate deck slides 10 and 13 before submitting the PDF, or explain the corrections in the video.
