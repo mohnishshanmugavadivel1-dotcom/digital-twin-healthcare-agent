@@ -46,7 +46,7 @@ make setup && make train && make build-frontend && make serve
 # then open http://localhost:8000/?patient=SYN-0039&start=151.833
 ```
 
-**Public static snapshot:** [https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). It is deployed by the manual GitHub Pages workflow ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)); the site was confirmed loading on 2026-10-23. The deployed snapshot was recorded on 2026-10-21 (manifest: commit 581b4f7 plus uncommitted changes, model `gt-0.1.0-s20261017-202610211601`). Features added later appear only after the next deployment. They include the FHIR panel with its RiskAssessment, the low-glucose watch (risk card and What-If column), the personalisation confidence line, the new banner and the 15-min preset grid. The repository's committed snapshot (`frontend/static-demo/demo/manifest.json`) already contains them, recorded from a clean commit; it has not been deployed yet. There is no demo video yet.
+**Public static snapshot:** [https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). It is deployed by the manual GitHub Pages workflow ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)), and the site was confirmed loading on 2026-10-23. The public site serves whichever snapshot was last deployed; its `demo/manifest.json` shows the commit and recording time. The snapshot in this repository was recorded on 2026-10-23 from clean commit a6c1d91 (model `gt-0.1.0-s20261017-202610230926`). It includes the FHIR panel with its RiskAssessment, the low-glucose watch (risk card and What-If column), the personalisation confidence line, the What-If research note and the 15-min preset grid. There is no demo video yet.
 
 ### 90-second judge walkthrough
 
@@ -710,16 +710,16 @@ The configured checks include:
 
 GitHub Actions (`.github/workflows/ci.yml`) runs the same lint, Python test, build and frontend-test steps on every push and pull request.
 
-**Results recorded on 2026-10-23 for the working tree** (uncommitted changes on top of 722783d):
+**Results recorded on 2026-10-23 for commit a6c1d91** (the snapshot commit then adds only the re-recorded snapshot, this README section and the rebuilt deck):
 - `make check` exit 0:
   - Ruff passed;
-  - 145 Python tests passed (1 third-party deprecation warning from the FastAPI/Starlette test client);
+  - 151 Python tests passed (1 third-party deprecation warning from the FastAPI/Starlette test client). Two Shanghai loader tests skip unless `requirements-realdata.lock` is installed; with it installed, all 151 ran;
   - the TypeScript check and production build succeeded (Vite reports its standard large-chunk size warning);
-  - 29/29 frontend tests passed, 0 skipped.
-- `npm run build:static` exit 0. `scripts/export_static_demo.py` exit 0 with its built-in faithfulness checks. Compared with the previous snapshot, every frame, observation and forecast is identical (volatile IDs excluded), and all 36 earlier what-ifs reproduce exactly.
-- `scripts/twin_validity_analysis.py` exit 0, with all three self-checks passing ([write-up](docs/research/TWIN_VALIDITY.md)).
-- `scripts/validate_fhir_export.py` (fhir.resources 6.4.0, FHIR R4 4.0.1): OK for the SYN-0039 and SYN-0019 exports (81 resources each) and a full-coverage test record (11 resources).
-- Reproducibility re-runs: `glucotwin train` matched `reports/evaluation_report.json` apart from `generated_at` and `model_version`, and `glucotwin audit` matched `reports/audit_report.json` apart from `runtime_s`.
+  - 34/34 frontend tests passed, 0 skipped.
+- `scripts/export_static_demo.py` exit 0 with its built-in faithfulness checks; `npm run build:static` exit 0. Every frame, forecast and What-If is identical to the previous snapshot. The only additions are the descriptive confidence fields and the FHIR RiskAssessment (volatile IDs and the model-version label excluded).
+- `scripts/twin_validity_analysis.py` exit 0, with all three self-checks passing. `scripts/validate_twin_and_whatif.py` exit 0 (1,005 s), with exact simulator reconstruction and v1 eligibility reproduced (1,776 / 2,304) ([write-up](docs/research/TWIN_VALIDITY.md)).
+- `scripts/validate_fhir_export.py` (fhir.resources 6.4.0, FHIR R4 4.0.1): OK for both recorded exports (82 resources each, including a RiskAssessment) and for a SYN-0019 export at 16:45 that contains the low-glucose-watch prediction (81 resources).
+- Reproducibility: rebuilding the bundle with `run_pipeline` matched `reports/evaluation_report.json` apart from `generated_at` and `model_version`.
 
 Check the latest GitHub Actions run for the submitted commit before relying on these results.
 
@@ -731,7 +731,10 @@ Check the latest GitHub Actions run for the submitted commit before relying on t
   - `docs/qa/browser_smoke.mjs` passed 14/14;
   - `docs/qa/browser_new_features.mjs` passed 11/11 (390 px swipe cue and no page overflow, FHIR panel, presets on the 15-min grid vs an off-grid moment, and the low-glucose note for SYN-0019 at 16:45).
   - This run found the open FHIR panel widening a 390 px page to 748 px; one CSS rule fixed it before the final run.
-  - This was a local rehearsal; the public site has not been redeployed.
+- Later on 2026-10-23, against the snapshot recorded from a6c1d91 and served locally under `/digital-twin-healthcare-agent/`:
+  - `browser_smoke.mjs` passed 14/14;
+  - `browser_new_features.mjs` passed 15/15. Four checks were new: banner headline and provenance, the personalisation confidence line, the What-If *Low watch* column, and the FHIR RiskAssessment (probability for the excursion only).
+  - There were no console errors or failed requests.
 - Accessibility and keyboard-interaction testing have not been done.
 
 ## 14. Submission artefacts
