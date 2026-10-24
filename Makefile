@@ -28,6 +28,6 @@ test:
 	$(VENV)/bin/pytest
 
 lint:
-	$(VENV)/bin/ruff check src tests
+	$(VENV)/bin/ruff check src tests scripts
 
 check: lint test build-frontend  ## minimum release check

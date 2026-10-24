@@ -97,6 +97,7 @@ For frontend development, run `make dev-frontend` (Vite on :5173, which proxies 
 * [ML baseline & validation plan](docs/ML_PLAN.md), [frontend spec](docs/FRONTEND_SPEC.md), [testing & security](docs/QA_SECURITY.md)
 * [Backlog, dependency graph & risks](docs/BACKLOG.md), [official-rules compliance](docs/COMPETITION_COMPLIANCE.md), [demo script](docs/DEMO_SCRIPT.md)
 * [Wave-2 independent audit](docs/AUDIT_WAVE2.md), [initial status report](docs/INIT_REPORT.md), [competition notes (wave 1, partly superseded)](docs/COMPETITION.md)
+* [Model comparison & selection protocol](docs/MODEL_COMPARISON.md) — what every reported metric means, and why the served models are served
 
 ## Submission artefacts
 
