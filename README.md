@@ -2,7 +2,8 @@
 
 ## TL;DR (60-Second Judge's Summary)
 
-**Demo video:** not recorded yet (recording script: [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md)) · **Live demo (static snapshot, no install):** <https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/> · **Submission PDFs:** [`team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/`](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/) — [16-slide deck](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Presentation.pdf) · [architecture](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Architecture.pdf)
+**Demo video:** https://www.youtube.com/playlist?list=PLcX1MXnpsia4
+(recording script: [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md)) · **Live demo (static snapshot, no install):** <https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/> · **Submission PDFs:** [`team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/`](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/) — [16-slide deck](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Presentation.pdf) · [architecture](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Architecture.pdf)
 
 | What | Result (held-out test patients; source in brackets) |
 |---|---|
