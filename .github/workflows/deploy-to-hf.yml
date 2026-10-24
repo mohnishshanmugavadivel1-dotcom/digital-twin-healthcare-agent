@@ -1,0 +1,44 @@
+name: Sync to Hugging Face Space
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync-to-hub:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepend Hugging Face Space metadata to README.md
+        run: |
+          if ! head -n 1 README.md | grep -q "^---$"; then
+            cat << 'EOF' > README_HF.md
+          ---
+          title: GlucoTwin Digital Twin
+          emoji: 🩺
+          colorFrom: blue
+          colorTo: teal
+          sdk: docker
+          app_port: 7860
+          pinned: false
+          ---
+
+          EOF
+            cat README.md >> README_HF.md
+            mv README_HF.md README.md
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add README.md
+            git commit -m "Add Hugging Face Space Docker metadata"
+          fi
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git push --force https://NR25040:${HF_TOKEN}@huggingface.co/spaces/NR25040/digital-twin-healthcare-agent HEAD:main
