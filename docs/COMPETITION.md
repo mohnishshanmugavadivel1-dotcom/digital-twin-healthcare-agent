@@ -1,5 +1,7 @@
 # Competition readiness (Agent G)
 
+> **Note (Historical Sprint Record):** This document is preserved as an engineering development log from earlier waves. For final release metrics (161 Python tests, 50 frontend tests, 83 browser checks, and validated twin-curve / real-data benchmarks), see the root [README.md](../README.md).
+
 > **Superseded in part (2026-10-17, wave 2).** The official rules were found in full. See [COMPETITION_COMPLIANCE.md](COMPETITION_COMPLIANCE.md).
 > In particular, the video must be a **minimum of 20 minutes** (not 15–20), and the current demo plan is [DEMO_SCRIPT.md](DEMO_SCRIPT.md).
 

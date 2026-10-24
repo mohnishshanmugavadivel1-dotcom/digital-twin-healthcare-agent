@@ -1,5 +1,7 @@
 # Wave-2 independent audit (2026-10-17)
 
+> **Note (Historical Sprint Record):** This document is preserved as an engineering development log from earlier waves. For final release metrics (161 Python tests, 50 frontend tests, 83 browser checks, and validated twin-curve / real-data benchmarks), see the root [README.md](../README.md).
+
 Scope: verify every wave-1 claim from the repository, the code and the official competition source; fix verified defects; produce
 submission artefacts. "Verified" means re-executed or read from source during this audit. Wave-1 claims were treated as unverified.
 
