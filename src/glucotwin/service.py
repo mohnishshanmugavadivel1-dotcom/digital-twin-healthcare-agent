@@ -15,9 +15,12 @@ from pathlib import Path
 
 import pandas as pd
 
+from glucotwin.config import COUNTERFACTUAL_RELIABLE_MIN_GRAMS, COUNTERFACTUAL_RISK_SATURATION
 from glucotwin.contracts import (
+    CounterfactualComparison,
     CounterfactualResult,
     EvaluationReport,
+    Forecast,
     PatientRecord,
     PatientSummary,
     ReplayStatus,
@@ -33,8 +36,52 @@ class NotFound(KeyError):
     pass
 
 
-def _trajectory_glucose(fc, horizon_min: int) -> float:
-    return next(p.glucose_mg_dl for p in fc.trajectory if p.horizon_min == horizon_min)
+COMPARISON_LABELS = {
+    "zero_carb_meal_now": "vs a zero-carb meal at the same time (isolates the carb content)",
+    "no_meal": "vs no meal (also includes the model's learned meal-timing expectation)",
+}
+
+
+def compare_forecasts(scenario: Forecast, reference: Forecast, kind: str) -> CounterfactualComparison | None:
+    """Scenario minus reference per horizon; None when either leg was withheld."""
+    if scenario.status != "ok" or reference.status != "ok":
+        return None
+    ref = {p.horizon_min: p.glucose_mg_dl for p in reference.trajectory}
+    deltas = {str(p.horizon_min): round(p.glucose_mg_dl - ref[p.horizon_min], 1)
+              for p in scenario.trajectory if p.horizon_min in ref}
+    p_ref = reference.excursion.probability if reference.excursion else None
+    dp = (round(scenario.excursion.probability - p_ref, 4)
+          if scenario.excursion is not None and p_ref is not None else None)
+    return CounterfactualComparison(
+        reference=kind, label=COMPARISON_LABELS[kind], delta_glucose_mg_dl=deltas, delta_probability=dp,
+        reference_probability=p_ref, risk_saturated=p_ref is not None and p_ref > COUNTERFACTUAL_RISK_SATURATION,
+    )
+
+
+def counterfactual_notes(primary: CounterfactualComparison | None, secondary: CounterfactualComparison | None,
+                         small_meal: bool) -> list[str]:
+    """Plain-language qualifiers shown next to a what-if result."""
+    if primary is None:
+        return ["Withheld: not enough recent CGM data for a reliable what-if at this moment."]
+    notes = []
+    if small_meal:
+        notes.append(f"Meals under {COUNTERFACTUAL_RELIABLE_MIN_GRAMS:g} g are unreliable in this model: few training "
+                     "meals are that small and the audited small-meal differences are unstable.")
+    if primary.risk_saturated:
+        notes.append("Starting risk is already above 95%, so the risk change is not informative.")
+    if secondary is not None:
+        # reference-vs-baseline: what logging *any* meal now does on its own in these models
+        parts = []
+        g_s, g_p = secondary.delta_glucose_mg_dl.get("60"), primary.delta_glucose_mg_dl.get("60")
+        if g_s is not None and g_p is not None and abs(g_s - g_p) >= 2.0:
+            parts.append(f"the +60-min forecast by {g_s - g_p:+.1f} mg/dL")
+        if (secondary.delta_probability is not None and primary.delta_probability is not None
+                and abs(secondary.delta_probability - primary.delta_probability) >= 0.05):
+            parts.append(f"the risk by {100 * (secondary.delta_probability - primary.delta_probability):+.0f} points")
+        if parts:
+            notes.append("Logging any meal now (even zero-carb) shifts " + " and ".join(parts) + " on its own: a learned "
+                         "meal-timing association, not physiology. That is why the no-meal comparison differs.")
+    return notes
 
 
 @dataclass
@@ -165,20 +212,19 @@ class TwinService:
                 # a what-if on train/validation patients would present in-sample model behaviour as held out
                 raise NotFound(f"{pid} is not a held-out test patient; what-if is limited to the test split")
             eng = self.engines[pid]
-            baseline, scenario = eng.counterfactual_forecast(meal_grams)
-            d60 = (
-                round(_trajectory_glucose(scenario, 60) - _trajectory_glucose(baseline, 60), 1)
-                if baseline.status == "ok" and scenario.status == "ok"
-                else None
-            )
-            dp = (
-                round(scenario.excursion.probability - baseline.excursion.probability, 4)
-                if baseline.excursion is not None and scenario.excursion is not None
-                else None
-            )
+            legs = eng.counterfactual_forecasts(meal_grams)
+            baseline, reference, scenario = legs
+            secondary = compare_forecasts(scenario, baseline, "no_meal")
+            primary = compare_forecasts(scenario, reference, "zero_carb_meal_now")
+            small = float(meal_grams) < COUNTERFACTUAL_RELIABLE_MIN_GRAMS
+            notes = counterfactual_notes(primary, secondary, small)
             return CounterfactualResult(
-                patient_id=pid, as_of=eng.as_of.to_pydatetime(), baseline=baseline, scenario=scenario,
-                delta_glucose_60mg_dl=d60, delta_probability=dp,
+                patient_id=pid, as_of=eng.as_of.to_pydatetime(), meal_grams=float(meal_grams),
+                baseline=baseline, reference=reference, scenario=scenario,
+                # legacy fields keep their original (no-meal) meaning
+                delta_glucose_60mg_dl=secondary.delta_glucose_mg_dl.get("60") if secondary else None,
+                delta_probability=secondary.delta_probability if secondary else None,
+                primary=primary, secondary=secondary, small_meal_unreliable=small, notes=notes,
             )
 
     def _status(self, sess: ReplaySession) -> ReplayStatus:

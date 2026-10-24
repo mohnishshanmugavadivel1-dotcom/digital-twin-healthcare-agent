@@ -367,18 +367,48 @@ class CounterfactualRequest(_Model):
     meal_grams: float = Field(ge=1, le=300, description="Carbohydrates of the hypothetical meal in grams (1-300)")
 
 
+class CounterfactualComparison(_Model):
+    """Scenario minus one reference leg, per forecast horizon (backlog B-22).
+
+    ``reference="zero_carb_meal_now"`` (primary) isolates the carb content: both legs log a
+    meal at the same time. ``reference="no_meal"`` (secondary) also contains the models'
+    learned meal-timing expectation. Both are learned model associations, not causal effects.
+    """
+
+    reference: Literal["zero_carb_meal_now", "no_meal"]
+    label: str
+    delta_glucose_mg_dl: dict[str, float] = Field(
+        default_factory=dict, description="Horizon in minutes -> scenario minus reference glucose (mg/dL)")
+    delta_probability: float | None = None
+    reference_probability: float | None = None
+    risk_saturated: bool = Field(
+        default=False, description="Reference-leg risk > 0.95: a risk change cannot be meaningfully positive")
+
+
 class CounterfactualResult(_Model):
-    """Baseline versus simulated what-if forecast. Strictly a simulated scenario, never advice."""
+    """Baseline versus simulated what-if forecast. Strictly a simulated scenario, never advice.
+
+    ``primary`` compares against a zero-carb meal logged at the same time (``reference``);
+    ``secondary`` against the no-meal ``baseline``. ``delta_glucose_60mg_dl`` and
+    ``delta_probability`` keep their original no-meal meaning for backward compatibility.
+    """
 
     patient_id: PatientId
     as_of: datetime
+    meal_grams: float | None = None
     baseline: Forecast
+    reference: Forecast | None = None
     scenario: Forecast
     delta_glucose_60mg_dl: float | None = None
     delta_probability: float | None = None
+    primary: CounterfactualComparison | None = None
+    secondary: CounterfactualComparison | None = None
+    small_meal_unreliable: bool = False
+    notes: list[str] = Field(default_factory=list)
     is_simulated: Literal[True] = True
     disclaimer: str = (
         "Simulated what-if scenario. The hypothetical meal was never added to the patient record. "
+        "Differences are learned associations of the forecasting models, not causal physiological effects. "
         "Not medical advice and not a treatment recommendation."
     )
 
