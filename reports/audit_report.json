@@ -1,0 +1,333 @@
+{
+  "schema": "glucotwin-audit/1",
+  "seed": 20261017,
+  "is_synthetic": true,
+  "disclaimer": "Synthetic-simulator results only; not clinical validation.",
+  "stress_realism": {
+    "meal_log_prob": 0.6,
+    "carb_log_sigma": 0.5,
+    "meal_log_delay_max_min": 45,
+    "cgm_noise_sd": 7.0
+  },
+  "default_realism": {
+    "meal_log_prob": 0.9,
+    "carb_log_sigma": 0.25,
+    "meal_log_delay_max_min": 0,
+    "cgm_noise_sd": 4.5
+  },
+  "consistency_with_pipeline_report": {
+    "trend_rule": {
+      "auroc_match": true,
+      "threshold_match": true,
+      "event_sens_match": true
+    },
+    "logistic_regression": {
+      "auroc_match": true,
+      "threshold_match": true,
+      "event_sens_match": true
+    },
+    "hist_gradient_boosting": {
+      "auroc_match": true,
+      "threshold_match": true,
+      "event_sens_match": true
+    },
+    "rmse_persistence_30_match": true,
+    "rmse_persistence_120_match": true,
+    "rmse_hist_gradient_boosting_30_match": true,
+    "rmse_hist_gradient_boosting_120_match": true
+  },
+  "main": {
+    "n_test_patients": 12,
+    "monitored_days_total": 167.9548611111111,
+    "nominal_days_total": 168.0,
+    "test_prevalence": 0.1462894407806026,
+    "event": {
+      "trend_rule": {
+        "auroc": 0.6545328057210337,
+        "grid": {
+          "threshold": 0.05,
+          "sensitivity": 0.44126026478967656,
+          "specificity": 0.7414278329791512,
+          "ppv": 0.22626106384807082,
+          "v01_event_sensitivity": 1.0,
+          "v01_median_lead_min": 60.0,
+          "v01_false_alerts_per_nominal_day": 6.279761904761905,
+          "onsets": 298,
+          "event_sensitivity_any_alert": 1.0,
+          "event_sensitivity_lead_ge_30min": 0.8355704697986577,
+          "event_sensitivity_sustained": 0.9563758389261745,
+          "median_lead_any_alert_min": 60.0,
+          "median_lead_sustained_min": 35.0,
+          "false_alert_episodes_per_monitored_day": 6.281449628909885
+        },
+        "quantile": {
+          "threshold": 0.0035855872878656743,
+          "sensitivity": 0.8744762862409922,
+          "specificity": 0.30001148699098273,
+          "ppv": 0.1763254823775893,
+          "v01_event_sensitivity": 1.0,
+          "v01_median_lead_min": 120.0,
+          "v01_false_alerts_per_nominal_day": 7.059523809523809,
+          "onsets": 298,
+          "event_sensitivity_any_alert": 1.0,
+          "event_sensitivity_lead_ge_30min": 0.959731543624161,
+          "event_sensitivity_sustained": 0.9563758389261745,
+          "median_lead_any_alert_min": 120.0,
+          "median_lead_sustained_min": 90.0,
+          "false_alert_episodes_per_monitored_day": 7.061421099419074
+        }
+      },
+      "logistic_regression": {
+        "auroc": 0.8840048578787105,
+        "grid": {
+          "threshold": 0.35,
+          "sensitivity": 0.665158371040724,
+          "specificity": 0.9020734018723795,
+          "ppv": 0.5378777612142567,
+          "v01_event_sensitivity": 0.912751677852349,
+          "v01_median_lead_min": 95.0,
+          "v01_false_alerts_per_nominal_day": 1.3630952380952381,
+          "onsets": 298,
+          "event_sensitivity_any_alert": 0.912751677852349,
+          "event_sensitivity_lead_ge_30min": 0.87248322147651,
+          "event_sensitivity_sustained": 0.6879194630872483,
+          "median_lead_any_alert_min": 95.0,
+          "median_lead_sustained_min": 85.0,
+          "false_alert_episodes_per_monitored_day": 1.3634615782183541
+        },
+        "quantile": {
+          "threshold": 0.3448042698711328,
+          "sensitivity": 0.669348081112787,
+          "specificity": 0.8999483085405778,
+          "ppv": 0.534100026745119,
+          "v01_event_sensitivity": 0.912751677852349,
+          "v01_median_lead_min": 95.0,
+          "v01_false_alerts_per_nominal_day": 1.3154761904761905,
+          "onsets": 298,
+          "event_sensitivity_any_alert": 0.912751677852349,
+          "event_sensitivity_lead_ge_30min": 0.87248322147651,
+          "event_sensitivity_sustained": 0.6946308724832215,
+          "median_lead_any_alert_min": 95.0,
+          "median_lead_sustained_min": 85.0,
+          "false_alert_episodes_per_monitored_day": 1.3158297326910755
+        }
+      },
+      "hist_gradient_boosting": {
+        "auroc": 0.9358426984699422,
+        "grid": {
+          "threshold": 0.32,
+          "sensitivity": 0.7834757834757835,
+          "specificity": 0.9008959852966515,
+          "ppv": 0.5753138075313807,
+          "v01_event_sensitivity": 0.9563758389261745,
+          "v01_median_lead_min": 120.0,
+          "v01_false_alerts_per_nominal_day": 1.0654761904761905,
+          "onsets": 298,
+          "event_sensitivity_any_alert": 0.9563758389261745,
+          "event_sensitivity_lead_ge_30min": 0.912751677852349,
+          "event_sensitivity_sustained": 0.8120805369127517,
+          "median_lead_any_alert_min": 120.0,
+          "median_lead_sustained_min": 110.0,
+          "false_alert_episodes_per_monitored_day": 1.065762543672862
+        },
+        "quantile": {
+          "threshold": 0.30072984334762376,
+          "sensitivity": 0.7921903804256746,
+          "specificity": 0.8956694043995176,
+          "ppv": 0.5654306220095694,
+          "v01_event_sensitivity": 0.9630872483221476,
+          "v01_median_lead_min": 120.0,
+          "v01_false_alerts_per_nominal_day": 1.0773809523809523,
+          "onsets": 298,
+          "event_sensitivity_any_alert": 0.9630872483221476,
+          "event_sensitivity_lead_ge_30min": 0.912751677852349,
+          "event_sensitivity_sustained": 0.8187919463087249,
+          "median_lead_any_alert_min": 120.0,
+          "median_lead_sustained_min": 110.0,
+          "false_alert_episodes_per_monitored_day": 1.0776705050546818
+        }
+      }
+    },
+    "trajectory": {
+      "persistence": {
+        "rmse": {
+          "30": 18.651962961642162,
+          "60": 31.41677543427755,
+          "90": 40.673398693868116,
+          "120": 46.57638342687362
+        }
+      },
+      "hist_gradient_boosting": {
+        "rmse": {
+          "30": 10.398652705315333,
+          "60": 17.207745442716003,
+          "90": 22.859530895865728,
+          "120": 25.903112546989572
+        }
+      }
+    }
+  },
+  "bootstrap_95ci_patient_level": {
+    "auroc_logistic": [
+      0.8387593890860171,
+      0.922954300804654
+    ],
+    "auroc_hgb": [
+      0.9148604100050542,
+      0.9546874914069199
+    ],
+    "auroc_trend": [
+      0.5829801566193017,
+      0.7358419145073073
+    ],
+    "rmse30_hgb": [
+      9.81156441973128,
+      11.005326951024413
+    ],
+    "rmse120_hgb": [
+      23.188976628052735,
+      29.058432256305796
+    ],
+    "rmse30_persistence": [
+      16.436243522607466,
+      21.076117615942284
+    ],
+    "evsens_any_logistic": [
+      0.8252417317862498,
+      0.9830647402056127
+    ],
+    "evsens_sustained_logistic": [
+      0.480354183927092,
+      0.8345920110009537
+    ],
+    "fa_per_monitored_day_logistic": [
+      0.9165968458018405,
+      1.9173692768576787
+    ]
+  },
+  "ablation": {
+    "no_record_features": {
+      "dropped": [
+        "age_years",
+        "bmi",
+        "hba1c_percent",
+        "fasting_glucose_mg_dl",
+        "diabetes_duration_years",
+        "egfr",
+        "med_sulfonylurea",
+        "med_basal_insulin",
+        "med_biguanide",
+        "med_dpp4_inhibitor"
+      ],
+      "auroc_trend_rule": 0.6545328057210337,
+      "auroc_logistic_regression": 0.9074719507441215,
+      "auroc_hist_gradient_boosting": 0.9414131142492524,
+      "logistic_event_sensitivity_sustained": 0.7281879194630873
+    },
+    "no_hba1c_fpg": {
+      "dropped": [
+        "hba1c_percent",
+        "fasting_glucose_mg_dl"
+      ],
+      "auroc_trend_rule": 0.6545328057210337,
+      "auroc_logistic_regression": 0.8966053525662563,
+      "auroc_hist_gradient_boosting": 0.9281624191991877,
+      "logistic_event_sensitivity_sustained": 0.7348993288590604
+    },
+    "no_meal_features": {
+      "dropped": [
+        "carbs_30",
+        "carbs_60",
+        "carbs_120",
+        "carbs_on_board",
+        "minutes_since_meal",
+        "expected_meal_rise",
+        "carb_sensitivity"
+      ],
+      "auroc_trend_rule": 0.6545328057210337,
+      "auroc_logistic_regression": 0.8487722525197143,
+      "auroc_hist_gradient_boosting": 0.8877191028746672,
+      "logistic_event_sensitivity_sustained": 0.6812080536912751
+    }
+  },
+  "seed_robustness": {
+    "main_seed": {
+      "test_prevalence": 0.1462894407806026,
+      "auroc_trend_rule": 0.6545328057210337,
+      "auroc_logistic_regression": 0.8840048578787105,
+      "auroc_hist_gradient_boosting": 0.9358426984699422,
+      "rmse30_persistence": 18.651962961642162,
+      "rmse120_persistence": 46.57638342687362,
+      "rmse30_hist_gradient_boosting": 10.398652705315333,
+      "rmse120_hist_gradient_boosting": 25.903112546989572,
+      "logistic_event_sensitivity_any_alert": 0.912751677852349,
+      "logistic_event_sensitivity_sustained": 0.6879194630872483,
+      "logistic_event_sensitivity_lead_ge_30min": 0.87248322147651,
+      "logistic_median_lead_sustained_min": 85.0,
+      "logistic_false_alert_episodes_per_monitored_day": 1.3634615782183541
+    },
+    "other_seeds": {
+      "1": {
+        "test_prevalence": 0.1826687346775404,
+        "auroc_trend_rule": 0.6246647496184614,
+        "auroc_logistic_regression": 0.8932481400584978,
+        "auroc_hist_gradient_boosting": 0.923108666577603,
+        "rmse30_persistence": 20.416947878185404,
+        "rmse120_persistence": 51.546596964447005,
+        "rmse30_hist_gradient_boosting": 10.212107426312606,
+        "rmse120_hist_gradient_boosting": 26.488762902128112,
+        "logistic_event_sensitivity_any_alert": 0.9329608938547486,
+        "logistic_event_sensitivity_sustained": 0.7346368715083799,
+        "logistic_event_sensitivity_lead_ge_30min": 0.9162011173184358,
+        "logistic_median_lead_sustained_min": 70.0,
+        "logistic_false_alert_episodes_per_monitored_day": 1.149094517489457
+      },
+      "2": {
+        "test_prevalence": 0.18155649223810014,
+        "auroc_trend_rule": 0.6631212330517559,
+        "auroc_logistic_regression": 0.9103560473816082,
+        "auroc_hist_gradient_boosting": 0.939294715048432,
+        "rmse30_persistence": 19.497771370094664,
+        "rmse120_persistence": 48.16171963721073,
+        "rmse30_hist_gradient_boosting": 10.769129197878547,
+        "rmse120_hist_gradient_boosting": 25.835936812160696,
+        "logistic_event_sensitivity_any_alert": 0.9342465753424658,
+        "logistic_event_sensitivity_sustained": 0.7150684931506849,
+        "logistic_event_sensitivity_lead_ge_30min": 0.8986301369863013,
+        "logistic_median_lead_sustained_min": 85.0,
+        "logistic_false_alert_episodes_per_monitored_day": 1.0597866534358722
+      },
+      "3": {
+        "test_prevalence": 0.23087348196965268,
+        "auroc_trend_rule": 0.6244529596783517,
+        "auroc_logistic_regression": 0.8830128480446963,
+        "auroc_hist_gradient_boosting": 0.910103831201468,
+        "rmse30_persistence": 20.229013164105922,
+        "rmse120_persistence": 50.87167013095301,
+        "rmse30_hist_gradient_boosting": 10.818776510221646,
+        "rmse120_hist_gradient_boosting": 27.214164024344857,
+        "logistic_event_sensitivity_any_alert": 0.944954128440367,
+        "logistic_event_sensitivity_sustained": 0.7752293577981652,
+        "logistic_event_sensitivity_lead_ge_30min": 0.9128440366972477,
+        "logistic_median_lead_sustained_min": 80.0,
+        "logistic_false_alert_episodes_per_monitored_day": 1.3753411064252048
+      }
+    }
+  },
+  "stress_test": {
+    "test_prevalence": 0.14844227244960292,
+    "auroc_trend_rule": 0.6868441163268144,
+    "auroc_logistic_regression": 0.9038231284182849,
+    "auroc_hist_gradient_boosting": 0.9369618569097818,
+    "rmse30_persistence": 21.62058041401698,
+    "rmse120_persistence": 49.062504770550746,
+    "rmse30_hist_gradient_boosting": 15.360442331043002,
+    "rmse120_hist_gradient_boosting": 26.95200473798562,
+    "logistic_event_sensitivity_any_alert": 0.8936781609195402,
+    "logistic_event_sensitivity_sustained": 0.6954022988505747,
+    "logistic_event_sensitivity_lead_ge_30min": 0.7758620689655172,
+    "logistic_median_lead_sustained_min": 67.5,
+    "logistic_false_alert_episodes_per_monitored_day": 1.4646489704787895
+  },
+  "runtime_s": 264.2
+}
