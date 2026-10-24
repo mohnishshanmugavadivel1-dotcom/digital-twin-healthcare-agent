@@ -1,5 +1,7 @@
 # Optional, ONLY for the real-data research experiment (scripts/shanghai_experiment.py).
-# Not part of the production install or CI. Install: .venv/bin/pip install --require-hashes -r requirements-realdata.lock
+# The same pinned versions are also in requirements.lock (since 2026-10-24), so `make setup` and CI run the
+# Shanghai loader tests instead of skipping them. This file keeps the hash-checked install for the experiment:
+# .venv/bin/pip install --require-hashes -r requirements-realdata.lock
 openpyxl==3.1.5 --hash=sha256:5282c12b107bffeef825f4617dc029afaf41d0ea60823bbb665ef3079dc79de2
 et-xmlfile==2.0.0 --hash=sha256:7a91720bc756843502c3b7504c77b8fe44217c85c537d85037f0f536151b2caa
 xlrd==2.0.2 --hash=sha256:ea762c3d29f4cca48d82df517b6d89fbce4db3107f9d78713e48cd321d5c9aa9

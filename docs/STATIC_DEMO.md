@@ -11,9 +11,11 @@ nothing is computed in the browser, and every page shows a banner saying so.
 | `early-warning` | SYN-0039, replay start offset 151.833 h | Sun 8 Mar 07:55 → 13:55 | Risk 22% at 07:55. A 140 g breakfast is logged at 08:53, and the alert fires at 08:55, 85 min before glucose first exceeds 180 mg/dL (10:20). What-ifs recorded at 07:55 and 08:55. |
 | `unlogged-meal` | SYN-0019, offset 253.667 h | Thu 12 Mar 13:45 → 19:45 | A **weakness**: glucose rises with no logged meal. The alert fires only once the rise has begun (14:50, glucose 93 mg/dL, up from 70 at 14:35), 45 min before the first reading above 180 (15:35). Stepping in 1-hour jumps skips the alert (14:45: risk 31%). What-ifs at 13:45. |
 
-* Each scenario covers 6 h in 73 frames, one every 5 min. These are the replay states the API returned when stepped 5 min at a time.
+| `moment-syn-XXXX` (10 files) | The other 10 held-out patients (SYN-0004, 0009, 0021, 0022, 0025, 0026, 0052, 0054, 0058, 0059), offset 24 h (the live app's default start, not hand-picked) | Tue 3 Mar 00:05 → 00:10 | **One recorded moment** per patient, so every patient in the list opens a real view: record, twin state, 2-h forecast, AGP, FHIR export and every What-If amount at that moment, plus the single 5-min step to the end of the recording. The patient view labels it "one recorded moment". About 335 KB each. |
+
+* Each full replay covers 6 h in 73 frames, one every 5 min. These are the replay states the API returned when stepped 5 min at a time.
 * The observation stream and the forecast history come from the same API.
-* What-if results (`POST /api/patients/{id}/counterfactual`) were recorded for 25, 30, 35, 36, 40, 45, 50, 60, 90, 120, 200 and 300 g at the moments listed above. This list covers every Indian meal preset; a front-end test enforces that.
+* What-if results (`POST /api/patients/{id}/counterfactual`) were recorded for 25 amounts (18, 22, 25, 28, 30, 32, 35, 36, 40, 44, 45, 48, 50, 52, 58, 60, 64, 65, 68, 78, 90, 92, 120, 200 and 300 g; `manifest.json` `whatif_grams`) at the moments listed above, and the preset amounts every 15 min of each full replay. This list covers every Indian meal preset; a front-end test enforces that.
 * Any other amount or moment returns an explicit "not recorded; run locally" message instead of an invented number.
 * `manifest.json` records:
   * the model version;
@@ -64,10 +66,10 @@ To publish, a maintainer must:
 
 A local rehearsal of the same build, served under `/digital-twin-healthcare-agent/`, passed `docs/qa/browser_smoke.mjs` 14/14 on 2026-10-22.
 
-If the snapshot is re-recorded after committing, the manifest will show a clean commit hash. The current snapshot was recorded on top of commit 581b4f7 with uncommitted changes, and the banner says so.
+If the snapshot is re-recorded after committing, the manifest shows a clean commit hash. The current snapshot was recorded from a clean tree at commit 902063c (2026-10-24). The one-moment scenarios pass the same faithfulness checks; their 60-min stepping check can only compare frame 0 (`checks.step_60_compared_frames` records which frames were compared).
 
 ## Limits
 
 * Synthetic patients only. A research prototype, not a medical device, and forecasts are not diagnoses or treatment instructions.
-* Two scenarios. The live app (`make serve`) has 12 held-out patients and can start at any offset.
+* Two full replays; the other 10 held-out patients have one recorded moment each. The live app (`make serve`) can replay any of the 12 from any offset.
 * The model version string contains the training timestamp. Retraining changes the string, though not the predictions, which are deterministic for the committed seed; re-record after retraining.
