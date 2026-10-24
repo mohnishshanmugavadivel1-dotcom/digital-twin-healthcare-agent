@@ -178,6 +178,10 @@ class PersonalParameters(_Model):
     carb_sensitivity_mg_dl_per_g: float  # shrunk towards the EHR-derived prior
     carb_sensitivity_prior: float
     meals_used: int
+    # Additive, descriptive only (glucotwin.twin.personal_uncertainty); never used by a forecast.
+    observed_weight: float | None = None  # n / (3 + n): share of the estimate from observed meals
+    response_sd_mg_dl_per_g: float | None = None  # SD of observed meal-response ratios (n >= 2)
+    sampling_se_mg_dl_per_g: float | None = None  # sampling standard error, not a posterior SD (n >= 2)
 
 
 class DataQuality(_Model):

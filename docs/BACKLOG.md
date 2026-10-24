@@ -1,7 +1,5 @@
 # Prioritised backlog, dependency graph and risk register
 
-<img width="1901" height="852" alt="image" src="https://github.com/user-attachments/assets/21ac5e81-d62e-4c7b-a23e-23f309c5778a" />
-
 **Wave-2 status (2026-10-17):** B-02 DONE (official rules in COMPETITION_COMPLIANCE.md) · B-03 DONE (`docs/submission/GlucoTwin_Architecture.pdf`) · B-04 DONE (`docs/submission/GlucoTwin_Presentation.pdf`; team details filled 2026-10-18) · B-09 DONE (patient-bootstrap CIs, `glucotwin audit`) · B-11 DONE (`scripts/find_demo_scenario.py`) · B-14 partly (pytest CVE fixed; TestClient deprecation remains) · B-01 partly (team details filled 2026-10-18; licence holder open), B-06 BLOCKED on the team. New items: B-19 event-model feature set — investigated 2026-10-20 (docs/ABLATION_RECORD_FEATURES.md, scripts/ablate_record_features.py): ablation reproduced (test AUROC 0.884 → 0.9075 without the record block, Δ CI −0.053..−0.001); mechanism identified (fasting_glucose_mg_dl carries std coef −3.7 against the dynamic evidence); validation does NOT prefer the change (0.8881 vs 0.8866), so the served model is unchanged — re-select across cohort seeds on validation post-submission; B-20 derive synthetic HbA1c from a pre-monitoring period instead of the evaluated window.
 
 Deadline: **20 Oct 2026, 09:30 EDT / 19:00 IST**. P0 = needed for a valid submission; P1 = strongly improves the score;

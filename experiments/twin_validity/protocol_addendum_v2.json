@@ -1,0 +1,44 @@
+{
+  "name": "GlucoTwin twin-validity protocol, addendum v2 (post-hoc / exploratory)",
+  "registered": "2026-10-23, written before running scripts/validate_twin_and_whatif.py",
+  "status": "POST-HOC. Written after the v1 results (reports/research/twin_validity.json) were known. Nothing in this addendum replaces or re-scores a v1 analysis; v1 results are collated unchanged.",
+  "scope": "Synthetic simulator cohort only (seed 20261017, 60 patients x 14 days, split 36/12/12). Frozen served models; no retraining, no change to served behaviour. Not clinical evidence.",
+  "simulator": "src/glucotwin/synth/generator.py, documented there as 'an extended Bergman minimal model integrated with 1-minute Euler'. Ground-truth meal effects come from paired runs with common random numbers (glucotwin.twin_validity_research.paired_meal_delta), exactly as in v1.",
+  "bootstrap": {"resamples": 1000, "unit": "patient", "seed": 20261017, "interval": "2.5th-97.5th percentile"},
+  "analyses": {
+    "A_post_meal": {
+      "question": "Does personalisation help in post-meal windows, where it should matter most?",
+      "rows": "Test-split feature rows with carbs_60 >= 10 g (at least 10 g of logged carbohydrate in the 60 min before the forecast moment) and an observed target.",
+      "arms": "served = frozen trajectory model on the served features; ablated = same model with carb_sensitivity set to the day-0 EHR prior and expected_meal_rise recomputed from it (identical to v1 analysis A).",
+      "horizons_min": [60, 120],
+      "metrics": ["RMSE", "MAE"],
+      "contrast": "ablated minus served (positive = personalisation helps), paired patient bootstrap CI"
+    },
+    "B_grams": {
+      "question": "Does the served What-If track true counterfactual deltas across meal sizes outside the preset range?",
+      "grams": [20, 40, 60, 90, 120],
+      "anchors": "the same 32 replay offsets x 12 test patients as v1 B",
+      "eligibility": "identical to v1 B: latest CGM <= 180 mg/dL, forecast not withheld, joint-support status within_training_support. Counts excluded per gram are reported.",
+      "truth": "simulator paired delta at the service's own anchor minute",
+      "baseline": "cohort average: mean true delta per (grams, horizon) over training patients at eligible anchors (latest CGM <= 180), as in v1",
+      "horizons_min": [30, 60, 120],
+      "metrics": ["MAE", "median absolute error", "bias", "direction accuracy where |true delta| >= 2 mg/dL", "Spearman rho"],
+      "contrast": "served What-If minus baseline for MAE and for median AE, paired patient bootstrap CI"
+    },
+    "C_exploratory_observed_curve": {
+      "status": "EXPLORATORY research estimator; not served, not a product claim.",
+      "question": "Could a personalised response curve learned only from observed CGM beat the cohort-average baseline?",
+      "curve": "For every meal in training patients that glucotwin.features.meal_responses accepts (isolated, >= 10 g, >= 50% window observed), take observed rise at h = CGM(tm + h) - last CGM at or before tm, divided by that meal's observed peak rise (ratio x carbs). Use meals with peak rise >= 5 mg/dL. c(h) = median of that fraction. Observed CGM only; simulator truth is never used to fit it.",
+      "estimator_personal": "delta_hat(h) = grams x s(patient, anchor) x c(h), where s is glucotwin.features.personal_carb_sensitivity at the anchor time (shrunk running mean, k = 3, using only meals whose available_at <= anchor).",
+      "estimator_cohort_curve": "delta_hat(h) = grams x S x c(h), with S = median observed ratio across training meals (isolates the effect of personalisation).",
+      "evaluation": "same eligible scenarios and grams as B_grams plus the v1 preset grams (25, 35, 36, 45, 50) scored against the same truth and baseline",
+      "contrast": "estimator_personal minus baseline MAE at 30/60/120 min, paired patient bootstrap CI"
+    },
+    "collate_v1": "Copy v1 A, A2 (r, rho, MAE by day) and B by_horizon unchanged from reports/research/twin_validity.json."
+  },
+  "reporting_rules": [
+    "Report every pre-specified number, including null and negative results.",
+    "Do not change definitions after seeing results; any deviation is listed under deviations in the output.",
+    "Direction accuracy is uninformative when all true deltas share a sign; report the sign distribution next to it."
+  ]
+}

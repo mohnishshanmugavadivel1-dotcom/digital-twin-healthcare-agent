@@ -1,0 +1,667 @@
+{
+ "generated_at": "2026-10-23T06:36:08+00:00",
+ "protocol": "experiments/twin_validity/protocol.json",
+ "model_version": "gt-0.1.0-s20261017-202610230611",
+ "what": "Synthetic simulator cohort only. Research analysis of the frozen served models; not clinical evidence.",
+ "checks": {
+  "simulator_reconstruction_exact": true,
+  "service_anchor_equals_latest_cgm_at_offset": "378/384",
+  "anchor_note": "the rest fall in CGM gaps, where the service anchors on the latest observation of any stream; ground truth always uses the service's own moment",
+  "served_arm_reproduces_headline": true
+ },
+ "A_personalisation_ablation": {
+  "rmse_mg_dl": {
+   "30": {
+    "served": 10.399,
+    "ablated": 10.915,
+    "ablated_minus_served": 0.517,
+    "ci95_patient_bootstrap": [
+     0.121,
+     0.964
+    ],
+    "n_rows": 47105
+   },
+   "60": {
+    "served": 17.208,
+    "ablated": 17.789,
+    "ablated_minus_served": 0.582,
+    "ci95_patient_bootstrap": [
+     0.093,
+     1.076
+    ],
+    "n_rows": 46884
+   },
+   "90": {
+    "served": 22.86,
+    "ablated": 23.81,
+    "ablated_minus_served": 0.95,
+    "ci95_patient_bootstrap": [
+     -0.056,
+     2.143
+    ],
+    "n_rows": 46705
+   },
+   "120": {
+    "served": 25.903,
+    "ablated": 26.759,
+    "ablated_minus_served": 0.856,
+    "ci95_patient_bootstrap": [
+     -0.201,
+     2.189
+    ],
+    "n_rows": 46560
+   }
+  },
+  "event_auroc": {
+   "served": 0.884,
+   "ablated": 0.877,
+   "ablated_minus_served": -0.007,
+   "ci95_patient_bootstrap": [
+    -0.019,
+    0.003
+   ],
+   "n_rows": 40789,
+   "n_positive": 5967
+  },
+  "reproduces_headline": true,
+  "n_test_patients": 12
+ },
+ "A2_latent_sensitivity_recovery": {
+  "latent_definition": "mean peak interstitial-glucose rise per gram after an extra 40 g meal (paired simulator runs, eligible anchors)",
+  "latent_range_test": [
+   0.846,
+   2.232
+  ],
+  "test_patients": [
+   {
+    "day": 0,
+    "pearson_r": 0.617,
+    "spearman_rho": 0.746,
+    "mae_mg_dl_per_g": 0.243,
+    "median_ratio_estimate_to_latent": 1.03,
+    "mean_meals_used": 0.0,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.291,
+     0.9
+    ]
+   },
+   {
+    "day": 1,
+    "pearson_r": 0.834,
+    "spearman_rho": 0.895,
+    "mae_mg_dl_per_g": 0.174,
+    "median_ratio_estimate_to_latent": 0.967,
+    "mean_meals_used": 2.667,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.681,
+     0.976
+    ]
+   },
+   {
+    "day": 2,
+    "pearson_r": 0.875,
+    "spearman_rho": 0.895,
+    "mae_mg_dl_per_g": 0.163,
+    "median_ratio_estimate_to_latent": 0.951,
+    "mean_meals_used": 6.083,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.716,
+     0.972
+    ]
+   },
+   {
+    "day": 3,
+    "pearson_r": 0.954,
+    "spearman_rho": 0.965,
+    "mae_mg_dl_per_g": 0.15,
+    "median_ratio_estimate_to_latent": 0.955,
+    "mean_meals_used": 9.167,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.89,
+     0.985
+    ]
+   },
+   {
+    "day": 4,
+    "pearson_r": 0.958,
+    "spearman_rho": 0.944,
+    "mae_mg_dl_per_g": 0.136,
+    "median_ratio_estimate_to_latent": 0.929,
+    "mean_meals_used": 12.417,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.88,
+     0.991
+    ]
+   },
+   {
+    "day": 5,
+    "pearson_r": 0.976,
+    "spearman_rho": 0.986,
+    "mae_mg_dl_per_g": 0.12,
+    "median_ratio_estimate_to_latent": 0.947,
+    "mean_meals_used": 15.417,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.902,
+     0.997
+    ]
+   },
+   {
+    "day": 6,
+    "pearson_r": 0.982,
+    "spearman_rho": 0.965,
+    "mae_mg_dl_per_g": 0.108,
+    "median_ratio_estimate_to_latent": 0.939,
+    "mean_meals_used": 19.0,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.94,
+     0.996
+    ]
+   },
+   {
+    "day": 7,
+    "pearson_r": 0.986,
+    "spearman_rho": 0.965,
+    "mae_mg_dl_per_g": 0.13,
+    "median_ratio_estimate_to_latent": 0.928,
+    "mean_meals_used": 21.667,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.957,
+     0.998
+    ]
+   },
+   {
+    "day": 8,
+    "pearson_r": 0.99,
+    "spearman_rho": 0.979,
+    "mae_mg_dl_per_g": 0.137,
+    "median_ratio_estimate_to_latent": 0.926,
+    "mean_meals_used": 24.417,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.974,
+     0.997
+    ]
+   },
+   {
+    "day": 9,
+    "pearson_r": 0.986,
+    "spearman_rho": 0.979,
+    "mae_mg_dl_per_g": 0.139,
+    "median_ratio_estimate_to_latent": 0.913,
+    "mean_meals_used": 27.333,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.963,
+     0.997
+    ]
+   },
+   {
+    "day": 10,
+    "pearson_r": 0.98,
+    "spearman_rho": 0.979,
+    "mae_mg_dl_per_g": 0.128,
+    "median_ratio_estimate_to_latent": 0.925,
+    "mean_meals_used": 30.333,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.962,
+     0.995
+    ]
+   },
+   {
+    "day": 11,
+    "pearson_r": 0.98,
+    "spearman_rho": 0.979,
+    "mae_mg_dl_per_g": 0.141,
+    "median_ratio_estimate_to_latent": 0.914,
+    "mean_meals_used": 33.333,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.95,
+     0.996
+    ]
+   },
+   {
+    "day": 12,
+    "pearson_r": 0.977,
+    "spearman_rho": 0.972,
+    "mae_mg_dl_per_g": 0.153,
+    "median_ratio_estimate_to_latent": 0.913,
+    "mean_meals_used": 36.333,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.95,
+     0.994
+    ]
+   },
+   {
+    "day": 13,
+    "pearson_r": 0.975,
+    "spearman_rho": 0.979,
+    "mae_mg_dl_per_g": 0.161,
+    "median_ratio_estimate_to_latent": 0.898,
+    "mean_meals_used": 39.25,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.927,
+     0.994
+    ]
+   },
+   {
+    "day": 14,
+    "pearson_r": 0.981,
+    "spearman_rho": 0.972,
+    "mae_mg_dl_per_g": 0.171,
+    "median_ratio_estimate_to_latent": 0.898,
+    "mean_meals_used": 42.75,
+    "pearson_r_ci95_patient_bootstrap": [
+     0.939,
+     0.994
+    ]
+   }
+  ],
+  "all_60_patients": [
+   {
+    "day": 0,
+    "pearson_r": 0.55,
+    "spearman_rho": 0.566,
+    "mae_mg_dl_per_g": 0.238,
+    "median_ratio_estimate_to_latent": 0.926,
+    "mean_meals_used": 0.0
+   },
+   {
+    "day": 1,
+    "pearson_r": 0.648,
+    "spearman_rho": 0.664,
+    "mae_mg_dl_per_g": 0.212,
+    "median_ratio_estimate_to_latent": 0.937,
+    "mean_meals_used": 2.983
+   },
+   {
+    "day": 2,
+    "pearson_r": 0.757,
+    "spearman_rho": 0.751,
+    "mae_mg_dl_per_g": 0.199,
+    "median_ratio_estimate_to_latent": 0.913,
+    "mean_meals_used": 6.233
+   },
+   {
+    "day": 3,
+    "pearson_r": 0.835,
+    "spearman_rho": 0.824,
+    "mae_mg_dl_per_g": 0.172,
+    "median_ratio_estimate_to_latent": 0.937,
+    "mean_meals_used": 9.517
+   },
+   {
+    "day": 4,
+    "pearson_r": 0.827,
+    "spearman_rho": 0.815,
+    "mae_mg_dl_per_g": 0.173,
+    "median_ratio_estimate_to_latent": 0.94,
+    "mean_meals_used": 12.633
+   },
+   {
+    "day": 5,
+    "pearson_r": 0.873,
+    "spearman_rho": 0.866,
+    "mae_mg_dl_per_g": 0.156,
+    "median_ratio_estimate_to_latent": 0.927,
+    "mean_meals_used": 15.817
+   },
+   {
+    "day": 6,
+    "pearson_r": 0.897,
+    "spearman_rho": 0.88,
+    "mae_mg_dl_per_g": 0.147,
+    "median_ratio_estimate_to_latent": 0.936,
+    "mean_meals_used": 18.933
+   },
+   {
+    "day": 7,
+    "pearson_r": 0.892,
+    "spearman_rho": 0.868,
+    "mae_mg_dl_per_g": 0.153,
+    "median_ratio_estimate_to_latent": 0.919,
+    "mean_meals_used": 21.9
+   },
+   {
+    "day": 8,
+    "pearson_r": 0.901,
+    "spearman_rho": 0.878,
+    "mae_mg_dl_per_g": 0.149,
+    "median_ratio_estimate_to_latent": 0.926,
+    "mean_meals_used": 24.95
+   },
+   {
+    "day": 9,
+    "pearson_r": 0.901,
+    "spearman_rho": 0.885,
+    "mae_mg_dl_per_g": 0.147,
+    "median_ratio_estimate_to_latent": 0.923,
+    "mean_meals_used": 28.017
+   },
+   {
+    "day": 10,
+    "pearson_r": 0.903,
+    "spearman_rho": 0.892,
+    "mae_mg_dl_per_g": 0.148,
+    "median_ratio_estimate_to_latent": 0.925,
+    "mean_meals_used": 31.183
+   },
+   {
+    "day": 11,
+    "pearson_r": 0.905,
+    "spearman_rho": 0.889,
+    "mae_mg_dl_per_g": 0.149,
+    "median_ratio_estimate_to_latent": 0.927,
+    "mean_meals_used": 34.283
+   },
+   {
+    "day": 12,
+    "pearson_r": 0.909,
+    "spearman_rho": 0.896,
+    "mae_mg_dl_per_g": 0.153,
+    "median_ratio_estimate_to_latent": 0.919,
+    "mean_meals_used": 37.633
+   },
+   {
+    "day": 13,
+    "pearson_r": 0.917,
+    "spearman_rho": 0.903,
+    "mae_mg_dl_per_g": 0.151,
+    "median_ratio_estimate_to_latent": 0.917,
+    "mean_meals_used": 40.95
+   },
+   {
+    "day": 14,
+    "pearson_r": 0.914,
+    "spearman_rho": 0.903,
+    "mae_mg_dl_per_g": 0.152,
+    "median_ratio_estimate_to_latent": 0.914,
+    "mean_meals_used": 44.05
+   }
+  ]
+ },
+ "B_whatif_ground_truth": {
+  "exclusions": {
+   "total_scenarios": 2304,
+   "latest_cgm_above_180_or_missing": 348,
+   "forecast_withheld": 0,
+   "outside_training_support": 180,
+   "eligible": 1776
+  },
+  "eligible_patients": 12,
+  "eligible_moments": 296,
+  "baseline_training_anchor_points": 863,
+  "by_horizon": {
+   "30": {
+    "n_scenarios": 1776,
+    "mean_true_delta": 8.678,
+    "true_delta_range": [
+     3.533,
+     17.999
+    ],
+    "primary": {
+     "mae": 3.889,
+     "bias": -2.899,
+     "spearman_rho": 0.294,
+     "direction_accuracy": 0.963,
+     "direction_n": 1776
+    },
+    "secondary": {
+     "mae": 7.507,
+     "bias": 1.389,
+     "spearman_rho": 0.14,
+     "direction_accuracy": 0.91,
+     "direction_n": 1776
+    },
+    "baseline": {
+     "mae": 2.335,
+     "bias": 0.975,
+     "spearman_rho": 0.592,
+     "direction_accuracy": 1.0,
+     "direction_n": 1776
+    },
+    "mae_primary_minus_baseline": 1.554,
+    "mae_primary_minus_baseline_ci95_patient_bootstrap": [
+     0.292,
+     2.834
+    ],
+    "mae_by_grams": {
+     "25": {
+      "primary": 4.316,
+      "baseline": 1.516
+     },
+     "35": {
+      "primary": 3.022,
+      "baseline": 2.123
+     },
+     "36": {
+      "primary": 3.093,
+      "baseline": 2.183
+     },
+     "40": {
+      "primary": 3.705,
+      "baseline": 2.426
+     },
+     "45": {
+      "primary": 4.356,
+      "baseline": 2.729
+     },
+     "50": {
+      "primary": 4.841,
+      "baseline": 3.032
+     }
+    }
+   },
+   "60": {
+    "n_scenarios": 1776,
+    "mean_true_delta": 35.81,
+    "true_delta_range": [
+     15.391,
+     77.659
+    ],
+    "primary": {
+     "mae": 11.132,
+     "bias": -7.135,
+     "spearman_rho": 0.588,
+     "direction_accuracy": 0.999,
+     "direction_n": 1776
+    },
+    "secondary": {
+     "mae": 15.744,
+     "bias": 2.443,
+     "spearman_rho": 0.361,
+     "direction_accuracy": 0.954,
+     "direction_n": 1776
+    },
+    "baseline": {
+     "mae": 9.275,
+     "bias": 3.821,
+     "spearman_rho": 0.615,
+     "direction_accuracy": 1.0,
+     "direction_n": 1776
+    },
+    "mae_primary_minus_baseline": 1.857,
+    "mae_primary_minus_baseline_ci95_patient_bootstrap": [
+     -1.722,
+     5.526
+    ],
+    "mae_by_grams": {
+     "25": {
+      "primary": 15.813,
+      "baseline": 6.03
+     },
+     "35": {
+      "primary": 9.716,
+      "baseline": 8.436
+     },
+     "36": {
+      "primary": 9.607,
+      "baseline": 8.676
+     },
+     "40": {
+      "primary": 9.936,
+      "baseline": 9.637
+     },
+     "45": {
+      "primary": 10.581,
+      "baseline": 10.837
+     },
+     "50": {
+      "primary": 11.136,
+      "baseline": 12.036
+     }
+    }
+   },
+   "120": {
+    "n_scenarios": 1776,
+    "mean_true_delta": 49.004,
+    "true_delta_range": [
+     18.248,
+     111.588
+    ],
+    "primary": {
+     "mae": 28.959,
+     "bias": -28.903,
+     "spearman_rho": 0.617,
+     "direction_accuracy": 0.934,
+     "direction_n": 1776
+    },
+    "secondary": {
+     "mae": 22.229,
+     "bias": -13.604,
+     "spearman_rho": 0.322,
+     "direction_accuracy": 0.909,
+     "direction_n": 1776
+    },
+    "baseline": {
+     "mae": 12.818,
+     "bias": 4.897,
+     "spearman_rho": 0.59,
+     "direction_accuracy": 1.0,
+     "direction_n": 1776
+    },
+    "mae_primary_minus_baseline": 16.141,
+    "mae_primary_minus_baseline_ci95_patient_bootstrap": [
+     8.916,
+     23.015
+    ],
+    "mae_by_grams": {
+     "25": {
+      "primary": 29.646,
+      "baseline": 8.479
+     },
+     "35": {
+      "primary": 31.754,
+      "baseline": 11.718
+     },
+     "36": {
+      "primary": 32.874,
+      "baseline": 12.039
+     },
+     "40": {
+      "primary": 26.659,
+      "baseline": 13.314
+     },
+     "45": {
+      "primary": 24.676,
+      "baseline": 14.895
+     },
+     "50": {
+      "primary": 28.147,
+      "baseline": 16.463
+     }
+    }
+   }
+  }
+ },
+ "D_lower_bound_below_70_rule": {
+  "validation": {
+   "all": {
+    "n_forecast_moments": 47679,
+    "fired": 2186,
+    "fire_rate": 0.046,
+    "outcome_moments": 378,
+    "outcome_base_rate": 0.008,
+    "true_positive": 208,
+    "ppv": 0.095,
+    "sensitivity": 0.55
+   },
+   "sulfonylurea_or_basal_insulin": {
+    "n_forecast_moments": 19948,
+    "fired": 2113,
+    "fire_rate": 0.106,
+    "outcome_moments": 314,
+    "outcome_base_rate": 0.016,
+    "true_positive": 200,
+    "ppv": 0.095,
+    "sensitivity": 0.637
+   },
+   "neither": {
+    "n_forecast_moments": 27731,
+    "fired": 73,
+    "fire_rate": 0.003,
+    "outcome_moments": 64,
+    "outcome_base_rate": 0.002,
+    "true_positive": 8,
+    "ppv": 0.11,
+    "sensitivity": 0.125
+   },
+   "patients": 12,
+   "patients_with_flag": 5
+  },
+  "test": {
+   "all": {
+    "n_forecast_moments": 47560,
+    "fired": 9495,
+    "fire_rate": 0.2,
+    "outcome_moments": 4091,
+    "outcome_base_rate": 0.086,
+    "true_positive": 3178,
+    "ppv": 0.335,
+    "sensitivity": 0.777
+   },
+   "sulfonylurea_or_basal_insulin": {
+    "n_forecast_moments": 31706,
+    "fired": 9495,
+    "fire_rate": 0.299,
+    "outcome_moments": 4091,
+    "outcome_base_rate": 0.129,
+    "true_positive": 3178,
+    "ppv": 0.335,
+    "sensitivity": 0.777
+   },
+   "neither": {
+    "n_forecast_moments": 15854,
+    "fired": 0,
+    "fire_rate": 0.0,
+    "outcome_moments": 0,
+    "outcome_base_rate": 0.0,
+    "true_positive": 0,
+    "ppv": null,
+    "sensitivity": null
+   },
+   "patients": 12,
+   "patients_with_flag": 8
+  }
+ },
+ "E_time_below_range": {
+  "unit": "percent of CGM readings",
+  "all_60_patients": {
+   "readings": 238103,
+   "below_70": 876,
+   "share_below_70": 0.368,
+   "below_54": 19
+  },
+  "sulfonylurea_or_basal_insulin": {
+   "readings": 119143,
+   "below_70": 865,
+   "share_below_70": 0.726,
+   "below_54": 19
+  },
+  "neither": {
+   "readings": 118960,
+   "below_70": 11,
+   "share_below_70": 0.009,
+   "below_54": 0
+  },
+  "published_comparator_in_repo": "2.4% (docs/AUDIT_WAVE2.md F-18; deck slide 6)"
+ },
+ "runtime_s": 101.9
+}

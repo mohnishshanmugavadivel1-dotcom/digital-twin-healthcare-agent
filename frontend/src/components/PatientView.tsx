@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import type { CounterfactualResult, Forecast, ForecastSummary, Observation, PatientRecord, ReplayStatus, TwinState } from "../api/types";
-import { comparisonCells, fmtDateTime, fmtOffset, jointSupportChip, toMs } from "../format";
+import { comparisonCells, fmtDateTime, fmtOffset, hypoglycaemiaMedications, jointSupportChip, scenarioLowWatchCell, toMs } from "../format";
 import { MEAL_PRESETS, PRESET_NOTE, presetById, scenarioLabel } from "../mealPresets";
+import { FhirViewer } from "./FhirViewer";
 import { GlucoseChart } from "./GlucoseChart";
 import { RiskPanel } from "./RiskPanel";
 import { RiskTimeline } from "./RiskTimeline";
@@ -103,6 +104,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
   if (error) return <div className="card error">Could not load the patient twin: {error} <button onClick={() => void start()}>Retry</button></div>;
   if (!record || !replay) return <div className="card muted">Loading patient twin…</div>;
   const offset = record.utc_offset_minutes;
+  const hypoMeds = hypoglycaemiaMedications(record.medications);
   const clockMs = toMs(replay.clock);
   const progress = (clockMs - toMs(replay.start)) / Math.max(toMs(replay.end) - toMs(replay.start), 1);
 
@@ -119,6 +121,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
             {record.medications.map((m) => <span key={m.name} className="chip" title={m.drug_class}>{m.name} {m.dose}</span>)}
           </div>
           <div className="muted small">{record.conditions.join(" · ")}</div>
+          <FhirViewer key={patientId} patientId={patientId} />
           {(record.genetic_markers?.length || record.family_history_t2d != null) && (
             <div className="muted small" title="Synthetic, display-only: no simulated effect and not used by the model">
               Family history of T2D: {record.family_history_t2d ? "yes" : "no"}
@@ -170,7 +173,8 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
               {simBusy ? "Simulating…" : sims.length ? "Add scenario" : "Simulate meal"}</button>
             {sims.length > 0 && <button onClick={clearSim}>Clear scenarios</button>}
             {simError && <span className="sim-error small" role="alert">Simulation failed: {simError}</span>}
-            {sims.length > 0 && (
+            {sims.length > 0 && (<>
+              <p className="swipe-cue tiny muted" aria-hidden="true">← Swipe table for 120m &amp; risk columns →</p>
               <div className="table-wrap sim-wrap">
                 <table className="sim-table small" aria-label="Hypothetical meal scenarios: carb effect versus a zero-carb meal at the same time, and versus no meal">
                   <thead>
@@ -180,6 +184,8 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                         vs zero-carb meal now (primary)</th>
                       <th scope="colgroup" colSpan={2} className="sim-secondary" title="Scenario minus the forecast with no meal. Also contains the model's learned meal-timing expectation (after a long gap it anticipates a meal), so it can differ from the primary comparison">
                         vs no meal</th>
+                      <th scope="col" rowSpan={2} className="sim-low" title="Whether the lower edge of the scenario forecast's 80% prediction interval falls below 70 mg/dL within 120 min. An interval edge, not a probability.">
+                        Low watch<br /><span className="tiny muted">lower bound &lt;70</span></th>
                     </tr>
                     <tr>
                       <th scope="col">Δ +30 min</th><th scope="col">Δ +60 min</th><th scope="col">Δ +120 min</th><th scope="col">Excursion risk</th>
@@ -190,6 +196,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                     {sims.map(({ grams, label, result }) => {
                       const p = comparisonCells(result.primary), s = comparisonCells(result.secondary);
                       const support = jointSupportChip(result.joint_support);
+                      const low = scenarioLowWatchCell(result.scenario?.trajectory, hypoMeds);
                       return (
                         <tr key={`${result.as_of}-${grams}`} className={result.small_meal_unreliable ? "sim-unreliable" : undefined}>
                           <td>{grams} g{label && <span className="muted tiny sim-label">{label}</span>}{result.small_meal_unreliable && (
@@ -199,13 +206,14 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                           <td className={p.riskQualified ? "sim-qualified" : undefined} title={p.riskTitle}>{p.risk}{p.riskQualified && " *"}</td>
                           <td className="sim-secondary">{s.d60}</td>
                           <td className={`sim-secondary${s.riskQualified ? " sim-qualified" : ""}`} title={s.riskTitle}>{s.risk}{s.riskQualified && " *"}</td>
+                          <td className={`sim-low${low.flagged ? " sim-low-flag" : ""}`} title={low.title}>{low.text}</td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
               </div>
-            )}
+            </>)}
             {sims.length > 0 && (() => {
               const last = sims[sims.length - 1].result;
               if (!last.primary) {
@@ -230,11 +238,18 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
               forecasting models trained on synthetic simulator data, not causal physiological effects (backlog B-22). Meal presets: {PRESET_NOTE} An
               "outside training support" tag means no training meal was comparable; inputs inside the training range still do not make a forecast accurate. <span className="sim-qualified">*</span> starting
               risk above 95%: change not informative. Not medical advice, not a treatment recommendation. The chart overlays the latest scenario.</div>
+            <div className="muted tiny whatif-research" style={{ flexBasis: "100%" }}>
+              <b>Research check (synthetic simulator; not what this table serves):</b> against simulator ground truth at +120 min
+              (2,953 scenarios, 12 held-out patients), the served What-If above has MAE 37.3 mg/dL and a train-only cohort-average meal curve 16.8.
+              A <i>personalised carb-sensitivity response curve</i> (grams × this patient's learned sensitivity × a response shape fitted on
+              training patients, scale chosen on validation patients, test scored once) reached 5.9. The simulator's near-linear meal response
+              favours it; it is not real-data evidence and it is not served. Details: docs/research/TWIN_VALIDITY.md (addendum v3).
+            </div>
           </div>
           <GlucoseChart cgm={cgm} meals={meals} forecast={forecast} scenario={sims.length ? sims[sims.length - 1].result.scenario : null}
                         history={history} clockMs={clockMs} offsetMin={offset} windowHours={WINDOW_HOURS} showPastPredictions={showPast} />
         </section>
-        <RiskPanel forecast={forecast} state={state} history={history} offset={offset} />
+        <RiskPanel forecast={forecast} state={state} history={history} offset={offset} medications={record.medications} />
       </div>
       <SensorTimeline clockMs={clockMs} offsetMin={offset} windowHours={WINDOW_HOURS}
                       cgm={cgm} meals={meals} steps={steps} heartRate={heartRate} forecasts={history} />

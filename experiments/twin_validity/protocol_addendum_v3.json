@@ -1,0 +1,28 @@
+{
+  "name": "GlucoTwin twin-validity protocol, addendum v3: train-fitted, validation-selected personalised response curve",
+  "registered": "2026-10-23, written before section D of scripts/validate_twin_and_whatif.py was implemented or run",
+  "status": "Pre-specified for the test evaluation, with one disclosed limitation: addendum v2 already reported test-set results for one candidate below (median shape, no calibration: MAE 5.5 / 10.7 / 8.5 at +30/60/120 min on the same test scenarios). If validation selects that candidate, its test numbers are a repeat, not a first look. Sections A-C of addendum v2 are recomputed unchanged.",
+  "scope": "Synthetic simulator cohort only (seed 20261017; split train 36 / validation 12 / test 12 patients). Not served; no change to the frozen engine or models. Not clinical evidence.",
+  "data_use": {
+    "train (36 patients)": "fits the response-curve shape c(h) from OBSERVED CGM after isolated logged meals (glucotwin.features.meal_responses rules) and the cohort-average baseline from simulator truth, exactly as in addendum v2",
+    "validation (12 patients)": "selects among the candidates below and fits the optional calibration factor, using simulator truth at their anchors. No test-patient data is used.",
+    "test (12 patients)": "scored once with the selected candidate"
+  },
+  "estimator": "delta_hat(grams, h) = alpha_h x grams x s(patient, t0) x c(h). s is glucotwin.features.personal_carb_sensitivity at the forecast moment t0, using only meals whose 120-min response window closed at or before t0 (causal).",
+  "candidates": [
+    {"id": "median_uncal", "c(h)": "median over training meals of observed rise at h / observed peak rise", "alpha_h": 1},
+    {"id": "mean_uncal", "c(h)": "mean of the same fractions", "alpha_h": 1},
+    {"id": "median_cal", "c(h)": "median", "alpha_h": "least-squares scale per horizon on validation scenarios: sum(pred x true) / sum(pred^2)"},
+    {"id": "mean_cal", "c(h)": "mean", "alpha_h": "as above"}
+  ],
+  "selection": "lowest mean of the validation MAEs at +30, +60 and +120 min; ties resolved in the listed order (simplest first).",
+  "validation_scenarios": "12 validation patients x the same 32 replay offsets x 10 gram amounts (20, 25, 35, 36, 40, 45, 50, 60, 90, 120), anchors with latest CGM <= 180 mg/dL. The served What-If is limited to test patients, so validation has no joint-support filter.",
+  "test_scenarios": "identical to addendum v2 section C: 12 test patients, the same anchors, all 10 gram amounts, eligibility = latest CGM <= 180, forecast not withheld, joint support within_training_support. Also reported on the 5-gram subset (20/40/60/90/120 g) of section B for comparison with the served What-If's MAE there.",
+  "truth": "paired simulator counterfactual with common random numbers (glucotwin.twin_validity_research.paired_meal_delta) at the service's own anchor minute, horizons +30/+60/+120 min",
+  "comparators": [
+    "cohort-average curve: mean true delta per (grams, horizon) over training patients at eligible anchors (train only)",
+    "served What-If (frozen trajectory model, feature perturbation vs a zero-carb meal)"
+  ],
+  "metrics": ["MAE", "RMSE", "median absolute error", "bias", "direction accuracy where |true delta| >= 2 mg/dL (reported with the share of positive true deltas)"],
+  "inference": "paired patient bootstrap, 1,000 resamples, seed 20261017, 95% percentile CIs for MAE and RMSE differences (selected curve minus each comparator)"
+}

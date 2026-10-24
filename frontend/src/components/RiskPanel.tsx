@@ -1,5 +1,5 @@
-import type { Forecast, ForecastSummary, TwinState } from "../api/types";
-import { fmtDateTime, num, riskPct, toMs } from "../format";
+import type { Forecast, ForecastSummary, Medication, TwinState } from "../api/types";
+import { fmtDateTime, hypoglycaemiaMedications, lowerBoundBelow, num, riskPct, toMs } from "../format";
 
 /**
  * Excursion-risk card plus the evidence behind the current forecast: data
@@ -14,6 +14,24 @@ interface Props {
   state: TwinState | null;
   history: ForecastSummary[];
   offset: number; // patient-local UTC offset in minutes (record.utc_offset_minutes)
+  medications?: Medication[]; // record medications, display context for the low-glucose lower-bound note only
+}
+
+/** Lower-bound note: states exactly what is computed. Not a probability; rule audited in twin_validity.json (D). */
+function LowerBoundNote({ forecast, medications }: { forecast: Forecast; medications: Medication[] }) {
+  const low = lowerBoundBelow(forecast.trajectory);
+  if (!low) return null;
+  const meds = hypoglycaemiaMedications(medications);
+  const level = Math.round((forecast.interval_level ?? 0.8) * 100);
+  return (
+    <div className="lowbound small" role="note">
+      <b>Low-glucose watch:</b> the {level}% forecast lower bound falls below 70 mg/dL from +{low.horizon_min} min
+      (lowest {Math.round(low.lowest_mg_dl)} mg/dL).{meds.length > 0 && <> Record medication that can cause hypoglycaemia: {meds.join(", ")}.</>}
+      <div className="muted tiny">This is the lower edge of the prediction interval, <b>not a probability of hypoglycaemia</b> and not a
+        validated hypoglycaemia predictor. On synthetic held-out patients a reading below 70 mg/dL followed within 2 h at
+        3,178 of 9,495 moments when it showed (test) and 208 of 2,186 (validation); the simulator under-represents lows.</div>
+    </div>
+  );
 }
 
 function Evidence({ state, history, offset }: { state: TwinState | null; history: ForecastSummary[]; offset: number }) {
@@ -55,7 +73,7 @@ function Evidence({ state, history, offset }: { state: TwinState | null; history
   );
 }
 
-export function RiskPanel({ forecast, state, history, offset }: Props) {
+export function RiskPanel({ forecast, state, history, offset, medications = [] }: Props) {
   if (!forecast) return <section className="card"><h3>Excursion risk</h3><p className="muted">No forecast yet.</p>{state && <Evidence state={state} history={history} offset={offset} />}</section>;
   if (forecast.status !== "ok") {
     return (
@@ -101,6 +119,7 @@ export function RiskPanel({ forecast, state, history, offset }: Props) {
         ))}
       </div>
       <p className="muted tiny">Predicted values with the {Math.round((forecast.interval_level ?? 0.8) * 100)}% interval — <b>model-generated</b>, not observed measurements.</p>
+      <LowerBoundNote forecast={forecast} medications={medications} />
       <h4>What drives this estimate</h4>
       <ul className="factors">
         {ex.top_factors.map((f) => (
