@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
-import type { Forecast, ForecastSummary, Observation, PatientRecord, ReplayStatus, TwinState } from "../api/types";
+import type { CounterfactualResult, Forecast, ForecastSummary, Observation, PatientRecord, ReplayStatus, TwinState } from "../api/types";
 import { fmtDateTime, fmtOffset, toMs } from "../format";
 import { GlucoseChart } from "./GlucoseChart";
 import { RiskPanel } from "./RiskPanel";
@@ -27,6 +27,9 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
   const [speed, setSpeed] = useState(15);
   const [showPast, setShowPast] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [simGrams, setSimGrams] = useState(60);
+  const [sim, setSim] = useState<CounterfactualResult | null>(null);
+  const [simBusy, setSimBusy] = useState(false);
   const busy = useRef(false);
 
   const refresh = useCallback(async (status: ReplayStatus) => {
@@ -43,12 +46,21 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
   const start = useCallback(async () => {
     setPlaying(false);
     setError(null);
+    setSim(null);
     try {
       const [rec, status] = await Promise.all([api.patient(patientId), api.createReplay(patientId, startOffsetHours)]);
       setRecord(rec);
       await refresh(status);
     } catch (e) { setError(String(e)); }
   }, [patientId, refresh, startOffsetHours]);
+
+  const runSim = useCallback(async () => {
+    setSimBusy(true);
+    try {
+      setSim(await api.counterfactual(patientId, simGrams));
+    } catch (e) { setError(String(e)); }
+    finally { setSimBusy(false); }
+  }, [patientId, simGrams]);
 
   useEffect(() => { void start(); }, [start]);
 
@@ -57,6 +69,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
     busy.current = true;
     try {
       const status = await api.stepReplay(replay.session_id, minutes);
+      setSim(null); // a what-if is tied to the "now" it was computed at
       await refresh(status);
       onTick();
       if (status.finished) setPlaying(false);
@@ -119,7 +132,22 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
             <h3>Glucose: last {WINDOW_HOURS} h and 2 h forecast</h3>
             <label className="small"><input type="checkbox" checked={showPast} onChange={(e) => setShowPast(e.target.checked)} /> show earlier 60-min predictions</label>
           </div>
-          <GlucoseChart cgm={cgm} meals={meals} forecast={forecast} history={history} clockMs={clockMs}
+          <div className="whatif">
+            <b className="sim-tag">SIMULATED</b>
+            <label className="small">What if the patient eats <input type="number" min={1} max={300} value={simGrams}
+              onChange={(e) => setSimGrams(Math.max(1, Math.min(300, Number(e.target.value))))} aria-label="Hypothetical meal carbs in grams" /> g of carbs now?</label>
+            <button onClick={() => void runSim()} disabled={simBusy}>{simBusy ? "Simulating…" : "Simulate meal"}</button>
+            {sim && sim.baseline.status === "ok" && sim.scenario.status === "ok" && (
+              <span className="small">
+                Scenario at {fmtDateTime(toMs(sim.as_of), offset)}: <b>{sim.delta_glucose_60mg_dl! > 0 ? "+" : ""}{sim.delta_glucose_60mg_dl} mg/dL</b> at +60 min
+                {sim.delta_probability != null && sim.baseline.excursion && sim.scenario.excursion && (
+                  <> · excursion risk {(100 * sim.baseline.excursion.probability).toFixed(0)}% → <b>{(100 * sim.scenario.excursion.probability).toFixed(0)}%</b></>
+                )}
+              </span>
+            )}
+            <div className="muted tiny" style={{ flexBasis: "100%" }}>The hypothetical meal is never added to the patient record. A simulated scenario for exploration — not medical advice.</div>
+          </div>
+          <GlucoseChart cgm={cgm} meals={meals} forecast={forecast} scenario={sim?.scenario ?? null} history={history} clockMs={clockMs}
                         offsetMin={offset} windowHours={WINDOW_HOURS} showPastPredictions={showPast} />
         </section>
         <RiskPanel forecast={forecast} />
