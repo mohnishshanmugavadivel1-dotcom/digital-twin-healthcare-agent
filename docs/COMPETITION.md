@@ -24,7 +24,7 @@ participants' public READMEs**, which agree with each other, but they are second
 
 | Likely requirement | Source pattern | Status in this repo |
 |---|---|---|
-| Team details, college or incubator | all checklists | Done (2026-10-18): team mono, Amrita Vishwa Vidyapeetham, Chennai — Mohnish Shanmugavadivel (sole member) |
+| Team details, college or incubator | all checklists | Done (2026-10-18): team mono, Amrita Vishwa Vidyapeetham, Chennai — Mohnish Shanmugavadivel (Team Leader, primary/sole developer) · Sachithanantham V (Registered Team Member) (updated 2026-10-24 to match the Unstop registration; implementation and experiments by Mohnish Shanmugavadivel) |
 | Project title, problem statement, healthcare use case | all | Done (README) |
 | Technical stack; AI/ML model and framework details | all | Done (README, ML_PLAN) |
 | ~~15–20 minute~~ unlisted YouTube demo video — *duration later corrected by the official rules: **minimum 20 minutes*** (see [COMPETITION_COMPLIANCE.md](COMPETITION_COMPLIANCE.md)) | e.g. github.com/srujan1-creator/Digital-Twin-Challenge, github.com/Nikunj-Shah00000/Digital-Twin-Challenge-2026 | **Missing.** Verified scene plan: [DEMO_SCRIPT.md](DEMO_SCRIPT.md) (targets 22–24 min) |

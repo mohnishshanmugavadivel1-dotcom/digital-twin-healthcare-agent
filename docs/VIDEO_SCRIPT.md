@@ -25,7 +25,7 @@ cd frontend && npm ci && npm run build:static && npm run preview:static   # http
 ```
 
 - Deep links: `?patient=SYN-0039&start=151.833` (hero, starts 07:55) and `?patient=SYN-0019&start=253.667` (weakness, starts 13:45).
-- In the snapshot, What-If amounts exist only for **25, 30, 35, 36, 40, 45, 50, 60, 90, 120, 200 and 300 g**, at **07:55 and 08:55** (SYN-0039) and **13:45** (SYN-0019). Any other amount shows an explicit "no recorded what-if" message. Use only the amounts in this script.
+- In the snapshot, What-If amounts exist at **07:55 and 08:55** (SYN-0039) and **13:45** (SYN-0019) for **18, 22, 25, 28, 30, 32, 35, 36, 40, 44, 45, 48, 50, 52, 58, 60, 64, 65, 68, 78, 90, 92, 120, 200 and 300 g**. The 20 preset amounts are also recorded every 15 min of each replay. Any other amount shows an explicit "no recorded what-if" message. Use only the amounts in this script.
 - Browser window **1440 px** wide, zoom 100%, bookmarks bar hidden, notifications off. Record at 1080p.
 - Open these in tabs:
   - the dashboard (hero deep link);
@@ -33,6 +33,7 @@ cd frontend && npm ci && npm run build:static && npm run preview:static   # http
   - [rmse_by_horizon.svg](../reports/real_data/shanghai_t2dm/public/rmse_by_horizon.svg);
   - the architecture PDF and the presentation PDF.
 - The deck was regenerated on 2026-10-23 from `docs/submission/src/presentation.template.html` (`scripts/build_presentation.py`, then `scripts/export_submission_pdfs.mjs`). It now has **15 slides**. New slide 9, *Twin validity against simulator ground truth*, covers personalisation recovery, the post-meal improvement, the confidence line, the served What-If negative result, the train-fitted personalised curve, the FHIR RiskAssessment and the low-glucose watch; every number is filled from the research reports. Later slides moved up by one: dashboard 10, demo moments 11 (SYN-0019 warned late at 14:50, 45 min before 180), safety 12, impact 13, engineering 14 (151 Python tests, 34 frontend tests), thank you 15. Do not show an older copy of the PDF.
+- **Update 2026-10-24: the deck has 16 slides.** New **slide 11**, *Twin-curve What-If, Indian meals, AGP and a fact-grounded handover*, sits after the dashboard (10). Later slides moved down by one: demo moments 12, safety 13, impact 14, engineering 15 (test counts filled automatically), thank you 16. The dashboard now also has the **Automated Gentle Meal-Swap Finder** inside the What-If lab and the **Atithi (patient) companion summary** below the clinician handover note (module 6++).
 - If any on-screen value differs from this script, **stop**. Never narrate a number you cannot see.
 
 **Alternative: the live app** (`make setup && make train && make serve`). `make train` rewrites `reports/evaluation_report.json` with only `generated_at` and `model_version` changing. Afterwards, run `git diff --stat reports/` and restore with `git checkout -- reports/` before any commit. Live values should match this script, but re-verify them before recording.
@@ -85,7 +86,7 @@ If a take runs short, pause longer on the evidence card in module 4 rather than 
 | 10 | 15:15–16:45 | 1:30 | README "Results at a glance" §2 + `rmse_by_horizon.svg` | Show the table, the chart and the attribution line | "Real data (ShanghaiT2DM) · glucose-history models · NOT the GlucoTwin model" |
 | X3 | (B only) | 1:30 | Terminal | `make check`; show 140 passed, 23/23 frontend | "Reproducible: one seed, `make check`" |
 | 11 | 16:45–18:00 | 1:15 | README "Limitations and intended use" | Scroll | "Not clinically validated · next: real data with carbs and activity" |
-| 12 | 18:00–18:30 | 0:30 | Deck slide 15 (thank you) | Static | Repo link · "Synthetic patients · not a medical device" |
+| 12 | 18:00–18:30 | 0:30 | Deck slide 16 (thank you) | Static | Repo link · "Synthetic patients · not a medical device" |
 
 ## 4. Narration and expected screen values
 
@@ -137,7 +138,14 @@ Optional comparison for Cut B (SYN-0019 at 13:45, same preset): **7% → 20%**, 
 
 **6+ (Cut C, +0:40).** Screen: scroll the What-If table right to the **Low watch** column (every recorded row shows **–**; hover one for the tooltip). Then read the grey *Research check* note under the table: served What-If **37.3**, cohort average **16.8**, personalised curve **5.9** mg/dL MAE at +120 min.
 
-> "The last column is a low-glucose watch for each scenario. Adding carbs lifts the forecast, so it stays clear here; you'll see the watch fire on the risk card for a patient on a sulfonylurea and insulin. Now honesty about the What-If. We replayed every scenario against the simulator's true response. At two hours the served What-If is off by 37 mg/dL on average, worse than a simple cohort-average curve at 17. But a curve built from this patient's learned sensitivity, fitted on training patients and tested once, gets about 6. So the learned parameter carries the right information; our forecasting model doesn't yet use it well. That curve is research, and it is not what the table serves."
+> "The last column is a low-glucose watch for each scenario. Adding carbs lifts the forecast, so it stays clear here; you'll see the watch fire on the risk card for a patient on a sulfonylurea and insulin. Now honesty about the What-If. We replayed every scenario against the simulator's true response. At two hours the served What-If is off by 37 mg/dL on average, worse than a simple cohort-average curve at 17. But a curve built from this patient's learned sensitivity, fitted on training patients and tested once, gets about 6. So the learned parameter carries the right information; our forecasting model doesn't yet use it well. That curve now sits beside the table as a purple research column; the served numbers are unchanged."
+
+**6++ (Cut C, +1:30). Twin curve, walk, swap finder, AGP and the two grounded notes.** Show deck **slide 11** for a few seconds first, then return to the dashboard (still 07:55, idli row in the table).
+- Purple columns on the idli row: twin curve **+42.5 / +60.0** at +60/+120 min. Tick **compare with a post-meal walk (+20 min, 2,500 steps)**: **+48.8 (walk −11.2)**.
+- Preset **Rajma chawal** (**68 g**) → **Add scenario**. The **Automated Gentle Meal-Swap Finder** runs by itself ("large meal (68 g …); simulated excursion risk 93% …"). Its top 3: **Khaman dhokla 32 g +54.8**, **Idli with sambar 35 g +60.0**, **Rava upma 35 g +60.0**, each with the low watch "not triggered". Read the label: "Deterministic Twin Scenario Search … educational simulation, not a clinical prescription."
+- Scroll to the **Glucose profile (AGP)** card (6.3 days, 44.9% coverage, so marked below the 14-day / 70% minimum), the **Clinician handover note** ("Verified: 100% of numbers") and the **Atithi (Patient) Plain-Language Companion Summary** ("Verified: 100% of numbers (20/20)").
+
+> "The purple column is the personalised twin curve. For two idli it predicts about 60 mg/dL at two hours, close to the simulator's true 65 you saw on slide 11. A twenty-minute walk afterwards is a cohort-level effect: on held-out test scenarios its error was 4.3 mg/dL, against 11.6 if you assume a walk does nothing. Now a big plate of rajma chawal. The swap finder searches our Indian presets automatically, keeps only meals inside training support that don't trip the low watch, and ranks them by the twin curve. Honestly, that curve only sees grams, so the order is simply fewer carbs first; the GI badge is context, not part of the ranking. Below, the AGP says this window is too short to be a proper profile. The clinician note and the Atithi summary — Atithi is Happiest Health's word for the people it serves — are fixed templates, and a separate checker traces every number back to the twin; if one doesn't trace, the card isn't shown. They explain; they never prescribe."
 
 Optional, if time allows: SYN-0019 deep link, **+1 h** three times → **16:45**: the risk card shows "Low-glucose watch: the 80% forecast lower bound falls below 70 mg/dL from **+120 min** (lowest **69 mg/dL**)", listing **Glimepiride (sulfonylurea)** and **Insulin glargine (basal insulin)**. Return to the hero deep link before module F.
 
