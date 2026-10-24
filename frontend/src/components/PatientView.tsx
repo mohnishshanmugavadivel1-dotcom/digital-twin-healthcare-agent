@@ -26,7 +26,7 @@ const SPEEDS = [
 
 const errText = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
-export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { patientId: string; onTick: () => void; startOffsetHours?: number }) {
+export function PatientView({ patientId, onTick, startOffsetHours = 24, staticNote }: { patientId: string; onTick: () => void; startOffsetHours?: number; staticNote?: string }) {
   const [record, setRecord] = useState<PatientRecord | null>(null);
   const [replay, setReplay] = useState<ReplayStatus | null>(null);
   const [state, setState] = useState<TwinState | null>(null);
@@ -46,7 +46,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
   const [topSwap, setTopSwap] = useState<RankedSwap | null>(null);
   const [simBusy, setSimBusy] = useState(false);
   const [simError, setSimError] = useState<string | null>(null);
-  const [showWalk, setShowWalk] = useState(false);
+  const [showWalk, setShowWalk] = useState(true); // the +20-min walk column is part of the primary twin-curve set
   const [agp, setAgp] = useState<AgpSummary | null>(null);
   const busy = useRef(false);
   const handover: HandoverInput | null = useMemo(
@@ -173,6 +173,7 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
             <button onClick={() => void start()}>Restart</button>
           </div>
           <div className="muted tiny">Chronological replay: the twin only sees data up to "now". {replay.finished && <b>Replay finished.</b>}</div>
+          {staticNote && <div className="static-moment tiny" role="note"><b>Static demo · one recorded moment.</b> {staticNote}</div>}
         </div>
       </section>
 
@@ -211,25 +212,26 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
             {sims.length > 0 && <button onClick={clearSim}>Clear scenarios</button>}
             {simError && <span className="sim-error small" role="alert">Simulation failed: {simError}</span>}
             {sims.length > 0 && (<>
-              <p className="swipe-cue tiny muted" aria-hidden="true">← Swipe the table for more columns (no-meal comparison, low watch) →</p>
+              <p className="whatif-lead small">Primary meal &amp; walk deltas below use the patient's validated Personalised Twin Response Curve (5.9 mg/dL MAE at +120m on held-out simulator truth); raw tree feature-perturbation deltas (37.3 mg/dL MAE) are shown beside them for transparency.</p>
+              <p className="swipe-cue tiny muted" aria-hidden="true">← Swipe the table for more columns (tree model, no-meal comparison, low watch) →</p>
               <div className="table-wrap sim-wrap">
                 <table className="sim-table small" aria-label="Hypothetical meal scenarios: carb effect versus a zero-carb meal at the same time, and versus no meal">
                   <thead>
                     <tr>
                       <th scope="col" rowSpan={2}>Meal</th>
-                      <th scope="colgroup" colSpan={4} title="Scenario minus a zero-carb meal logged at the same time: both legs reset the model's time-since-meal input, so this isolates the carb content">
-                        vs zero-carb meal now (primary)</th>
-                      <th scope="colgroup" colSpan={showWalk ? 3 : 2} className="sim-twin" title="Research estimate, not the served forecast: grams × this patient's learned carb sensitivity × a response shape fitted on synthetic training patients. Held-out synthetic test MAE 5.9 mg/dL at +120 min (served What-If 37.3).">
-                        Personalised twin curve (research)</th>
+                      <th scope="colgroup" colSpan={showWalk ? 3 : 2} className="sim-twin sim-primary" title="Primary: grams × this patient's learned carb sensitivity × a response shape fitted on synthetic training patients (simulator-validated research estimate; not real-patient evidence). Held-out synthetic test MAE 5.9 mg/dL at +120 min; walk 4.3 mg/dL. The forecast models are unchanged.">
+                        Personalised twin curve (primary · simulator-validated research estimate)</th>
+                      <th scope="colgroup" colSpan={4} className="sim-tree" title="Tree-model feature perturbation: scenario minus a zero-carb meal logged at the same time (both legs reset the model's time-since-meal input, so this isolates the carb content). Held-out synthetic test MAE 37.3 mg/dL at +120 min: the learned response is attenuated. Excursion risk comes from the same served model.">
+                        vs zero-carb meal now (tree model — attenuated)</th>
                       <th scope="colgroup" colSpan={2} className="sim-secondary" title="Scenario minus the forecast with no meal. Also contains the model's learned meal-timing expectation (after a long gap it anticipates a meal), so it can differ from the primary comparison">
                         vs no meal</th>
                       <th scope="col" rowSpan={2} className="sim-low" title="Whether the lower edge of the scenario forecast's 80% prediction interval falls below 70 mg/dL within 120 min. An interval edge, not a probability.">
                         Low watch<br /><span className="tiny muted">lower bound &lt;70</span></th>
                     </tr>
                     <tr>
-                      <th scope="col">Δ +30 min</th><th scope="col">Δ +60 min</th><th scope="col">Δ +120 min</th><th scope="col">Excursion risk</th>
-                      <th scope="col" className="sim-twin">Δ +60 min</th><th scope="col" className="sim-twin">Δ +120 min</th>
-                      {showWalk && <th scope="col" className="sim-twin" title="Meal plus the walk; in brackets the walk's own effect">+ walk, Δ +120 min</th>}
+                      <th scope="col" className="sim-twin sim-primary">Δ60m twin</th><th scope="col" className="sim-twin sim-primary">Δ120m twin</th>
+                      {showWalk && <th scope="col" className="sim-twin sim-primary" title="Meal plus a 20-min walk (2,500 steps); in brackets the walk's own effect">+20m walk, Δ120m</th>}
+                      <th scope="col" className="sim-tree">Δ30 tree</th><th scope="col" className="sim-tree">Δ60 tree</th><th scope="col" className="sim-tree">Δ120 tree</th><th scope="col" className="sim-tree">Excursion risk</th>
                       <th scope="col" className="sim-secondary">Δ +60 min</th><th scope="col" className="sim-secondary">Excursion risk</th>
                     </tr>
                   </thead>
@@ -243,8 +245,6 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                           <td>{grams} g{label && <span className="muted tiny sim-label">{label}</span>}{result.small_meal_unreliable && (
                             <span className="sim-flag" title="Meals under 30 g are unreliable in this model: few training meals are that small and the audited small-meal differences are unstable">unreliable &lt;30 g</span>)}{support && (
                             <span className="sim-flag sim-support" title={support.title}>{support.label}</span>)}</td>
-                          <td>{p.d30}</td><td>{p.d60}</td><td>{p.d120}</td>
-                          <td className={p.riskQualified ? "sim-qualified" : undefined} title={p.riskTitle}>{p.risk}{p.riskQualified && " *"}</td>
                           {(() => {
                             const tc = result.twin_curve;
                             const span = showWalk ? 3 : 2;
@@ -252,13 +252,15 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
                             const flag = tc.within_tested_range ? "" : " sim-twin-outside";
                             const title = `${tc.caveat}${tc.within_tested_range ? "" : ` Outside the tested range: ${tc.outside_tested_reasons.join("; ")}.`}`;
                             return (<>
-                              <td className={`sim-twin${flag}`} title={title}>{fmtDelta(tc.delta_glucose_mg_dl["60"])}</td>
-                              <td className={`sim-twin${flag}`} title={title}>{fmtDelta(tc.delta_glucose_mg_dl["120"])}{!tc.within_tested_range && <span className="sim-flag">untested</span>}</td>
-                              {showWalk && <td className={`sim-twin${flag}`} title={title}>{tc.with_walk_delta_glucose_mg_dl
+                              <td className={`sim-twin sim-primary${flag}`} title={title}>{fmtDelta(tc.delta_glucose_mg_dl["60"])}</td>
+                              <td className={`sim-twin sim-primary${flag}`} title={title}>{fmtDelta(tc.delta_glucose_mg_dl["120"])}{!tc.within_tested_range && <span className="sim-flag">untested</span>}</td>
+                              {showWalk && <td className={`sim-twin sim-primary${flag}`} title={title}>{tc.with_walk_delta_glucose_mg_dl
                                 ? <>{fmtDelta(tc.with_walk_delta_glucose_mg_dl["120"])} <span className="muted tiny">(walk {fmtDelta(tc.walk_delta_glucose_mg_dl?.["120"])})</span></>
                                 : "–"}</td>}
                             </>);
                           })()}
+                          <td className="sim-tree">{p.d30}</td><td className="sim-tree">{p.d60}</td><td className="sim-tree">{p.d120}</td>
+                          <td className={`sim-tree${p.riskQualified ? " sim-qualified" : ""}`} title={p.riskTitle}>{p.risk}{p.riskQualified && " *"}</td>
                           <td className="sim-secondary">{s.d60}</td>
                           <td className={`sim-secondary${s.riskQualified ? " sim-qualified" : ""}`} title={s.riskTitle}>{s.risk}{s.riskQualified && " *"}</td>
                           <td className={`sim-low${low.flagged ? " sim-low-flag" : ""}`} title={low.title}>{low.text}</td>
@@ -295,10 +297,10 @@ export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { pati
               "outside training support" tag means no training meal was comparable; inputs inside the training range still do not make a forecast accurate. <span className="sim-qualified">*</span> starting
               risk above 95%: change not informative. Not medical advice, not a treatment recommendation. The chart overlays the latest scenario.</div>
             <div className="muted tiny whatif-research" style={{ flexBasis: "100%" }}>
-              <b>Personalised twin curve column (research; synthetic simulator):</b> grams × this patient's learned carb sensitivity × a
+              <b>Personalised twin curve columns (primary; simulator-validated research estimate):</b> grams × this patient's learned carb sensitivity × a
               response shape fitted on training patients, scale chosen on validation patients, test scored once. Against simulator ground truth
               at +120 min (2,953 scenarios, 12 held-out patients) it had MAE 5.9 mg/dL, versus 16.8 for a train-only cohort-average curve and
-              37.3 for the served What-If columns. The simulator's near-linear meal response favours it. <b>Walk toggle:</b> a cohort-level
+              37.3 for the tree-model columns (feature perturbation of the served forecast model; excursion risk and low watch come from it too). The simulator's near-linear meal response favours it. <b>Walk toggle:</b> a cohort-level
               effect (the twin has no personal activity parameter) scaled by the latest CGM; held-out test MAE 4.3 mg/dL at +120 min against
               11.6 for assuming no effect. It reflects the simulator's built-in exercise model. Neither is real-data evidence, neither changes
               the served forecast, and "untested" marks inputs outside the 20–120 g / CGM ≤180 mg/dL test range. Details:

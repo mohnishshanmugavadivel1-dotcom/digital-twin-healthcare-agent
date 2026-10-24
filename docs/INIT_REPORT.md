@@ -1,5 +1,7 @@
 # Initial audit, agent assignments and status (2026-10-17)
 
+> **Note (Historical Sprint Record):** This document is preserved as an engineering development log from earlier waves. For final release metrics (161 Python tests, 50 frontend tests, 83 browser checks, and validated twin-curve / real-data benchmarks), see the root [README.md](../README.md).
+
 ## Repository and environment audit (verified)
 
 * Repo at start: `README.md` containing only the repository name; a single commit (`4a487f1`) on `main`; clean tree. There was no existing code to preserve.

@@ -36,11 +36,22 @@ for (const [label, w, h, mobile] of [["desktop", 1366, 900, false], ["phone", 39
   ok(`${label}: GI badge shown for the chosen preset, with its source note`, !!badge && /GI/.test(badge[0]) && /indicative/i.test(badge[1]), JSON.stringify(badge));
   const row = await p.evaluate(() => { const r = document.querySelector(".sim-table tbody tr"); return [...r.querySelectorAll("td")].map((c) => c.textContent.trim()); });
   const head = await p.evaluate(() => document.querySelector(".sim-table thead").innerText);
-  // 35 g at 07:55: served tree Δ+120 = +10.7 (unchanged), research curve Δ+120 = +60.0 (API, 2026-10-23)
-  ok(`${label}: tree Δ+120 unchanged and twin curve beside it`, row[3] === "+10.7" && row.includes("+60.0") && /twin curve \(research\)/i.test(head), JSON.stringify(row));
-  await p.evaluate(() => document.querySelector(".walk-toggle input").click()); await sleep(300);
+  // 35 g at 07:55: research curve Δ+60/+120 = +42.5/+60.0 (primary, first after Meal), walk +48.8 (−11.2),
+  // served tree Δ+30/+60/+120 = +7.9/+29.9/+10.7 (unchanged values, now secondary columns) (API, 2026-10-23)
+  // Layout changed on 2026-10-24 at the team's request: twin curve first and bold, tree columns after it.
+  ok(`${label}: twin curve is the primary block right after Meal; tree deltas unchanged, to the right`,
+    row[1] === "+42.5" && row[2] === "+60.0" && /^\+48\.8/.test(row[3]) && row[4] === "+7.9" && row[5] === "+29.9" && row[6] === "+10.7"
+      && /twin curve \(primary/i.test(head) && /tree model — attenuated/i.test(head) && head.search(/twin curve/i) < head.search(/tree model/i), JSON.stringify(row));
+  const bold = await p.evaluate(() => [...document.querySelectorAll(".sim-table tbody tr:first-child td.sim-primary")].map((c) => getComputedStyle(c).fontWeight));
+  ok(`${label}: the three primary twin-curve cells are bold`, bold.length === 3 && bold.every((w) => Number(w) >= 700), JSON.stringify(bold));
+  const lead = await p.evaluate(() => document.querySelector(".whatif-lead")?.textContent ?? "");
+  ok(`${label}: lead sentence above the table states the 5.9 vs 37.3 mg/dL basis`,
+    lead.startsWith("Primary meal & walk deltas below use the patient's validated Personalised Twin Response Curve (5.9 mg/dL MAE at +120m on held-out simulator truth)") && /37\.3 mg\/dL MAE/.test(lead), lead.slice(0, 80));
   const walk = await p.evaluate(() => { const r = document.querySelector(".sim-table tbody tr"); return [...r.querySelectorAll("td.sim-twin")].map((c) => c.textContent.trim()); });
-  ok(`${label}: walk toggle adds meal + walk with the walk's own effect`, walk.length === 3 && /\+48\.8/.test(walk[2]) && /walk −?-?11\.2|walk -11\.2/.test(walk[2]), JSON.stringify(walk));
+  ok(`${label}: walk column shown by default with the walk's own effect`, walk.length === 3 && /\+48\.8/.test(walk[2]) && /walk −?-?11\.2|walk -11\.2/.test(walk[2]), JSON.stringify(walk));
+  await p.evaluate(() => document.querySelector(".walk-toggle input").click()); await sleep(300);
+  const nowalk = await p.evaluate(() => document.querySelectorAll(".sim-table tbody tr:first-child td.sim-twin").length);
+  ok(`${label}: walk toggle hides the walk column`, nowalk === 2, String(nowalk));
   const agp = await p.evaluate(() => { const c = document.querySelector(".agp-card"); return c ? { txt: c.innerText, polys: c.querySelectorAll("polygon").length, med: !!c.querySelector("polyline") } : null; });
   ok(`${label}: AGP card with percentile bands, TIR, GMI and the sufficiency caveat`, !!agp && agp.polys === 2 && agp.med && /time in range/i.test(agp.txt) && /GMI/.test(agp.txt) && /below its 14-day/i.test(agp.txt), agp ? agp.txt.slice(0, 120).replace(/\n/g, " | ") : "");
   const ho = await p.evaluate(() => { const c = document.querySelector("details.handover.card"); return c ? c.innerText : null; });

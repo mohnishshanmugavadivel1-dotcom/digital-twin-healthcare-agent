@@ -61,8 +61,10 @@ export default function App() {
               <summary>What was recorded</summary>
               Meal presets every {snapshot?.preset_grid_minutes ?? 15} min of each replay, and every amount ({snapshot?.whatif_grams.join(", ")} g)
               at the marked moments; other requests say they were not recorded instead of guessing. The FHIR export is recorded once, at the
-              replay start. {snapshot && <>Scenarios: {snapshot.scenarios.map((sc, i) => (
-                <span key={sc.id}>{i > 0 && " · "}<a href={`?patient=${sc.patient_id}`} title={sc.description}>{sc.title}</a></span>))}. </>}
+              replay start. {snapshot && <>Full replays: {snapshot.scenarios.filter((sc) => sc.kind !== "moment").map((sc, i) => (
+                <span key={sc.id}>{i > 0 && " · "}<a href={`?patient=${sc.patient_id}`} title={sc.description}>{sc.title}</a></span>))}.
+                {" "}{snapshot.scenarios.some((sc) => sc.kind === "moment") && <>The other {snapshot.scenarios.filter((sc) => sc.kind === "moment").length} held-out
+                patients each have one recorded moment (24 h into their data) with every What-If amount. </>}</>}
               For the full interactive app, run it locally (<code>make setup train serve</code>).
             </details>
           </div>
@@ -89,6 +91,7 @@ export default function App() {
           </aside>
           <main className="content">
             {selected ? <PatientView key={selected} patientId={selected} onTick={loadPatients}
+              staticNote={snapshot?.scenarios.find((sc) => sc.patient_id === selected && sc.kind === "moment")?.description}
               startOffsetHours={selected === linkPatient && Number.isFinite(linkStart) && linkStart > 0 ? linkStart : 24} /> : <div className="card muted">Select a patient.</div>}
           </main>
         </div>

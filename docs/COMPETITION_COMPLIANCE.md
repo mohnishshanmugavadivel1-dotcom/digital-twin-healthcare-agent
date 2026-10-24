@@ -1,5 +1,7 @@
 # Competition compliance: requirement-to-evidence checklist
 
+> **Note (Historical Sprint Record):** This document is preserved as an engineering development log from earlier waves. For final release metrics (161 Python tests, 50 frontend tests, 83 browser checks, and validated twin-curve / real-data benchmarks), see the root [README.md](../README.md).
+
 **Verified on 2026-10-17** against the organiser's own listing. Two URLs serve the same Unstop record:
 
 * Human page: https://unstop.com/hackathons/crp-digital-twin-challenge-2026-happiest-health-1757873. Its description is truncated at "Read More".
