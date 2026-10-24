@@ -9,7 +9,34 @@
 ## 🚀 Live Deployment
 The interactive dashboard is deployed and running live on Hugging Face Spaces:
 🔗 [Launch Live App on Hugging Face](https://huggingface.co/spaces/Mohnish2007/digital-twin-healthcare-agent)
+[ ## 🕹️ How to Evaluate & Run Locally
 
+To view the complete interactive data generation and advanced simulation loops for all 12 patient profiles, please run the project locally. The live web deployments serve as a functional UI showcase with two pre-loaded tracking profiles (Farah & Anil).
+
+### 🛠️ Local Installation & Launch
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/mohnishshanmugavadivel1-dotcom/digital-twin-healthcare-agent.git
+   cd digital-twin-healthcare-agent
+   ```
+
+2. **Navigate to the frontend environment:**
+   ```bash
+   cd frontend
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+4. **Launch the local development server:**
+   ```bash
+   npm run dev
+   ```
+   Once the development server is active, open the local address in your browser to evaluate all 12 patient matrices with full data generation pipelines.
+]
 | What | Result (held-out test patients; source in brackets) |
 |---|---|
 | Synthetic benchmark | 30-min glucose RMSE **10.4** mg/dL (served gradient boosting; persistence 18.7). Excursion warning AUROC **0.884** (served logistic regression) / 0.936 (opt-in gradient boosting); **85-min median lead time** for the 69% of onsets that get a sustained warning ([evaluation](reports/evaluation_report.json), [audit](reports/audit_report.json)) |
