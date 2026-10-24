@@ -1,7 +1,7 @@
 {
-  "schema_version": "0.1.0",
-  "generated_at": "2026-10-17T18:10:01.621682Z",
-  "model_version": "gt-0.1.0-s20261017-202610171810",
+  "schema_version": "0.2.0",
+  "generated_at": "2026-10-17T18:29:26.415338Z",
+  "model_version": "gt-0.1.0-s20261017-202610171829",
   "dataset": {
     "name": "glucotwin-synthetic-t2d",
     "version": "0.1.0",

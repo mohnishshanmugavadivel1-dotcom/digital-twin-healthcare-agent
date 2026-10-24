@@ -1,5 +1,7 @@
 # Prioritised backlog, dependency graph and risk register
 
+**Wave-2 status (2026-10-17):** B-02 DONE (official rules in COMPETITION_COMPLIANCE.md) · B-03 DONE (`docs/submission/GlucoTwin_Architecture.pdf`) · B-04 DONE except team details (`docs/submission/GlucoTwin_Presentation.pdf`) · B-09 DONE (patient-bootstrap CIs, `glucotwin audit`) · B-11 DONE (`scripts/find_demo_scenario.py`) · B-14 partly (pytest CVE fixed; TestClient deprecation remains) · B-01, B-06 BLOCKED on the team. New items: B-19 decide whether to drop record features from the event model (ablation: AUROC 0.884 → 0.907 without them, confirm across seeds first); B-20 derive synthetic HbA1c from a pre-monitoring period instead of the evaluated window.
+
 Deadline: **20 Oct 2026, 09:30 EDT / 19:00 IST**. P0 = needed for a valid submission; P1 = strongly improves the score;
 P2 = after submission (jury round).
 
@@ -12,7 +14,7 @@ P2 = after submission (jury round).
 | B-03 | P0 | Export the architecture diagram to PDF (render the Mermaid in ARCHITECTURE.md) | G | – | S |
 | B-04 | P0 | Presentation deck (PDF/PPT) from the outline in COMPETITION.md, using real numbers from the report | G | B-02 | M |
 | B-05 | P1 | `scripts/fetch_shanghai_t2dm.py` adapter + 15-min plausibility check (only if the rules allow it) | A + C | B-02 | M |
-| B-06 | P0 | Record the 15–20 minute demo video (script in COMPETITION.md); choose a hero patient and timestamp | G + E | B-11 | M |
+| B-06 | P0 | Record the **≥ 20-minute** demo video (script: DEMO_SCRIPT.md; hero and failure scenes chosen and verified) | G + E | B-11 | M |
 | B-07 | P1 | Serve HGB for the event task with TreeSHAP group attributions; compare faithfulness with the logistic-regression groups | C | – | M |
 | B-08 | P1 | Within-patient chronological evaluation with a 120-min embargo (quantifies the value of personalisation) | C | – | S |
 | B-09 | P1 | Patient-bootstrap 95% confidence intervals for all reported metrics | C | – | S |

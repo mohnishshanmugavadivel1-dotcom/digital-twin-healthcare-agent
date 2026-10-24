@@ -3,14 +3,18 @@ import { api } from "./api/client";
 import type { HealthStatus, PatientSummary } from "./api/types";
 import { EvaluationView } from "./components/EvaluationView";
 import { PatientView } from "./components/PatientView";
-import { glucoseClass, num } from "./format";
+import { glucoseClass, num, riskPct } from "./format";
 
 type Tab = "patients" | "evaluation";
 
 export default function App() {
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [patients, setPatients] = useState<PatientSummary[]>([]);
-  const [selected, setSelected] = useState<string | null>(null);
+  // Deep link for reproducible demos: ?patient=SYN-0004&start=36 (replay starts 36 h into the record)
+  const params = new URLSearchParams(window.location.search);
+  const linkPatient = params.get("patient");
+  const linkStart = Number(params.get("start"));
+  const [selected, setSelected] = useState<string | null>(linkPatient);
   const [tab, setTab] = useState<Tab>("patients");
   const [error, setError] = useState<string | null>(null);
   const [threshold, setThreshold] = useState(0.5);
@@ -54,14 +58,15 @@ export default function App() {
                   <div className="pt-meta">{p.age_years} y · {p.sex[0].toUpperCase()} · HbA1c {p.hba1c_percent}%</div>
                   <div className="pt-meta">
                     <span className={glucoseClass(p.latest_glucose_mg_dl)}>{num(p.latest_glucose_mg_dl)} mg/dL</span>
-                    {risk !== null && <span className={`dot ${risk >= threshold ? "dot-high" : risk >= threshold / 2 ? "dot-mod" : "dot-low"}`} title="Latest excursion risk">{Math.round(risk * 100)}%</span>}
+                    {risk !== null && <span className={`dot ${risk >= threshold ? "dot-high" : risk >= threshold / 2 ? "dot-mod" : "dot-low"}`} title="Latest excursion risk">{riskPct(risk)}</span>}
                   </div>
                 </button>
               );
             })}
           </aside>
           <main className="content">
-            {selected ? <PatientView key={selected} patientId={selected} onTick={loadPatients} /> : <div className="card muted">Select a patient.</div>}
+            {selected ? <PatientView key={selected} patientId={selected} onTick={loadPatients}
+              startOffsetHours={selected === linkPatient && Number.isFinite(linkStart) && linkStart > 0 ? linkStart : 24} /> : <div className="card muted">Select a patient.</div>}
           </main>
         </div>
       )}

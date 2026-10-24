@@ -71,3 +71,15 @@ def test_model_card_and_evaluation(client):
     rep = client.get("/api/evaluation").json()
     assert rep["dataset"]["is_synthetic"] is True
     assert {t["model"] for t in rep["trajectory"]} >= {"persistence", "damped_trend"}
+
+
+def test_replay_limited_to_held_out_patients(client, service):
+    train_pid = next(r.patient_id for r in service.cohort.records if r.split == "train")
+    r = client.post("/api/replay", json={"patient_id": train_pid})
+    assert r.status_code == 404 and "test patient" in r.json()["detail"]
+
+
+def test_replay_bounds_rejected_not_500(client, service):
+    pid = service.demo_patient_ids()[0]
+    assert client.post("/api/replay", json={"patient_id": pid, "start_offset_hours": 1e12}).status_code == 422
+    assert client.post("/api/replay", json={"patient_id": pid, "duration_hours": 1e15}).status_code == 422

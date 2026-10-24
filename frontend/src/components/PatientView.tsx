@@ -15,7 +15,7 @@ const SPEEDS = [
   { label: "1 h / tick", minutes: 60 },
 ];
 
-export function PatientView({ patientId, onTick }: { patientId: string; onTick: () => void }) {
+export function PatientView({ patientId, onTick, startOffsetHours = 24 }: { patientId: string; onTick: () => void; startOffsetHours?: number }) {
   const [record, setRecord] = useState<PatientRecord | null>(null);
   const [replay, setReplay] = useState<ReplayStatus | null>(null);
   const [state, setState] = useState<TwinState | null>(null);
@@ -44,11 +44,11 @@ export function PatientView({ patientId, onTick }: { patientId: string; onTick: 
     setPlaying(false);
     setError(null);
     try {
-      const [rec, status] = await Promise.all([api.patient(patientId), api.createReplay(patientId, 24)]);
+      const [rec, status] = await Promise.all([api.patient(patientId), api.createReplay(patientId, startOffsetHours)]);
       setRecord(rec);
       await refresh(status);
     } catch (e) { setError(String(e)); }
-  }, [patientId, refresh]);
+  }, [patientId, refresh, startOffsetHours]);
 
   useEffect(() => { void start(); }, [start]);
 
@@ -89,6 +89,13 @@ export function PatientView({ patientId, onTick }: { patientId: string; onTick: 
             {record.medications.map((m) => <span key={m.name} className="chip" title={m.drug_class}>{m.name} {m.dose}</span>)}
           </div>
           <div className="muted small">{record.conditions.join(" · ")}</div>
+          {(record.genetic_markers?.length || record.family_history_t2d != null) && (
+            <div className="muted small" title="Synthetic, display-only: no simulated effect and not used by the model">
+              Family history of T2D: {record.family_history_t2d ? "yes" : "no"}
+              {record.genetic_markers?.map((g) => ` · ${g.gene} ${g.variant} ${g.genotype}`).join("")}
+              {" "}(synthetic, context only; not a model input)
+            </div>
+          )}
         </div>
         <div className="replay">
           <div className="clock" aria-live="polite">{fmtDateTime(clockMs, offset)} <span className="muted tiny">local ({fmtOffset(offset)})</span></div>

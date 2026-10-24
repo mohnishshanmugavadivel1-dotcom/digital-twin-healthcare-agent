@@ -90,3 +90,11 @@ The 80% conformal interval coverage on test is 0.78 / 0.76 / 0.78 / 0.80, close 
 * Prevalence differs across splits (train 24.6%, validation 27.2%, test 14.6%) because each split has only 12 patients.
   Confidence intervals by patient bootstrap are backlog item B-09.
 * Absolute numbers are optimistic. See the feasibility report: the simulator is more predictable than real data.
+
+## Wave-2 robustness audit (2026-10-17)
+
+`glucotwin audit` (`src/glucotwin/evaluation/audit.py`) independently re-implements the protocol, verifies that it reproduces
+`evaluation_report.json` exactly, and adds patient-bootstrap 95% CIs, a **sustained** warning metric (the alert must still be on at the last
+eligible prediction before onset), ablations (no record / no HbA1c+FPG / no meal features), three extra cohort seeds, and a stress test with
+harder observation realism (`Realism(meal_log_prob=0.6, carb_log_sigma=0.5, meal_log_delay_max_min=45, cgm_noise_sd=7.0)`).
+Results and findings: [AUDIT_WAVE2.md](AUDIT_WAVE2.md). The served model and headline report are unchanged.

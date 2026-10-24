@@ -43,3 +43,7 @@ export function glucoseClass(g: number | null | undefined) {
   if (g > 180) return "g-high";
   return "g-ok";
 }
+
+/** Risk as a percentage that never displays false certainty: >99% / <1% at the extremes. */
+export const riskPct = (v: number | null | undefined) =>
+  v === null || v === undefined ? "–" : v >= 0.995 ? ">99%" : v < 0.005 ? "<1%" : `${Math.round(v * 100)}%`;

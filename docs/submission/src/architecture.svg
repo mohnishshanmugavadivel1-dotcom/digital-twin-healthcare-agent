@@ -1,0 +1,176 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" font-family="Inter, 'Segoe UI', Roboto, Arial, sans-serif">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#334155"/>
+    </marker>
+    <style>
+      .box{fill:#fff;stroke:#334155;stroke-width:1.6;rx:10}
+      .in{fill:#eef6ff}.st{fill:#effaf3}.ml{fill:#fff7ed}.ui{fill:#f5f3ff}.off{fill:#f8fafc}
+      .plan{fill:#fff;stroke:#94a3b8;stroke-dasharray:7 5;stroke-width:1.6}
+      .t{font-size:17px;font-weight:700;fill:#0f172a}
+      .s{font-size:13px;fill:#334155}
+      .m{font-size:12px;fill:#64748b}
+      .lane{font-size:13px;font-weight:700;fill:#64748b;letter-spacing:.08em}
+      .a{stroke:#334155;stroke-width:1.8;fill:none;marker-end:url(#ar)}
+      .ad{stroke:#334155;stroke-width:1.6;fill:none;stroke-dasharray:5 4;marker-end:url(#ar)}
+      .lbl{font-size:11.5px;fill:#475569}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#ffffff"/>
+  <text x="30" y="40" font-size="26" font-weight="800" fill="#0f172a">GlucoTwin: architecture (v0.2, as implemented)</text>
+  <text x="30" y="66" class="m">Research prototype on synthetic patients. Not a medical device. Solid boxes = implemented and tested; dashed = planned, not implemented.</text>
+
+  <text x="30" y="98" class="lane">1 · INPUTS (SYNTHETIC)</text>
+  <text x="330" y="98" class="lane">2 · STREAM</text>
+  <text x="630" y="98" class="lane">3 · TWIN STATE</text>
+  <text x="930" y="98" class="lane">4 · PREDICTION</text>
+  <text x="1230" y="98" class="lane">5 · CLINICIAN</text>
+
+  <!-- column 1 -->
+  <rect class="box in" x="30" y="112" width="260" height="128"/>
+  <text x="46" y="138" class="t">Synthetic cohort generator</text>
+  <text x="46" y="160" class="s">Bergman-type minimal model,</text>
+  <text x="46" y="177" class="s">1-min steps; meals, activity, dawn</text>
+  <text x="46" y="194" class="s">effect, unobserved stress days</text>
+  <text x="46" y="216" class="m">Hidden physiology never exposed</text>
+  <text x="46" y="231" class="m">to models or the API · seeded</text>
+
+  <rect class="box in" x="30" y="282" width="260" height="140"/>
+  <text x="46" y="308" class="t">Static: simulated EHR</text>
+  <text x="46" y="330" class="s">Demographics, diagnoses, labs</text>
+  <text x="46" y="347" class="s">(HbA1c, FPG, eGFR, lipids),</text>
+  <text x="46" y="364" class="s">medications, family history,</text>
+  <text x="46" y="381" class="s">TCF7L2 genotype*</text>
+  <text x="46" y="408" class="m">*display-only, not a model input</text>
+
+  <rect class="box in" x="30" y="464" width="260" height="124"/>
+  <text x="46" y="490" class="t">Dynamic: sensor stream</text>
+  <text x="46" y="512" class="s">CGM every 5 min (lag, bias, noise,</text>
+  <text x="46" y="529" class="s">dropouts) · steps · heart rate ·</text>
+  <text x="46" y="546" class="s">meal logs (carb error, 10 % unlogged)</text>
+  <text x="46" y="572" class="m">60 patients × 14 days</text>
+
+  <!-- column 2 -->
+  <rect class="box st" x="330" y="352" width="260" height="176"/>
+  <text x="346" y="378" class="t">Chronological replay</text>
+  <text x="346" y="398" class="t">&amp; ingestion</text>
+  <text x="346" y="422" class="s">Replay clock reveals only data</text>
+  <text x="346" y="439" class="s">≤ "now" (test patients only)</text>
+  <text x="346" y="461" class="s">Validation: ranges, units,</text>
+  <text x="346" y="478" class="s">duplicates (idempotent),</text>
+  <text x="346" y="495" class="s">out-of-order rejected</text>
+  <text x="346" y="516" class="m">POST /api/replay · /observations</text>
+
+  <!-- column 3 -->
+  <rect class="box st" x="630" y="320" width="260" height="240"/>
+  <text x="646" y="346" class="t">Patient state engine</text>
+  <text x="646" y="366" class="m">TwinEngine · versioned TwinState</text>
+  <text x="646" y="392" class="s">Updated on every observation:</text>
+  <text x="646" y="412" class="s">• glucose + trend</text>
+  <text x="646" y="430" class="s">• 24 h TIR / TAR / TBR, mean, CV</text>
+  <text x="646" y="448" class="s">• meals, carbs on board, activity</text>
+  <text x="646" y="466" class="s">• personal carb sensitivity</text>
+  <text x="646" y="483" class="s">  (EHR prior + observed meals)</text>
+  <text x="646" y="501" class="s">• data quality, staleness</text>
+  <text x="646" y="540" class="m">Forecast withheld if data insufficient</text>
+
+  <!-- column 4 -->
+  <rect class="box ml" x="930" y="170" width="260" height="110"/>
+  <text x="946" y="196" class="t">Feature builder</text>
+  <text x="946" y="218" class="s">33 causal features, obs ≤ t only</text>
+  <text x="946" y="235" class="s">Same code offline and online</text>
+  <text x="946" y="256" class="m">Parity + truncation tests</text>
+
+  <rect class="box ml" x="930" y="320" width="260" height="240"/>
+  <text x="946" y="346" class="t">Prediction service</text>
+  <text x="946" y="372" class="s">Trajectory: gradient boosting,</text>
+  <text x="946" y="389" class="s">30 / 60 / 90 / 120 min + split-</text>
+  <text x="946" y="406" class="s">conformal 80 % interval</text>
+  <text x="946" y="432" class="s">Event: logistic regression,</text>
+  <text x="946" y="449" class="s">P(excursion onset ≤ 120 min)</text>
+  <text x="946" y="466" class="s">Alert if ≥ 0.35 (set on validation)</text>
+  <text x="946" y="492" class="s">Grouped additive explanations</text>
+  <text x="946" y="509" class="s">(log-odds by clinical group)</text>
+  <text x="946" y="540" class="m">Asked only when glucose ≤ 180</text>
+
+  <!-- column 5 -->
+  <rect class="box ui" x="1230" y="170" width="340" height="110"/>
+  <text x="1246" y="196" class="t">FastAPI REST API</text>
+  <text x="1246" y="218" class="s">Pydantic contracts (schema 0.2.0)</text>
+  <text x="1246" y="235" class="s">patients · state · forecast(s) · replay</text>
+  <text x="1246" y="252" class="s">model card · evaluation</text>
+
+  <rect class="box ui" x="1230" y="320" width="340" height="240"/>
+  <text x="1246" y="346" class="t">Clinician dashboard (React)</text>
+  <text x="1246" y="372" class="s">• Excursion risk %, alert, top factor groups</text>
+  <text x="1246" y="392" class="s">• Glucose: last 12 h + 2 h forecast band</text>
+  <text x="1246" y="412" class="s">• Earlier predictions vs what happened</text>
+  <text x="1246" y="432" class="s">• Risk history, twin state, data quality</text>
+  <text x="1246" y="452" class="s">• Replay: play, +5 min, +1 h, restart</text>
+  <text x="1246" y="472" class="s">• Evaluation tab: all baselines, limits</text>
+  <text x="1246" y="502" class="s">Persistent "synthetic, not a medical</text>
+  <text x="1246" y="519" class="s">device" banner; no treatment advice</text>
+
+  <!-- offline lane -->
+  <text x="330" y="628" class="lane">6 · OFFLINE TRAINING &amp; EVALUATION</text>
+  <rect class="box off" x="330" y="642" width="430" height="150"/>
+  <text x="346" y="668" class="t">Training pipeline · glucotwin train</text>
+  <text x="346" y="692" class="s">Patient-level split 36 / 12 / 12 (no patient in two splits)</text>
+  <text x="346" y="711" class="s">Fit on train · model choice, threshold, conformal on</text>
+  <text x="346" y="730" class="s">validation · test evaluated once · fixed seed</text>
+  <text x="346" y="752" class="s">Baselines: persistence, damped trend, ridge, trend rule</text>
+  <text x="346" y="778" class="m">Deterministic: clean-clone rerun gives identical metrics</text>
+
+  <rect class="box off" x="800" y="642" width="250" height="150"/>
+  <text x="816" y="668" class="t">Model bundle</text>
+  <text x="816" y="692" class="s">artifacts/model_bundle.pkl</text>
+  <text x="816" y="711" class="s">models, threshold, interval</text>
+  <text x="816" y="730" class="s">widths, cohort seed</text>
+  <text x="816" y="778" class="m">local-only (pickle)</text>
+
+  <rect class="box off" x="1090" y="642" width="480" height="150"/>
+  <text x="1106" y="668" class="t">Evaluation &amp; audit reports</text>
+  <text x="1106" y="692" class="s">evaluation_report.json: RMSE, MARD, Clarke, coverage,</text>
+  <text x="1106" y="711" class="s">AUROC/AUPRC, warnings, lead time, false alerts/day</text>
+  <text x="1106" y="730" class="s">audit_report.json (glucotwin audit): bootstrap CIs,</text>
+  <text x="1106" y="749" class="s">sustained warnings, ablations, seeds, stress test</text>
+  <text x="1106" y="778" class="m">Synthetic results only; not clinical validation</text>
+
+  <!-- planned -->
+  <rect class="plan" x="30" y="642" width="260" height="226" rx="10"/>
+  <text x="46" y="668" class="t" fill="#64748b">Planned (not built)</text>
+  <text x="46" y="692" class="s">• Open-data check (ShanghaiT2DM,</text>
+  <text x="46" y="709" class="s">  CC BY 4.0)</text>
+  <text x="46" y="729" class="s">• HGB + TreeSHAP event model</text>
+  <text x="46" y="749" class="s">• HRV, sleep stages streams</text>
+  <text x="46" y="769" class="s">• What-if simulation</text>
+  <text x="46" y="789" class="s">• Database, auth, audit log,</text>
+  <text x="46" y="806" class="s">  FHIR export</text>
+  <text x="46" y="826" class="s">• Hypoglycaemia as 2nd event</text>
+  <text x="46" y="852" class="m">See docs/BACKLOG.md</text>
+
+  <!-- arrows -->
+  <path class="a" d="M160,240 L160,280"/>
+  <path class="a" d="M290,526 L330,486"/>
+  <path class="a" d="M290,330 L628,330"/>
+  <text x="400" y="322" class="lbl">record (static context, EHR prior)</text>
+  <path class="a" d="M590,440 L628,440"/>
+  <path class="a" d="M890,440 L928,440"/>
+  <text x="893" y="432" class="lbl">state</text>
+  <path class="a" d="M760,320 L760,225 L928,225"/>
+  <text x="770" y="216" class="lbl">history ≤ t</text>
+  <path class="a" d="M1060,280 L1060,318"/>
+  <path class="a" d="M1400,280 L1400,318"/>
+  <text x="1408" y="303" class="lbl">JSON (relative /api)</text>
+  <path class="a" d="M1190,400 C1210,400 1210,250 1228,250"/>
+  <text x="1196" y="314" class="lbl">forecast</text>
+  <path class="a" d="M290,150 C315,150 315,700 328,700"/>
+  <text x="298" y="612" class="lbl">cohort</text>
+  <path class="a" d="M760,717 L798,717"/>
+  <path class="a" d="M925,642 L1000,562"/>
+  <text x="900" y="604" class="lbl">loaded by</text>
+  <path class="a" d="M760,770 C900,830 1000,830 1088,770"/>
+  <path class="a" d="M1570,700 L1590,700 L1590,225 L1572,225"/>
+  <text x="1420" y="630" class="lbl">served via /api/evaluation</text>
+  <path class="a" d="M160,422 L160,462"/>
+</svg>

@@ -99,7 +99,7 @@ class TwinService:
     def _warm(self, pid: str, hours: float) -> pd.Timestamp:
         obs = self._obs_by_patient[pid]
         start = obs["timestamp"].min().floor("5min")
-        clock = start + pd.Timedelta(hours=hours)
+        clock = (start + pd.Timedelta(hours=hours)).round("5min")  # stay on the CGM grid for fractional offsets
         eng = self.engines[pid]
         eng.reset()
         eng.ingest_frame(obs[obs["timestamp"] <= clock], forecast_mode="last")
@@ -109,6 +109,9 @@ class TwinService:
         with self.lock:
             if pid not in self.engines:
                 raise NotFound(pid)
+            if pid not in self.demo_patient_ids():
+                # replaying a train/validation patient would show in-sample predictions as if held out
+                raise NotFound(f"{pid} is not a held-out test patient; replay is limited to the test split")
             # one active session per patient: creating a new one supersedes old ones
             for sid in [s for s, sess in self.sessions.items() if sess.patient_id == pid]:
                 del self.sessions[sid]

@@ -25,7 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from glucotwin.config import DISCLAIMER
 
-SCHEMA_VERSION = "0.1.0"
+SCHEMA_VERSION = "0.2.0"  # 0.2.0: genetic_markers/family history on PatientRecord; replay bounds
 
 PatientId = str  # pattern: ^SYN-\d{4}$
 
@@ -66,6 +66,16 @@ class LabResult(_Model):
     _tz = field_validator("measured_at")(_require_tz)
 
 
+class GeneticMarker(_Model):
+    """Synthetic genotype entry. In v0.2 it is display-only: no physiological effect, not a model input."""
+
+    gene: str
+    variant: str
+    genotype: str
+    risk_alleles: int = Field(ge=0, le=2)
+    note: str = "synthetic; display-only (no simulated effect, not used by the model)"
+
+
 class PatientRecord(_Model):
     """Historical, slowly-changing record. Observable by a clinician."""
 
@@ -85,6 +95,8 @@ class PatientRecord(_Model):
     conditions: list[str] = Field(default_factory=list)
     medications: list[Medication] = Field(default_factory=list)
     labs: list[LabResult] = Field(default_factory=list)
+    family_history_t2d: bool | None = None
+    genetic_markers: list[GeneticMarker] = Field(default_factory=list)
     utc_offset_minutes: int = 330  # Asia/Kolkata
     split: Literal["train", "validation", "test"] | None = None
 
@@ -252,8 +264,8 @@ class ForecastSummary(_Model):
 # ---------------------------------------------------------------------------
 class ReplayCreate(_Model):
     patient_id: PatientId
-    start_offset_hours: float = Field(default=24.0, ge=0, description="Warm-up history pre-loaded before replay")
-    duration_hours: float | None = Field(default=None, gt=0)
+    start_offset_hours: float = Field(default=24.0, ge=0, le=24 * 366, description="Warm-up history pre-loaded before replay")
+    duration_hours: float | None = Field(default=None, gt=0, le=24 * 366)
 
 
 class ReplayStep(_Model):
