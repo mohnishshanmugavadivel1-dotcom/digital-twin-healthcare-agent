@@ -109,3 +109,33 @@ tr.served td { background: #f4f7ff; }
 .hz-v{font-size:16px;font-weight:700}
 .fresh{display:inline-block;margin-left:10px;font-size:11.5px;font-weight:600;color:#2f9e44;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:999px;padding:1px 9px;vertical-align:middle}
 .fresh-stale{color:#b45309;background:#fffbeb;border-color:#fde68a}
+
+/* ---- Scenario lab (counterfactual comparison) ---- */
+.sim-table { flex-basis: 100%; border-collapse: collapse; margin: 2px 0; }
+.sim-table th, .sim-table td { text-align: left; padding: 2px 10px 2px 0; border-bottom: 1px solid var(--line, #e4e2dd); }
+.sim-table th { font-weight: 600; color: var(--muted, #6b6a66); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.sim-table td:first-child { font-weight: 600; }
+
+/* ---- Multisensor timeline ---- */
+.sensor-lane { display: flex; align-items: stretch; gap: 8px; margin-top: 6px; }
+.lane-label { flex: 0 0 82px; font-size: 0.72rem; color: var(--muted, #6b6a66); text-align: right; align-self: center; }
+.lane-track { position: relative; flex: 1; height: 26px; background: var(--band, #f4f2ee); border-radius: 4px; overflow: hidden; }
+.lane-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--muted, #6b6a66); }
+.st-dot { position: absolute; bottom: 10px; width: 4px; height: 4px; border-radius: 50%; background: #2563eb; }
+.st-gap { position: absolute; top: 6px; height: 6px; background: rgba(220, 38, 38, 0.35); border-radius: 3px; }
+.st-meal { position: absolute; bottom: 5px; width: 9px; height: 9px; background: #16a34a; transform: translateX(-50%) rotate(45deg); }
+.st-meal.big { width: 12px; height: 12px; bottom: 4px; }
+.st-step { position: absolute; bottom: 0; width: 3px; background: #d97706; border-radius: 2px 2px 0 0; }
+.st-hr { position: absolute; bottom: 10px; width: 4px; height: 4px; border-radius: 50%; background: #9333ea; }
+.st-fc { position: absolute; top: 4px; width: 2px; height: 18px; background: #0f766e; }
+.st-fc.withheld { background: #dc2626; }
+.lane-axis { position: relative; height: 16px; margin-left: 90px; font-size: 0.66rem; color: var(--muted, #6b6a66); }
+.lane-axis span { position: absolute; transform: translateX(-50%); }
+.st-now { position: absolute; top: -110px; width: 2px; height: 110px; background: #1f2937; opacity: 0.55; }
+
+/* ---- Forecast evidence block ---- */
+.evidence { border-top: 1px solid var(--line, #e4e2dd); margin-top: 10px; padding-top: 8px; }
+.ev-list { margin: 4px 0; padding-left: 16px; }
+.ev-list li { margin-bottom: 3px; }
+.ev-past { display: inline-flex; gap: 10px; margin: 0 4px; }
+.ev-past-item { background: var(--band, #f4f2ee); border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
