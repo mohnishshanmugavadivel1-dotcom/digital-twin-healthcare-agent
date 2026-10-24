@@ -11,7 +11,7 @@ The interactive dashboard is deployed and running live on Hugging Face Spaces:
 🔗 [Launch Live App on Hugging Face](https://huggingface.co/spaces/Mohnish2007/digital-twin-healthcare-agent)
 
 
-[ ## 🕹️ How to Evaluate & Run Locally
+## 🕹️ How to Evaluate & Run Locally
 
 To view the complete interactive data generation and advanced simulation loops for all 12 patient profiles, please run the project locally. The live web deployments serve as a functional UI showcase with two pre-loaded tracking profiles (Farah & Anil).
 
@@ -38,7 +38,8 @@ To view the complete interactive data generation and advanced simulation loops f
    npm run dev
    ```
    Once the development server is active, open the local address in your browser to evaluate all 12 patient matrices with full data generation pipelines.
-]
+
+
 | What | Result (held-out test patients; source in brackets) |
 |---|---|
 | Synthetic benchmark | 30-min glucose RMSE **10.4** mg/dL (served gradient boosting; persistence 18.7). Excursion warning AUROC **0.884** (served logistic regression) / 0.936 (opt-in gradient boosting); **85-min median lead time** for the 69% of onsets that get a sustained warning ([evaluation](reports/evaluation_report.json), [audit](reports/audit_report.json)) |
@@ -99,7 +100,7 @@ make setup && make train && make build-frontend && make serve
 # then open http://localhost:8000/?patient=SYN-0039&start=151.833
 ```
 
-**Public static snapshot:** [https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). It is deployed by the manual GitHub Pages workflow ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)), and the site was confirmed loading on 2026-10-23. The public site serves whichever snapshot was last deployed; its `demo/manifest.json` shows the commit and recording time. The snapshot in this repository was recorded on 2026-10-24 (06:12 UTC) from clean commit 902063c (model `gt-0.1.0-s20261017-202610240555`). The two full replays (SYN-0039, SYN-0019) are identical to the previous recording from 55ff96f; only session IDs, the model-version label and a new `kind` field differ. All 12 held-out patients are now clickable: the other 10 each have one recorded moment (24 h into their data, the live app's default start) with the record, forecast, AGP, FHIR export and every What-If amount ([details](docs/STATIC_DEMO.md)). It includes the FHIR panel with its RiskAssessment and handover note, the low-glucose watch (risk card and What-If column), the personalisation confidence line, the personalised twin-curve columns as the primary What-If deltas (with the post-meal walk; tree deltas beside them), all 24 regional meal presets on a 15-min grid, the AGP card and the fact-grounded handover note. There is no demo video yet.
+**Public static snapshot:** [https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). It is deployed by the manual GitHub Pages workflow ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)), and the site was confirmed loading on 2026-10-23. The public site serves whichever snapshot was last deployed; its `demo/manifest.json` shows the commit and recording time. The snapshot in this repository was recorded on 2026-10-24 (06:12 UTC) from clean commit 902063c (model `gt-0.1.0-s20261017-202610240555`). The two full replays (SYN-0039, SYN-0019) are identical to the previous recording from 55ff96f; only session IDs, the model-version label and a new `kind` field differ. All 12 held-out patients are now clickable: the other 10 each have one recorded moment (24 h into their data, the live app's default start) with the record, forecast, AGP, FHIR export and every What-If amount ([details](docs/STATIC_DEMO.md)). It includes the FHIR panel with its RiskAssessment and handover note, the low-glucose watch (risk card and What-If column), the personalisation confidence line, the personalised twin-curve columns as the primary What-If deltas (with the post-meal walk; tree deltas beside them), all 24 regional meal presets on a 15-min grid, the AGP card and the fact-grounded handover note. 
 
 ### 90-second judge walkthrough
 
@@ -114,7 +115,7 @@ All values below come from the recorded snapshot of synthetic patient SYN-0039 (
 | 1:05–1:20 | *Model evaluation* tab, then the [real-data results](#results-at-a-glance) | "On held-out synthetic patients, forecast RMSE is 44–45% lower than persistence at every horizon. Separately, on 100 real people with type 2 diabetes, our glucose-history models beat persistence at every horizon." |
 | 1:20–1:30 | [Limitations](#limitations-and-intended-use) | "It is not clinically validated, and the full twin has not been tested on real patients, because the public data lacks carb grams, steps and heart rate. That is our next step." |
 
-Weakness case worth showing: **SYN-0019** has an unlogged meal. The alert fires only once glucose is already rising (14:50), 45 min before it exceeds 180 mg/dL. Full video script and shot list (not recorded yet): [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md).
+Weakness case worth showing: **SYN-0019** has an unlogged meal. The alert fires only once glucose is already rising (14:50), 45 min before it exceeds 180 mg/dL. Full video script : [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md).
 
 ## Results at a glance
 
@@ -674,59 +675,9 @@ For detailed definitions, confidence intervals, ablations and caveats, consult [
 
 - Python 3.11 or later.
 - Node.js 22.6 or later (required by the frontend test runner's `--experimental-strip-types`; declared in `frontend/package.json` `engines`).
-- npm.
-- Make.
-
-The repository has been developed using pinned Python dependencies and npm lockfile-based frontend installation.
-
-### Install and run
-
-```bash
-make setup
-make train
-make serve
-```
-
-The commands perform the following operations:
-
-| Command | Purpose |
-|---|---|
-| `make setup` | Creates the Python virtual environment and installs pinned Python and frontend dependencies. |
-| `make train` | Generates the deterministic synthetic cohort and trains/evaluates the models. |
-| `make serve` | Builds the dashboard and starts the API and frontend application. |
-| `make check` | Runs the configured lint, test, frontend type-check and build checks. |
-
-The synthetic cohort is configured for 60 patients over 14 days using seed `20261017`.
-
-### Local application URLs
-
-When the server is running:
-
-- Dashboard: [http://localhost:8000](http://localhost:8000)
-- API documentation: [http://localhost:8000/docs](http://localhost:8000/docs)
-- API health endpoint: [http://localhost:8000/api/health](http://localhost:8000/api/health)
-- Vite development server: [http://localhost:5173](http://localhost:5173), when running `make dev-frontend`.
-
-These are local development addresses, not public deployment URLs.
-
-### Alternative setup without Make
-
-```bash
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.lock
-.venv/bin/pip install -e . --no-deps
-.venv/bin/glucotwin train
-
-cd frontend
-npm ci
-npm run build
-cd ..
-
-.venv/bin/glucotwin serve --host 0.0.0.0 --port 8000
-```
-
-On Windows, use the equivalent commands for the active shell and virtual-environment paths.
-
+- npm
+powershell(terminal) commands:
+exactly listed on top of the readme.md
 ## 10. Using the dashboard
 
 1. Select a synthetic test patient from the patient list.
@@ -921,9 +872,9 @@ This section maps the challenge submission requirements to the repository.
 | Architecture diagram in PDF format | [GlucoTwin Architecture PDF](docs/submission/GlucoTwin_Architecture.pdf) |
 | Project presentation in PDF format | [GlucoTwin Presentation PDF](docs/submission/GlucoTwin_Presentation.pdf) |
 | `<TeamName>_<CollegeName>` submission folder | [`team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/`](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/) holds copies of both PDFs ([architecture](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Architecture.pdf), [presentation](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Presentation.pdf)), identical to the files in `docs/submission/`, which stay in place so existing links keep working. |
-| Demo video | **Not recorded yet; no link.** The rules state both "minimum 20 minutes" and "15–20 minutes", so the length must be confirmed with the organisers. Script and shot list with two cuts (18:30 and 23:00): [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md). |
+| Demo video | https://www.youtube.com/watch?v=iVYfoRzdT8M |
 | Real-data research results (aggregate only) | [public/SUMMARY.md](reports/real_data/shanghai_t2dm/public/SUMMARY.md) · protocol: [docs/research/SHANGHAI_T2DM_EXPERIMENT.md](docs/research/SHANGHAI_T2DM_EXPERIMENT.md) |
-| Static demo (recorded snapshot) | Published on GitHub Pages: [live snapshot](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). Build instructions: [docs/STATIC_DEMO.md](docs/STATIC_DEMO.md). |
+| Static demo (recorded snapshot) | Published on GitHub Pages: [live snapshot](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). Build instructions: on top of readme.md |
 | Open-source licence | MIT, [`LICENSE`](LICENSE). See §16 for the copyright line. |
 
 
@@ -957,7 +908,7 @@ Current limitations are collected in one place: [Limitations and intended use](#
 
 ## 18. Submission compliance checklist
 
-Status of the official submission items (rules in [COMPETITION_COMPLIANCE.md](docs/COMPETITION_COMPLIANCE.md)). "Unverified" means it cannot be confirmed from this repository.
+Status of the official submission items (rules in [COMPETITION_COMPLIANCE.md](docs/COMPETITION_COMPLIANCE.md)). "verified"
 
 | Requirement | Status |
 |---|---|
@@ -966,5 +917,5 @@ Status of the official submission items (rules in [COMPETITION_COMPLIANCE.md](do
 | Architecture diagram (PDF) | Done: [docs/submission/GlucoTwin_Architecture.pdf](docs/submission/GlucoTwin_Architecture.pdf) |
 | Presentation (PDF) | Done: [docs/submission/GlucoTwin_Presentation.pdf](docs/submission/GlucoTwin_Presentation.pdf) |
 | Open-source licence | Done: MIT (`LICENSE`), copyright Mohnish Shanmugavadivel (§16) |
-| Demo video (rules say both "minimum 20 minutes" and "15–20 minutes"; confirm with the organisers) | **Not done.** No video and no link yet. Script in [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md). |
-| Submission on the Unstop platform by the team leader | **Unverified.** It cannot be confirmed from this repository. |
+| Demo video  | https://www.youtube.com/watch?v=iVYfoRzdT8M. Script in [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md). |
+| Submission on the Unstop platform by the team leader | verified |
