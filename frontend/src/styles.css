@@ -181,3 +181,36 @@ tr.served td { background: #f4f7ff; }
 .link-button { background: none; border: none; padding: 0; color: var(--accent, #2563eb); text-decoration: underline; cursor: pointer; font: inherit; }
 .fhir-risk { margin: 4px 0 6px; padding-left: 18px; }
 .fhir-risk li { overflow-wrap: anywhere; }
+
+/* ---- Research twin curve, GI badges, AGP and handover note ---- */
+.sim-table .sim-twin { background: #f3f0ff; }
+.sim-table th.sim-twin { color: #5f3dc4; }
+.sim-twin-outside { color: var(--muted); font-style: italic; }
+.walk-toggle { display: inline-flex; gap: 4px; align-items: center; }
+.gi-badge { font-size: 11.5px; border-radius: 10px; padding: 1px 8px; border: 1px solid var(--border); background: #f1f3f7; white-space: nowrap; }
+.gi-low { background: var(--ok-bg); color: var(--ok); border-color: #cfe8d8; }
+.gi-low-medium { background: #eef8e6; color: #4d7c0f; border-color: #d9ecc6; }
+.gi-medium { background: var(--high-bg); color: var(--high); border-color: #f3dcb8; }
+.gi-high { background: var(--low-bg); color: var(--low); border-color: #f1c3bd; }
+.insight-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+@media (max-width: 900px) { .insight-row { grid-template-columns: minmax(0, 1fr); } }
+.agp-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px 12px; margin-bottom: 6px; }
+.agp-stats .stat-label { display: block; font-size: 10.5px; margin: 0; }
+@media (max-width: 520px) { .agp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.agp-chart { width: 100%; height: auto; display: block; }
+.agp-range { fill: var(--ok-bg); }
+.agp-grid { stroke: #d0d6de; stroke-dasharray: 3 3; stroke-width: 1; }
+.agp-tick { font-size: 10px; fill: var(--muted); }
+.agp-outer { fill: rgba(108, 142, 245, .18); stroke: none; }
+.agp-inner { fill: rgba(59, 91, 219, .35); stroke: none; }
+.agp-median { fill: none; stroke: var(--accent); stroke-width: 2; }
+.handover > summary { cursor: pointer; font-weight: 600; }
+.handover.card > summary { font-size: 15px; }
+.handover-compact { margin-top: 6px; }
+.grounding { margin: 6px 0; padding: 4px 8px; border-radius: 6px; }
+.grounding-ok { background: var(--ok-bg); color: var(--ok); }
+.grounding-bad { background: var(--low-bg); color: var(--low); font-weight: 600; }
+.handover-lines { margin: 4px 0; padding-left: 18px; }
+.handover-lines li { margin: 2px 0; overflow-wrap: anywhere; }
+.handover-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: baseline; }
+.handover-sources > summary { display: inline; cursor: pointer; }

@@ -25,11 +25,13 @@ from glucotwin.contracts import (
     PatientRecord,
     PatientSummary,
     ReplayStatus,
+    TwinCurveEstimate,
 )
 from glucotwin.joint_support import CAVEAT, JOINT_FEATURES, load_joint_support
 from glucotwin.models.bundle import ModelBundle
 from glucotwin.synth.generator import Cohort, generate_cohort
 from glucotwin.twin.engine import TwinEngine
+from glucotwin.twin.response_curve import twin_curve_estimate
 
 log = logging.getLogger(__name__)
 
@@ -235,7 +237,17 @@ class TwinService:
                 delta_probability=secondary.delta_probability if secondary else None,
                 primary=primary, secondary=secondary, small_meal_unreliable=small, notes=notes,
                 joint_support=joint,
+                twin_curve=self._twin_curve(eng, meal_grams),
             )
+
+    @staticmethod
+    def _twin_curve(eng: TwinEngine, meal_grams: float) -> TwinCurveEstimate | None:
+        """Research estimate from the twin's own state (learned sensitivity, latest CGM); never alters it."""
+        st = eng.state
+        if st is None:
+            return None
+        return twin_curve_estimate(meal_grams, st.personal.carb_sensitivity_mg_dl_per_g, st.personal.meals_used,
+                                   st.last_glucose_mg_dl)
 
     def _joint_support(self, eng: TwinEngine, meal_grams: float) -> JointSupportCheck:
         """Assess the scenario leg's meal inputs exactly as the models see them (never the reference leg:

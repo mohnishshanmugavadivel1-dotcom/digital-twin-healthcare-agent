@@ -41,7 +41,10 @@ REPO = Path(__file__).resolve().parents[1]
 _spec = importlib.util.spec_from_file_location("tv1", REPO / "scripts/twin_validity_analysis.py")
 v1 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(v1)
-r3, ci, minutes, OFFSETS_H, SEED, BOOT = v1.r3, v1.ci, v1.minutes, v1.OFFSETS_H, v1.SEED, v1.BOOT
+r3, ci, minutes, OFFSETS_H = v1.r3, v1.ci, v1.minutes, v1.OFFSETS_H
+# Bootstrap as registered in protocol_addendum_v2.json / v3: 1,000 patient resamples, seed 20261017.
+# (Until 2026-10-23 this line imported v1's BOOT=2000 / SEED=20261023; see "deviations" in the report.)
+SEED, BOOT = 20261017, 1000
 
 GRAMS_B = (20, 40, 60, 90, 120)
 GRAMS_PRESET = (25, 35, 36, 45, 50)
@@ -535,7 +538,12 @@ def main() -> None:
             },
             "B_exclusions": v1r["B_whatif_ground_truth"]["exclusions"],
         },
-        "deviations": [],
+        "deviations": [
+            "Correction (2026-10-23): reports generated before this date computed every CI with 2,000 patient "
+            "resamples and seed 20261023 (imported from the v1 script), although protocol addenda v2 and v3 "
+            "register 1,000 resamples with seed 20261017 and the report text said 1,000. This run uses the "
+            "registered settings. Point estimates are unaffected; only CI endpoints can change."
+        ],
         "runtime_s": round(time.time() - t0, 1),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

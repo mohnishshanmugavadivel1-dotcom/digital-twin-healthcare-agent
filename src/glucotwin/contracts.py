@@ -147,6 +147,73 @@ class ObservationBatch(_Model):
     observations: list[Observation] = Field(min_length=1, max_length=5000)
 
 
+class AgpHour(_Model):
+    hour: int = Field(ge=0, le=23, description="Hour of the patient's local day")
+    n: int
+    p5: float
+    p25: float
+    p50: float
+    p75: float
+    p95: float
+
+
+class AgpSummary(_Model):
+    """Ambulatory glucose profile of the CGM a twin has received (glucotwin.agp). Descriptive only."""
+
+    patient_id: PatientId
+    as_of: datetime
+    window_days: int
+    days_with_data: float
+    n_readings: int
+    coverage_pct: float
+    sufficient: bool = Field(description=">= 14 days and >= 70% of possible readings (international consensus)")
+    mean_mg_dl: float | None
+    gmi_pct: float | None = Field(description="Glucose management indicator: 3.31 + 0.02392 x mean mg/dL")
+    cv_pct: float | None
+    tir_70_180_pct: float | None
+    tar_181_250_pct: float | None
+    tar_over_250_pct: float | None
+    tbr_54_69_pct: float | None
+    tbr_under_54_pct: float | None
+    hourly: list[AgpHour] = Field(default_factory=list)
+    utc_offset_minutes: int
+    note: str = ("Synthetic CGM. Descriptive summary following the 2019 international consensus metrics; "
+                 "GMI is an estimate from mean glucose, not a laboratory HbA1c. Not a diagnosis.")
+
+
+class FhirIngestSkip(_Model):
+    index: int
+    resource_type: str | None = None
+    reason: str
+
+
+class FhirIngestLab(_Model):
+    loinc: str
+    name: str
+    value: float
+    unit: str
+    effective: datetime
+
+
+class FhirIngestResult(_Model):
+    """POST /api/fhir/Bundle: what GlucoTwin would ingest from a FHIR R4 Bundle (validation only).
+
+    Nothing is written to any twin; send ``observations`` to POST /api/patients/{id}/observations to ingest.
+    A structural parse of the fields GlucoTwin uses; not a full FHIR validation or a compliance claim.
+    """
+
+    patient_id: PatientId
+    entries: int
+    observations: list[Observation] = Field(default_factory=list)
+    labs: list[FhirIngestLab] = Field(default_factory=list)
+    skipped: list[FhirIngestSkip] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    counts: dict[str, int] = Field(default_factory=dict)
+    ingested: Literal[False] = False
+    note: str = ("Validation only: nothing was added to a twin. Structural parse of the fields GlucoTwin uses; "
+                 "not a full FHIR validation, not certified, not a compliance claim.")
+
+
 class IngestResult(_Model):
     accepted: int
     duplicates: int
@@ -407,6 +474,32 @@ class JointSupportCheck(_Model):
     caveat: str = ""
 
 
+class TwinCurveEstimate(_Model):
+    """Research estimate shown next to the tree-model What-If (glucotwin.twin.response_curve).
+
+    Personalised meal curve (protocol addendum v3) and a cohort-level 20-min post-meal walk effect
+    (addendum v4), both scored on held-out synthetic patients against simulator ground truth.
+    Never changes the served forecast or the tree-model deltas.
+    """
+
+    kind: Literal["personalised_curve_research"] = "personalised_curve_research"
+    delta_glucose_mg_dl: dict[str, float] = Field(
+        default_factory=dict, description="Horizon in minutes -> meal-alone glucose change (mg/dL)")
+    walk_delta_glucose_mg_dl: dict[str, float] | None = Field(
+        default=None, description="Horizon -> change added by a 20-min post-meal walk (cohort level)")
+    with_walk_delta_glucose_mg_dl: dict[str, float] | None = Field(
+        default=None, description="Horizon -> meal + walk glucose change (mg/dL)")
+    carb_sensitivity_mg_dl_per_g: float
+    meals_used: int
+    latest_cgm_mg_dl: float | None = None
+    walk: dict[str, float] = Field(default_factory=dict)
+    within_tested_range: bool
+    outside_tested_reasons: list[str] = Field(default_factory=list)
+    test_mae_mg_dl: dict[str, float] = Field(default_factory=dict)
+    walk_test_mae_mg_dl: dict[str, float] = Field(default_factory=dict)
+    caveat: str = ""
+
+
 class CounterfactualResult(_Model):
     """Baseline versus simulated what-if forecast. Strictly a simulated scenario, never advice.
 
@@ -429,6 +522,8 @@ class CounterfactualResult(_Model):
     notes: list[str] = Field(default_factory=list)
     joint_support: JointSupportCheck | None = Field(
         default=None, description="B-23 training-support check of the scenario leg (additive; optional)")
+    twin_curve: TwinCurveEstimate | None = Field(
+        default=None, description="Research estimate: personalised meal curve and post-meal walk effect (additive)")
     is_simulated: Literal[True] = True
     disclaimer: str = (
         "Simulated what-if scenario. The hypothetical meal was never added to the patient record. "

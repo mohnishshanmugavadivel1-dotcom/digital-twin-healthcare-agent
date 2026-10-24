@@ -38,11 +38,13 @@ OBS_LIMIT = 5000  # the dashboard's limit for observations and forecasts
 KINDS = ("cgm", "meal", "steps", "heart_rate")
 # carbs of the editable Indian meal presets (frontend/src/mealPresets.ts; a frontend test keeps them in sync)
 # plus round amounts, including sizes that the B-23 check flags
-PRESET_GRAMS = [25, 35, 36, 40, 45, 50]
+# (the distinct values of presetGrams() in mealPresets.ts: 24 presets, 20 distinct amounts)
+PRESET_GRAMS = [18, 22, 25, 28, 32, 35, 36, 40, 44, 45, 48, 50, 52, 58, 60, 64, 65, 68, 78, 92]
 WHATIF_GRAMS = sorted(set(PRESET_GRAMS) | {30, 60, 90, 120, 200, 300})
 # the preset amounts are also recorded every PRESET_GRID_MIN minutes of each replay (all amounts at whatif_minutes)
 PRESET_GRID_MIN = 15
 FHIR_HOURS = 6  # CGM window of the recorded FHIR export (one export per scenario, at the replay start)
+AGP_DAYS = 14  # window of the recorded glucose profile (one per scenario, at the replay start)
 SCENARIOS = [
     {"id": "early-warning", "patient_id": "SYN-0039", "start_offset_hours": 151.833, "duration_hours": 6.0,
      "whatif_minutes": [0, 60],
@@ -115,6 +117,8 @@ def record_scenario(c: TestClient, sc: dict) -> dict:
         if i == 0:
             fhir = {"frame_index": 0, "hours": FHIR_HOURS,
                     "bundle": ok(c.get(f"/api/patients/{pid}/fhir", params={"hours": FHIR_HOURS}))}
+            agp = {"frame_index": 0, "days": AGP_DAYS,
+                   "summary": ok(c.get(f"/api/patients/{pid}/agp", params={"days": AGP_DAYS}))}
         grams = (WHATIF_GRAMS if i * STEP_MIN in sc["whatif_minutes"]
                  else PRESET_GRAMS if (i * STEP_MIN) % PRESET_GRID_MIN == 0 else [])
         if grams:
@@ -156,7 +160,7 @@ def record_scenario(c: TestClient, sc: dict) -> dict:
         raise SystemExit(f"{sc['id']}: the last recorded frame is not the end of the replay")
     return {**{k: sc[k] for k in ("id", "patient_id", "start_offset_hours", "duration_hours", "title", "description")},
             "step_minutes": STEP_MIN, "record": record, "frames": frames, "summaries": summaries,
-            "observations": observations, "forecasts": forecasts, "whatifs": whatifs, "fhir": fhir,
+            "observations": observations, "forecasts": forecasts, "whatifs": whatifs, "fhir": fhir, "agp": agp,
             "checks": {"probed_frames": sorted(probe_at), "observation_and_forecast_replay_equals_api": True,
                        "step_60_equals_step_5_frames": True,
                        "step_comparison_ignores": ["forecast_id", "session_id",

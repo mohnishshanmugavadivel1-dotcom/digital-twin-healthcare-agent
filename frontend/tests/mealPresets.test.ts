@@ -3,18 +3,33 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 
 import { personalRuleText } from "../src/format.ts";
-import { MEAL_PRESETS, PRESET_NOTE, presetById, scenarioLabel } from "../src/mealPresets.ts";
+import { GI_LABEL, MEAL_PRESETS, PRESET_NOTE, REGIONS, presetById, presetGrams, presetTitle, scenarioLabel } from "../src/mealPresets.ts";
 
-test("presets are plausible, unique, within the API range, with serving sizes and source ranges", () => {
+test("presets are plausible, unique, within the API range, with serving sizes and a stated basis", () => {
   const ids = new Set(MEAL_PRESETS.map((p) => p.id));
   assert.equal(ids.size, MEAL_PRESETS.length);
+  assert.equal(MEAL_PRESETS.length, 24);
   for (const p of MEAL_PRESETS) {
     assert.ok(p.carbs >= 1 && p.carbs <= 300, p.id);
-    // presets are rounded source values: never more than 2.5 g outside what the cited sources report
-    assert.ok(p.range[0] - 2.5 <= p.carbs && p.carbs <= p.range[1] + 2.5, `${p.id} value not backed by its sources`);
     assert.ok(p.serving.length > 3, p.id);
+    assert.ok(REGIONS.includes(p.region), p.id);
+    assert.ok(p.giNote.length > 3 && GI_LABEL[p.gi], p.id);
+    if (p.basis === "cited") {
+      // cited presets are rounded source values: never more than 2.5 g outside what the cited sources report
+      assert.ok(p.range && p.range[0] - 2.5 <= p.carbs && p.carbs <= p.range[1] + 2.5, `${p.id} value not backed by its sources`);
+      assert.match(presetTitle(p), /cited range/);
+    } else {
+      // team estimates must never pose as sourced values
+      assert.equal(p.range, null, p.id);
+      assert.match(presetTitle(p), /team estimate, not source-verified/);
+    }
+    assert.match(presetTitle(p), /indicative/);
   }
+  for (const r of REGIONS) assert.ok(MEAL_PRESETS.some((p) => p.region === r), r);
+  assert.deepEqual(presetGrams(), [...presetGrams()].sort((a, b) => a - b));
   assert.match(PRESET_NOTE, /Approximate/);
+  assert.match(PRESET_NOTE, /team estimates/);
+  assert.match(PRESET_NOTE, /GI badges are indicative/);
   assert.match(PRESET_NOTE, /only sees grams of carbohydrate/);
 });
 
