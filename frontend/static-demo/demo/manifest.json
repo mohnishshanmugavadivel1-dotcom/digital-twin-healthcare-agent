@@ -1,11 +1,11 @@
 {
  "kind": "glucotwin-static-demo-snapshot/1",
  "notice": "Static recorded snapshot of the GlucoTwin research prototype. Every response was recorded from the real API; nothing is computed live. Synthetic patients only. Not a medical device.",
- "recorded_at": "2026-10-23T20:27:26+00:00",
+ "recorded_at": "2026-10-24T06:01:17+00:00",
  "generator": "scripts/export_static_demo.py",
- "git_head": "55ff96f1b2eb5e0a58db8feaa603ecbe546cfb5e",
- "working_tree_dirty_at_recording": false,
- "model_version": "gt-0.1.0-s20261017-202610232010",
+ "git_head": "2a1e08b27ee3d67d15f137f37fc30a5df5a0a449",
+ "working_tree_dirty_at_recording": true,
+ "model_version": "gt-0.1.0-s20261017-202610240555",
  "b23_joint_support_sha256": "8ce57f36bf1a19add2587993fd1a587ba31849c5584ddd5f48cf7f4a26235dd2",
  "whatif_grams": [
   18,
@@ -60,13 +60,13 @@
  "health": {
   "status": "ok",
   "schema_version": "0.2.0",
-  "model_version": "gt-0.1.0-s20261017-202610232010",
+  "model_version": "gt-0.1.0-s20261017-202610240555",
   "patients_available": 12,
   "data_is_synthetic": true
  },
  "model": {
-  "model_version": "gt-0.1.0-s20261017-202610232010",
-  "trained_at": "2026-10-23T20:10:23.130930Z",
+  "model_version": "gt-0.1.0-s20261017-202610240555",
+  "trained_at": "2026-10-24T05:55:27.463768Z",
   "feature_names": [
    "glucose",
    "delta_15",
@@ -382,6 +382,7 @@
   {
    "id": "early-warning",
    "patient_id": "SYN-0039",
+   "kind": "replay",
    "start_offset_hours": 151.833,
    "title": "Early warning before an excursion, plus the what-if lab",
    "description": "Replay starts at 07:55 (glucose 94 mg/dL, excursion risk about 22%, no alert). Step forward to see the alert fire at 08:55, right after the logged 140 g breakfast, 85 min before glucose first exceeds 180 mg/dL (10:20). What-ifs are recorded at 07:55 and 08:55 (2 min after the breakfast: larger hypothetical meals then fall outside training support because the model counts carbs over the last 30 min).",
@@ -425,6 +426,7 @@
   {
    "id": "unlogged-meal",
    "patient_id": "SYN-0019",
+   "kind": "replay",
    "start_offset_hours": 253.667,
    "title": "Weakness: no meal logged, so the alert waits for the rise",
    "description": "Glucose rises with no logged meal. Risk stays below the 35% alert threshold until the rise has begun: the alert fires at 14:50 (glucose 93 mg/dL, up from 70 at 14:35), 45 min before glucose first exceeds 180 mg/dL (15:35). With a logged meal (first scenario) the warning comes earlier. Stepping in 1-hour jumps skips the alert (14:45: 31%); the risk-history panel still shows it. What-ifs are recorded at 13:45 only.",
@@ -463,6 +465,196 @@
    ],
    "fhir_clock": "2026-03-12T08:15:00Z",
    "n_frames": 73
+  },
+  {
+   "id": "moment-syn-0004",
+   "patient_id": "SYN-0004",
+   "kind": "moment",
+   "start_offset_hours": 24.0,
+   "title": "SYN-0004: one recorded moment",
+   "description": "One recorded moment 24 h into this held-out patient's data (the live app's default start): record, twin state, forecast, glucose profile, FHIR export and every What-If amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 and SYN-0019, or any patient in the local app.",
+   "file": "moment-syn-0004.json",
+   "start_clock": "2026-03-02T18:35:00Z",
+   "end_clock": "2026-03-02T18:40:00Z",
+   "whatif_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "preset_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "fhir_clock": "2026-03-02T18:35:00Z",
+   "n_frames": 2
+  },
+  {
+   "id": "moment-syn-0009",
+   "patient_id": "SYN-0009",
+   "kind": "moment",
+   "start_offset_hours": 24.0,
+   "title": "SYN-0009: one recorded moment",
+   "description": "One recorded moment 24 h into this held-out patient's data (the live app's default start): record, twin state, forecast, glucose profile, FHIR export and every What-If amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 and SYN-0019, or any patient in the local app.",
+   "file": "moment-syn-0009.json",
+   "start_clock": "2026-03-02T18:35:00Z",
+   "end_clock": "2026-03-02T18:40:00Z",
+   "whatif_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "preset_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "fhir_clock": "2026-03-02T18:35:00Z",
+   "n_frames": 2
+  },
+  {
+   "id": "moment-syn-0021",
+   "patient_id": "SYN-0021",
+   "kind": "moment",
+   "start_offset_hours": 24.0,
+   "title": "SYN-0021: one recorded moment",
+   "description": "One recorded moment 24 h into this held-out patient's data (the live app's default start): record, twin state, forecast, glucose profile, FHIR export and every What-If amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 and SYN-0019, or any patient in the local app.",
+   "file": "moment-syn-0021.json",
+   "start_clock": "2026-03-02T18:35:00Z",
+   "end_clock": "2026-03-02T18:40:00Z",
+   "whatif_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "preset_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "fhir_clock": "2026-03-02T18:35:00Z",
+   "n_frames": 2
+  },
+  {
+   "id": "moment-syn-0022",
+   "patient_id": "SYN-0022",
+   "kind": "moment",
+   "start_offset_hours": 24.0,
+   "title": "SYN-0022: one recorded moment",
+   "description": "One recorded moment 24 h into this held-out patient's data (the live app's default start): record, twin state, forecast, glucose profile, FHIR export and every What-If amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 and SYN-0019, or any patient in the local app.",
+   "file": "moment-syn-0022.json",
+   "start_clock": "2026-03-02T18:35:00Z",
+   "end_clock": "2026-03-02T18:40:00Z",
+   "whatif_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "preset_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "fhir_clock": "2026-03-02T18:35:00Z",
+   "n_frames": 2
+  },
+  {
+   "id": "moment-syn-0025",
+   "patient_id": "SYN-0025",
+   "kind": "moment",
+   "start_offset_hours": 24.0,
+   "title": "SYN-0025: one recorded moment",
+   "description": "One recorded moment 24 h into this held-out patient's data (the live app's default start): record, twin state, forecast, glucose profile, FHIR export and every What-If amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 and SYN-0019, or any patient in the local app.",
+   "file": "moment-syn-0025.json",
+   "start_clock": "2026-03-02T18:35:00Z",
+   "end_clock": "2026-03-02T18:40:00Z",
+   "whatif_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "preset_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "fhir_clock": "2026-03-02T18:35:00Z",
+   "n_frames": 2
+  },
+  {
+   "id": "moment-syn-0026",
+   "patient_id": "SYN-0026",
+   "kind": "moment",
+   "start_offset_hours": 24.0,
+   "title": "SYN-0026: one recorded moment",
+   "description": "One recorded moment 24 h into this held-out patient's data (the live app's default start): record, twin state, forecast, glucose profile, FHIR export and every What-If amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 and SYN-0019, or any patient in the local app.",
+   "file": "moment-syn-0026.json",
+   "start_clock": "2026-03-02T18:35:00Z",
+   "end_clock": "2026-03-02T18:40:00Z",
+   "whatif_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "preset_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "fhir_clock": "2026-03-02T18:35:00Z",
+   "n_frames": 2
+  },
+  {
+   "id": "moment-syn-0052",
+   "patient_id": "SYN-0052",
+   "kind": "moment",
+   "start_offset_hours": 24.0,
+   "title": "SYN-0052: one recorded moment",
+   "description": "One recorded moment 24 h into this held-out patient's data (the live app's default start): record, twin state, forecast, glucose profile, FHIR export and every What-If amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 and SYN-0019, or any patient in the local app.",
+   "file": "moment-syn-0052.json",
+   "start_clock": "2026-03-02T18:35:00Z",
+   "end_clock": "2026-03-02T18:40:00Z",
+   "whatif_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "preset_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "fhir_clock": "2026-03-02T18:35:00Z",
+   "n_frames": 2
+  },
+  {
+   "id": "moment-syn-0054",
+   "patient_id": "SYN-0054",
+   "kind": "moment",
+   "start_offset_hours": 24.0,
+   "title": "SYN-0054: one recorded moment",
+   "description": "One recorded moment 24 h into this held-out patient's data (the live app's default start): record, twin state, forecast, glucose profile, FHIR export and every What-If amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 and SYN-0019, or any patient in the local app.",
+   "file": "moment-syn-0054.json",
+   "start_clock": "2026-03-02T18:35:00Z",
+   "end_clock": "2026-03-02T18:40:00Z",
+   "whatif_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "preset_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "fhir_clock": "2026-03-02T18:35:00Z",
+   "n_frames": 2
+  },
+  {
+   "id": "moment-syn-0058",
+   "patient_id": "SYN-0058",
+   "kind": "moment",
+   "start_offset_hours": 24.0,
+   "title": "SYN-0058: one recorded moment",
+   "description": "One recorded moment 24 h into this held-out patient's data (the live app's default start): record, twin state, forecast, glucose profile, FHIR export and every What-If amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 and SYN-0019, or any patient in the local app.",
+   "file": "moment-syn-0058.json",
+   "start_clock": "2026-03-02T18:35:00Z",
+   "end_clock": "2026-03-02T18:40:00Z",
+   "whatif_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "preset_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "fhir_clock": "2026-03-02T18:35:00Z",
+   "n_frames": 2
+  },
+  {
+   "id": "moment-syn-0059",
+   "patient_id": "SYN-0059",
+   "kind": "moment",
+   "start_offset_hours": 24.0,
+   "title": "SYN-0059: one recorded moment",
+   "description": "One recorded moment 24 h into this held-out patient's data (the live app's default start): record, twin state, forecast, glucose profile, FHIR export and every What-If amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 and SYN-0019, or any patient in the local app.",
+   "file": "moment-syn-0059.json",
+   "start_clock": "2026-03-02T18:35:00Z",
+   "end_clock": "2026-03-02T18:40:00Z",
+   "whatif_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "preset_clocks": [
+    "2026-03-02T18:35:00Z"
+   ],
+   "fhir_clock": "2026-03-02T18:35:00Z",
+   "n_frames": 2
   }
  ]
 }

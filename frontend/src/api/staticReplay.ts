@@ -11,6 +11,7 @@ export interface SnapshotScenarioMeta {
   id: string; patient_id: string; start_offset_hours: number; title: string; description: string; file: string;
   start_clock: string; end_clock: string; whatif_clocks: string[]; n_frames: number;
   preset_clocks?: string[]; fhir_clock?: string; // optional: older snapshots lack them
+  kind?: "replay" | "moment"; // "moment": one recorded moment plus a single 5-min step (older snapshots: replay)
 }
 
 export interface SnapshotManifest {
