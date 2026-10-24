@@ -39,7 +39,7 @@ export function HandoverCard({ input, compact = false }: { input: HandoverInput 
           <details className="handover-sources">
             <summary className="link-button">Where each number comes from</summary>
             <div className="table-wrap">
-              <table className="sim-table small" aria-label="Source of each number in the handover note">
+              <table className="handover-src small" aria-label="Source of each number in the handover note">
                 <thead><tr><th scope="col">Number</th><th scope="col">Source</th></tr></thead>
                 <tbody>{note.report.sources.map((s, i) => <tr key={`${i}-${s.token}`}><td>{s.token}</td><td>{s.source}</td></tr>)}</tbody>
               </table>

@@ -242,7 +242,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <ul class="small">
         <li><b>Served What-If (negative result):</b> at +120 min, MAE {{wi_mae}} vs {{co_mae}} mg/dL for a cohort-average curve (difference {{wi_diff}} [{{wi_ci}}]; 20–120 g).</li>
         <li><b>Train-fitted personalised curve</b> (shape from 36 training patients' observed CGM; variant chosen on 12 validation patients: {{d_sel}}; scored once on 12 test patients): +120 min MAE <b>{{d_mae}}</b> vs cohort {{d_co}} (difference {{d_diff}} [{{d_ci}}]) and served What-If {{d_wi}}.</li>
-        <li class="muted">+30 / +60 min: curve {{d_mae30}} / {{d_mae60}} vs cohort {{d_co30}} / {{d_co60}}. +30 min CI includes zero. Shown beside the served What-If as a labelled research column, not part of the forecast; the simulator's near-linear meal response favours it.</li>
+        <li class="muted">+30 / +60 min: curve {{d_mae30}} / {{d_mae60}} vs cohort {{d_co30}} / {{d_co60}}. +30 min CI includes zero. Research column, not served; the simulator's near-linear meal response favours it.</li>
       </ul>
     </div>
     <div>
@@ -270,7 +270,7 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <li><b>Replay:</b> the twin only sees data up to "now".</li>
       <li><b>Evaluation tab:</b> every baseline and limitation.</li>
       <li><b>What-if meal lab</b> (simulated): <i>X</i> g eaten now versus a zero-carb meal at the same time, plus a grey no-meal comparison.
-        Learned model associations, not physiology; meals under 30 g flagged unreliable. A purple research column adds the personalised twin curve (next slide).</li>
+        Learned model associations, not physiology; meals under 30 g flagged unreliable.</li>
     </ul>
   </div>
   <div class="foot"><span>Recorded static snapshot of the current build (responses recorded from the real API), held-out synthetic patient SYN-0039 at 07:55 with three what-if meals</span><span>10</span></div>
@@ -284,13 +284,13 @@ img.shot{width:100%;border:1px solid #e2e8f0;border-radius:8px}
       <img class="shot" src="../../screenshots/whatif-twin-curve.png" alt="What-If table with the personalised twin-curve research column and walk toggle" style="width:100%">
       <img class="shot" src="../../screenshots/agp-handover.png" alt="AGP card and verified handover note" style="width:100%;margin-top:10px;max-height:250px;object-fit:cover;object-position:top">
     </div>
-    <ul class="small" style="margin-top:0">
-      <li><b>Personalised twin curve beside the served What-If.</b> SYN-0039, 35 g at 07:55, +120 min: served model {{tc_served}}, twin curve {{tc_curve}}; paired-simulator truth {{tc_truth}}. Held-out MAE {{d_mae}} vs {{d_wi}} (all test scenarios).</li>
-      <li><b>Post-meal walk toggle</b> (20 min, 2,500 steps): cohort-level effect, test MAE {{walk_mae}} vs {{walk_none}} for "no effect" at +120 min. The tree models only see past steps, so the walk is not put through them.</li>
-      <li><b>24 regional Indian dishes</b> (South 10 · North 5 · West 5 · East 2 · Snacks 2): 11 cited, 13 marked team estimates; indicative GI badges from the 2008 international GI tables. The model sees grams only.</li>
-      <li><b>AGP card:</b> time in ranges, GMI, CV, hourly percentiles; says when data fall below the 14-day / 70% consensus minimum.</li>
-      <li><b>Handover note:</b> fixed template; a separate parser checks that every number traces to the record, state or forecast, or the note is withheld. Describes, never instructs.</li>
-      <li><b>FHIR in:</b> <code>POST /api/fhir/Bundle</code> validates R4 Observations (CGM 99504-3; 14749-6 only with a lab-code warning; HR 8867-4; HbA1c 4548-4). Nothing is ingested; not certified.</li>
+    <ul class="small" style="margin-top:0;font-size:17px">
+      <li><b>Twin curve beside the served What-If.</b> SYN-0039, 35 g at 07:55, +120 min: served {{tc_served}}, twin curve {{tc_curve}}, paired-simulator truth {{tc_truth}}. Test MAE {{d_mae}} vs {{d_wi}}.</li>
+      <li><b>Post-meal walk toggle</b> (20 min, 2,500 steps): cohort-level effect; test MAE {{walk_mae}} vs {{walk_none}} for "no effect" at +120 min. Not passed through the tree models (they only see past steps).</li>
+      <li><b>24 regional Indian dishes</b> (South 10 · North 5 · West 5 · East 2 · Snacks 2): 11 cited, 13 team estimates; indicative GI badges (2008 GI tables). The model sees grams only.</li>
+      <li><b>AGP card:</b> time in ranges, GMI, CV, hourly percentiles; flags data below the 14-day / 70% minimum.</li>
+      <li><b>Handover note:</b> fixed template; a parser checks every number traces to the record, state or forecast, else the note is withheld. Describes, never instructs.</li>
+      <li><b>FHIR in:</b> <code>POST /api/fhir/Bundle</code> validates R4 Observations (CGM 99504-3; 14749-6 with a lab-code warning; HR 8867-4; HbA1c 4548-4). Nothing stored; not certified.</li>
     </ul>
   </div>
   <div class="foot"><span>Sources: frontend/static-demo/demo/early-warning.json, reports/research/walk_whatif_validation.json, docs/research/TWIN_VALIDITY.md (addenda v3, v4)</span><span>11</span></div>
