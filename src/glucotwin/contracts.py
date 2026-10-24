@@ -385,6 +385,24 @@ class CounterfactualComparison(_Model):
         default=False, description="Reference-leg risk > 0.95: a risk change cannot be meaningfully positive")
 
 
+class JointSupportCheck(_Model):
+    """B-23: whether the what-if scenario's meal inputs have a comparable example in the training data.
+
+    A training-support diagnostic only: ``no_training_analogue`` is not evidence that the forecast is
+    wrong, and ``within_training_support`` does not make it accurate. Never alters the forecast.
+    """
+
+    status: Literal["within_training_support", "no_training_analogue", "unavailable"]
+    reasons: list[str] = Field(default_factory=list, description="Coordinates outside the training range")
+    sparse: list[str] = Field(default_factory=list,
+                              description="Coordinates inside the range but above the 99th training percentile")
+    message: str | None = None
+    reason: str | None = Field(default=None, description="Why the check is unavailable, if it is")
+    coordinates: dict[str, float] = Field(default_factory=dict)
+    training_range: dict[str, list[float]] = Field(default_factory=dict)
+    caveat: str = ""
+
+
 class CounterfactualResult(_Model):
     """Baseline versus simulated what-if forecast. Strictly a simulated scenario, never advice.
 
@@ -405,6 +423,8 @@ class CounterfactualResult(_Model):
     secondary: CounterfactualComparison | None = None
     small_meal_unreliable: bool = False
     notes: list[str] = Field(default_factory=list)
+    joint_support: JointSupportCheck | None = Field(
+        default=None, description="B-23 training-support check of the scenario leg (additive; optional)")
     is_simulated: Literal[True] = True
     disclaimer: str = (
         "Simulated what-if scenario. The hypothetical meal was never added to the patient record. "

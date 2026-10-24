@@ -1,5 +1,12 @@
 # Recording checklist: one continuous take, ≥ 20 minutes (hard requirement)
 
+> **Outdated (2026-10-22): use [VIDEO_SCRIPT.md](VIDEO_SCRIPT.md) instead.** Known stale items below:
+> - "62 tests" (140 pass now);
+> - the SYN-0019 beat "The twin missed it" (at 5-min resolution the alert fires at 14:50, 45 min before glucose exceeds 180 mg/dL);
+> - the TIR comparison with ShanghaiT2DM (a matching summary statistic is not validation);
+> - values from the 2026-10-20 build;
+> - the ≥ 20-minute length (the rules also say 15–20 minutes; confirm with the organisers).
+
 Companion to [DEMO_SCRIPT.md](DEMO_SCRIPT.md). Every expected value below was re-verified against the
 running API and dashboard on **2026-10-20** (fresh deterministic training, model `gt-0.1.0-s…`, 62/62 tests).
 Target length **23:00** so editing cannot push the video under 20:00. **No video has been recorded yet.**

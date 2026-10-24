@@ -149,7 +149,8 @@ def create_app(service: TwinService | None = None) -> FastAPI:
         artifacts = Path(os.environ.get("GLUCOTWIN_ARTIFACTS", REPO_ROOT / "artifacts"))
         reports = Path(os.environ.get("GLUCOTWIN_REPORTS", REPO_ROOT / "reports"))
         bundle = _load_or_train_bundle(artifacts, reports)
-        service = TwinService(bundle, report_path=reports / "evaluation_report.json")
+        service = TwinService(bundle, report_path=reports / "evaluation_report.json",
+                              joint_support_path=reports / "research" / "b23_joint_support.json")
     app = FastAPI(title="GlucoTwin API", version=SCHEMA_VERSION,
                   description="Research prototype on synthetic data. Not a medical device.")
     app.state.service = service

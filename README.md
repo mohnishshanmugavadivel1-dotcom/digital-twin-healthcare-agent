@@ -1,12 +1,160 @@
-# GlucoTwin — A Continuously Updated Glucose Digital Twin
+# GlucoTwin — a living glucose digital twin for type 2 diabetes
 
-**Happiest Health Digital Twin Challenge 2026 · Prototype & Code Submission**
+**Happiest Health Digital Twin Challenge 2026 · Prototype & Code Submission · team mono**
 
-GlucoTwin is a replayable, evidence-aware glucose digital-twin research prototype. It combines synthetic patient health records with simulated continuous glucose monitoring (CGM), meals, steps and heart-rate observations to forecast glucose trajectories, estimate hyperglycaemic excursion risk and explore hypothetical meal scenarios.
+GlucoTwin builds a personal, continuously updated model of a person with type 2 diabetes. It fuses their health record with CGM, meals, steps and heart rate. Every 5 minutes it forecasts glucose up to 2 hours ahead, warns when a hyperglycaemic excursion is coming, and lets a clinician ask *"what if they eat this meal now?"*. Each answer is shown with its evidence, uncertainty and data quality.
 
-> **Safety notice:** GlucoTwin is an educational research prototype, not a medical device. All patients and observations are synthetic. Predictions and simulations are not clinical evidence, diagnoses, real-care alerts or treatment advice. The system has not been clinically validated.
+> **Status:** research prototype, not a medical device and not clinically validated. The dashboard runs on synthetic patients. Separately, we trained glucose-history forecasting models on 100 real people with type 2 diabetes (ShanghaiT2DM). The full GlucoTwin model has **not** been evaluated on real patients. Details: [Limitations and intended use](#limitations-and-intended-use).
 
-## Table of contents
+![GlucoTwin clinician dashboard at 07:55 for synthetic patient SYN-0039: patient record, What-If table comparing 35 g, 120 g and 300 g meals against a zero-carb reference (300 g tagged outside training support), 12-hour CGM with a 2-hour forecast and 80% interval, excursion risk 22% with its drivers, evidence and data quality, all streams, risk history, and the personalised carb sensitivity of 1.70 learned from 20 meals](docs/screenshots/dashboard.png)
+
+<sub>Synthetic patient SYN-0039 at 07:55 with three What-If meals. Captured on 2026-10-22 from the recorded static snapshot (current frontend; every response was recorded from the real API, model `gt-0.1.0-s20261017-202610211601`), served locally.</sub>
+
+## Product overview
+
+- **Designed for (research demo):** clinicians and care teams reviewing CGM data for people with type 2 diabetes.
+- **What it does:**
+  - forecasts glucose at +30/60/90/120 min with 80% intervals;
+  - estimates the probability that an excursion (≥ 3 consecutive readings > 180 mg/dL) starts within 2 h, and explains the drivers;
+  - compares hypothetical meals.
+- **What it shows:** observed vs predicted glucose, earlier forecasts vs what actually happened, data freshness and gaps, and the patient's own learned carb sensitivity.
+- **How it is built:** Python twin engine and ML pipeline, a FastAPI service and a React + TypeScript dashboard. It is reproducible from one seed with `make`.
+
+## Why GlucoTwin is different
+
+A glucose predictor takes a window of data and returns a number. GlucoTwin keeps a **patient state** that evolves over time:
+
+- **It updates in time order.** Each observation is ingested as it "arrives". The state holds last glucose and trend, carbs on board, activity, data quality and a personalised parameter. A forecast at time *t* uses only data up to *t*. A test checks that replay never reveals future data, and the dashboard replays it chronologically.
+- **It learns the individual.** Each patient's carb sensitivity starts from their health record and is updated from their own meal responses (see [How personalisation works](#how-personalisation-works)).
+- **It answers "what if?" without touching the record.** A hypothetical meal is run on a copy of the history, never on the real record. It is compared against a zero-carb reference so that only the carbohydrate effect is isolated ([details](#what-the-comparison-means-backlog-b-22)).
+- **It says when it is on thin ice.** Stale or missing CGM is flagged. Forecasts can return `insufficient_data` instead of guessing. A What-If meal unlike anything in training is tagged **outside training support** (API status `no_training_analogue`).
+- **It shows its work.** Risk drivers are grouped, additive logistic-regression contributions (associations, not causes). Earlier 60-min forecasts can be overlaid on what really happened.
+
+## Try the demo
+
+**Recorded static snapshot.** No Python is needed, and every response was recorded from the real API ([docs/STATIC_DEMO.md](docs/STATIC_DEMO.md)).
+
+```bash
+cd frontend && npm ci && npm run build:static && npm run preview:static
+# then open http://localhost:4173/
+```
+
+**Full live app:**
+
+```bash
+make setup && make train && make build-frontend && make serve
+# then open http://localhost:8000/?patient=SYN-0039&start=151.833
+```
+
+There is no public deployment and no demo video yet. A manual GitHub Pages workflow for the static snapshot ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)) is ready but has not been run.
+
+### 90-second judge walkthrough
+
+All values below come from the recorded snapshot of synthetic patient SYN-0039 (times are patient-local, UTC+05:30).
+
+| Time | Show | Say |
+|---|---|---|
+| 0:00–0:15 | Dashboard at **07:55** | "A twin of a person with type 2 diabetes: record, CGM, meals and activity. Glucose is 94 mg/dL; the twin forecasts 119 mg/dL at +60 min (80% interval 101–138) and a 22% excursion risk, so no alert." |
+| 0:15–0:30 | *Personalised parameter* panel | "This patient's carb sensitivity started at 1.31 mg/dL per gram from their HbA1c. After 20 of their own meals it is 1.70: the twin has adapted to this person's meal responses." |
+| 0:30–0:50 | What-If: *Idli with sambar* preset (≈ 35 g) | "Against a zero-carb meal, the predicted risk rises from 7% to 52%; 120 g gives > 99%. Try 300 g: it is tagged *outside training support*, so the twin flags that no comparable meal existed in training." |
+| 0:50–1:05 | Press **+1 h** → 08:55 | "A 140 g breakfast was logged at 08:53. The alert fires at 08:55, 85 min before glucose first exceeds 180 mg/dL (10:20). Data quality: 97% CGM completeness, last reading 0 min ago." |
+| 1:05–1:20 | *Model evaluation* tab, then the [real-data results](#results-at-a-glance) | "On held-out synthetic patients, forecast RMSE is 44–45% lower than persistence at every horizon. Separately, on 100 real people with type 2 diabetes, our glucose-history models beat persistence at every horizon." |
+| 1:20–1:30 | [Limitations](#limitations-and-intended-use) | "It is not clinically validated, and the full twin has not been tested on real patients, because the public data lacks carb grams, steps and heart rate. That is our next step." |
+
+Weakness case worth showing: **SYN-0019** has an unlogged meal. The alert fires only once glucose is already rising (14:50), 45 min before it exceeds 180 mg/dL. Full video script and shot list (not recorded yet): [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md).
+
+## Results at a glance
+
+Three things are reported separately and must not be compared with each other.
+
+### 1 · GlucoTwin on its synthetic benchmark (frozen served models)
+
+12 held-out synthetic test patients × 14 days (patient split 36 / 12 / 12). Brackets are patient-level bootstrap 95% CIs.
+
+| Glucose RMSE (mg/dL) | 30 min | 60 min | 120 min |
+|---|---|---|---|
+| Persistence (last reading) | 18.65 [16.44–21.08] | 31.42 | 46.58 |
+| Ridge regression | 11.21 | 17.04 | 27.92 |
+| **GlucoTwin (gradient boosting, served)** | **10.40** [9.81–11.01] | 17.21 | **25.90** [23.19–29.06] |
+
+| Excursion warning (served logistic regression) | GlucoTwin | Trend-rule baseline |
+|---|---|---|
+| AUROC (40,789 test readings, 14.6% positive) | **0.884** [0.839–0.923] | 0.655 [0.583–0.736] |
+| Onsets with an alert in the preceding 2 h | **272 / 298** (91.3%) | 298 / 298 |
+| False-alert episodes over 168 patient-days | **229** (1.36 / day) | 1,055 (6.28 / day) |
+
+Sources: [`reports/evaluation_report.json`](reports/evaluation_report.json) and [`reports/audit_report.json`](reports/audit_report.json). These are simulator results, not evidence about real patients. Full tables are in [§8](#8-evaluation-results).
+
+### 2 · Real-data research: ShanghaiT2DM glucose-history models
+
+**Evaluated:** persistence plus two models trained here on real CGM glucose history only (ridge and gradient boosting). **Not evaluated:** the full GlucoTwin model.
+
+The cohort is 100 adults with type 2 diabetes (FreeStyle Libre, 15-min readings; 112,462 readings). The split is fixed per patient before windowing: 60 train / 20 validation / 20 test. Results are scored once on the **20 held-out test patients** (about 22,500 forecasts per horizon). RMSE is in mg/dL, with 95% patient-bootstrap CIs.
+
+| Horizon | Persistence (baseline) | Ridge (glucose history) | Gradient boosting (glucose history) |
+|---|---|---|---|
+| 30 min | 16.10 [14.63–17.64] | 12.63 [11.78–13.51] | **12.32** [11.44–13.21] |
+| 60 min | 26.94 [24.13–29.90] | 23.18 [21.45–25.05] | **22.39** [20.80–24.05] |
+| 120 min | 40.79 [35.70–46.17] | 35.32 [31.64–39.27] | **33.62** [30.46–36.88] |
+
+Gradient boosting has lower RMSE than persistence by 3.78, 4.55 and 7.16 mg/dL (paired 95% CIs [−4.72, −2.85], [−6.14, −2.93] and [−10.10, −4.19]). It beats persistence for 20/20, 19/20 and 15/20 test patients. Leakage checks found 0 patients and 0 sessions in more than one split. An independent recomputation reproduced every metric.
+
+<img src="reports/real_data/shanghai_t2dm/public/rmse_by_horizon.svg" alt="Bar chart of held-out test RMSE with 95% confidence intervals at 30, 60 and 120 minutes for persistence, ridge and gradient boosting trained on ShanghaiT2DM glucose history" width="100%">
+
+Aggregate results: [public/SUMMARY.md](reports/real_data/shanghai_t2dm/public/SUMMARY.md) · [summary.json](reports/real_data/shanghai_t2dm/public/summary.json). Protocol and independent review: [ShanghaiT2DM experiment](docs/research/SHANGHAI_T2DM_EXPERIMENT.md).
+
+Data: ShanghaiT2DM, from "diabetes_datasets.zip" version 5 by Qinpei Zhao, Jinhao Zhu, Congrong Wang and Weixiong Rao (figshare, 2022), [doi:10.6084/m9.figshare.21600933.v5](https://doi.org/10.6084/m9.figshare.21600933.v5), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Descriptor: Zhao Q. et al., "Chinese diabetes datasets for data-driven machine learning", *Scientific Data* (2023), [doi:10.1038/s41597-023-01940-7](https://doi.org/10.1038/s41597-023-01940-7). Changes: only the Shanghai_T2DM CGM readings were used; they were cleaned, split into segments at gaps longer than 45 min and turned into forecasting windows. Only aggregate derived results are shown; no raw data are redistributed. The dataset authors have not reviewed or endorsed this work.
+
+### 3 · Full GlucoTwin model on real patients: not yet evaluated
+
+ShanghaiT2DM records food as free text, not carbohydrate grams, and has no steps or heart rate. Ten of GlucoTwin's 33 inputs would have to be invented, so we did not run it. Its sampling is also 15 min rather than GlucoTwin's 5 min. A real-data evaluation needs a dataset with logged carbohydrates and activity.
+
+## How personalisation works
+
+Each patient has one learned parameter: carb sensitivity *s*, the glucose rise in mg/dL per gram of carbohydrate.
+
+| Step | Rule (code: `carb_sensitivity_prior` and `personal_carb_sensitivity` in `features.py`) |
+|---|---|
+| Prior from the health record | *s₀* = clip(1.40 + 0.10 · (HbA1c − 7), 0.4, 3.0) |
+| Evidence | Each eligible logged meal gives *r* = (max CGM in the next 120 min − pre-meal CGM) / carbs. A meal is eligible if it is ≥ 10 g, has no overlapping meal, a fresh pre-meal reading and ≥ 50% CGM coverage. |
+| Update | *s* = (3 · *s₀* + Σ*r*) / (3 + *n*): shrinkage towards the prior with 3 pseudo-meals of weight, not a full Bayesian posterior |
+| Use | Model features `carb_sensitivity` and expected meal rise = *s* × carbs on board |
+| Example (SYN-0039) | *s₀* = 1.31 → *s* = 1.698 after 20 meals → 1.666 once the 120-min window of the 08:53 breakfast closes (10:55) |
+
+The update only uses meal responses that are complete at the current replay time. No experiment has yet isolated whether personalisation reduces forecast error, so we do not claim that it does.
+
+## Research and architecture
+
+| Document | What it covers |
+|---|---|
+| [Architecture PDF](docs/submission/GlucoTwin_Architecture.pdf) · [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Layers, data flow and contracts |
+| [Presentation PDF](docs/submission/GlucoTwin_Presentation.pdf) | Submission deck |
+| [ML plan](docs/ML_PLAN.md) · [model comparison](docs/MODEL_COMPARISON.md) · [independent audit](docs/AUDIT_WAVE2.md) | Validation protocol, model selection, bootstrap CIs, ablations |
+| [ShanghaiT2DM experiment](docs/research/SHANGHAI_T2DM_EXPERIMENT.md) | Real-data protocol, results and independent review |
+| [Counterfactual audit](reports/counterfactual_audit.json) · [§11](#11-counterfactual-simulation-and-limitations) | What-If comparisons over 2,934 scenarios |
+| [API and data contracts](docs/API_CONTRACTS.md) | Schemas and event definition |
+
+Team: **team mono**, Amrita Vishwa Vidyapeetham, Chennai (Mohnish Shanmugavadivel).
+
+## Limitations and intended use
+
+GlucoTwin is an educational research prototype. It is **not a medical device**, has **not been clinically validated**, and gives no diagnoses, alerts for real care, or treatment or dosing advice.
+
+- **Synthetic benchmark.** The dashboard and the headline GlucoTwin metrics use simulated patients. A simulator may be easier to predict than real physiology, and the test cohort has 12 patients.
+- **Real-data research is separate.** The ShanghaiT2DM results are for glucose-history-only models trained on that dataset, with 20 test patients from one region and one sensor type. They are not comparable with the synthetic benchmark. Retrospective accuracy is not clinical utility.
+- **No real-data validation of the full twin.** The frozen GlucoTwin model has not been evaluated on any real patients.
+- **What-If results are model associations, not physiology.** They are not a prediction of how a real person would respond. Meals under 30 g are flagged as unreliable ([§11](#11-counterfactual-simulation-and-limitations)).
+- **Support tags are diagnostics.** *No training analogue* flags unusual inputs; it is not a guaranteed out-of-distribution detector, and "within support" does not make a forecast correct.
+- **Personalisation updates a parameter.** We have not shown that this improves forecasts.
+- **Other gaps.** Indian meal presets use approximate, editable carb values. There is no real wearable integration and no sleep data. Accessibility and keyboard testing have not been done. On phones the What-If table needs a sideways swipe to show the risk columns.
+
+**Next research steps:**
+- Evaluate the full twin on a governed real dataset with logged carbohydrates and activity.
+- Isolate the effect of personalisation on forecast error.
+- Replace associational What-If with an intervention-capable, validated model.
+- Carry out prospective validation before any clinical claim.
+
+## Technical reference
 
 - [1. Project overview](#1-project-overview)
 - [2. Problem statement](#2-problem-statement)
@@ -24,7 +172,7 @@ GlucoTwin is a replayable, evidence-aware glucose digital-twin research prototyp
 - [14. Submission artefacts](#14-submission-artefacts)
 - [15. Team and institution](#15-team-and-institution)
 - [16. Open-source licence](#16-open-source-licence)
-- [17. Limitations and future work](#17-limitations-and-future-work)
+- [17. Future work](#17-future-work)
 - [18. Submission compliance checklist](#18-submission-compliance-checklist)
 
 ## 1. Project overview
@@ -47,9 +195,7 @@ Family history and genotype may be displayed as synthetic contextual information
 
 The system is designed to make a prediction inspectable: what was observed, what was predicted, how uncertain the prediction is, what information was available at that time, and how the model's forecast changes in a hypothetical scenario.
 
-![GlucoTwin dashboard](docs/screenshots/dashboard.png)
-
-*Dashboard screenshot from the synthetic research prototype.*
+The dashboard screenshot is at the [top of this README](#glucotwin--a-living-glucose-digital-twin-for-type-2-diabetes).
 
 ### Processing pipeline
 
@@ -270,7 +416,7 @@ The reported results are generated by the repository's training and evaluation p
 
 ## 8. Evaluation results
 
-**All results in this section refer to synthetic patients. They are not clinical validation.** The simulator may be easier for a model to learn than real-world physiology, and the held-out cohort is limited.
+**All results in this section refer to synthetic patients. They are not clinical validation.** The simulator may be easier for a model to learn than real-world physiology, and the held-out cohort is limited. The separate real-data experiment (ShanghaiT2DM, glucose-history models only) is summarised in [Results at a glance](#results-at-a-glance).
 
 ### 8.1 Glucose trajectory forecasting
 
@@ -392,12 +538,12 @@ On Windows, use the equivalent commands for the active shell and virtual-environ
 The README's existing demonstration notes identify the following deep links:
 
 - `/?patient=SYN-0039&start=151.833` — documented as an example of an early warning before an excursion.
-- `/?patient=SYN-0019&start=253.667` — documented as an example of a missed excursion after an unlogged meal.
+- `/?patient=SYN-0019&start=253.667`: a weakness case. Glucose rises with no logged meal, and the alert fires only once the rise has begun (14:50, 45 min before the first reading above 180 mg/dL). Earlier versions called this a "missed excursion"; that was an artefact of stepping in 1-hour jumps (corrected 2026-10-21, see [DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) Scene 6).
 
 Example links:
 
 - [Early-warning scenario](http://localhost:8000/?patient=SYN-0039&start=151.833)
-- [Missed-excursion scenario](http://localhost:8000/?patient=SYN-0019&start=253.667)
+- [Unlogged-meal scenario](http://localhost:8000/?patient=SYN-0019&start=253.667)
 
 These links work only where the GlucoTwin application is running. Recheck the exact readings and replay behaviour before using the scenarios in a recorded demonstration.
 
@@ -502,15 +648,22 @@ The configured checks include:
 
 GitHub Actions (`.github/workflows/ci.yml`) runs the same lint, Python test, build and frontend-test steps on every push and pull request.
 
-**Results recorded for this revision (2026-10-20):**
-- 76 Python tests passed.
-- 10 frontend tests passed (tooltip, scenario-table and API-error formatting).
-- Ruff passed and the production build succeeded.
-- A fresh `glucotwin train` reproduced the committed evaluation metrics exactly (only `generated_at` and `model_version` differ).
+**Results recorded on 2026-10-22 for the working tree** (uncommitted changes on top of 581b4f7):
+- `make check` exit 0:
+  - Ruff passed;
+  - 140 Python tests passed (1 third-party deprecation warning from the FastAPI/Starlette test client);
+  - the TypeScript check and production build succeeded (Vite reports its standard large-chunk size warning);
+  - 23/23 frontend tests passed, 0 skipped.
+- On 2026-10-21: `npm run build:static` exit 0.
+- Reproducibility re-runs: `glucotwin train` matched `reports/evaluation_report.json` apart from `generated_at` and `model_version`, and `glucotwin audit` matched `reports/audit_report.json` apart from `runtime_s`.
 
 Check the latest GitHub Actions run for the submitted commit before relying on these results.
 
-**Browser checks:** scripted headless-Chromium runs at 1440 px and 390 px widths covered replay, the scenario table, the evidence panel, error messages and horizontal overflow. Accessibility and keyboard-interaction testing have not been done.
+**Browser checks:**
+- On 2026-10-21, the script `docs/qa/browser_smoke.mjs` ran in headless Chromium at 1440 px. It passed 14/14 checks against the live app (`make serve` + `npm run preview`) and 14/14 against the static snapshot served from a sub-path, with no console errors or failed requests. The checks covered the banner, replay, the meal preset, recorded and unrecorded what-ifs, the training-support tag, stepping, the end of the replay and the evaluation tab.
+- On 2026-10-22, the same script passed 14/14 again against the static snapshot served locally under `/digital-twin-healthcare-agent/`, the sub-path a GitHub Pages project site would use. This was a local rehearsal, not a public deployment.
+- On 2026-10-22, a 390 px phone check (mobile emulation) covered 07:55, a preset What-If, 08:55 and the evaluation tab. It found the meal-preset dropdown widening the page to 443 px, fixed with one CSS rule in `frontend/src/styles.css`. After the fix all four views fit 390 px, with no console errors. On phones the What-If table scrolls sideways, with no visual cue.
+- Accessibility and keyboard-interaction testing have not been done.
 
 ## 14. Submission artefacts
 
@@ -525,12 +678,10 @@ This section maps the challenge submission requirements to the repository.
 | AI/ML model and evaluation details | This README and linked model documentation |
 | Architecture diagram in PDF format | [GlucoTwin Architecture PDF](docs/submission/GlucoTwin_Architecture.pdf) |
 | Project presentation in PDF format | [GlucoTwin Presentation PDF](docs/submission/GlucoTwin_Presentation.pdf) |
-| Demo video | **TODO: Add final unlisted YouTube link after upload.** |
-| Open-source licence | `Copyright (c) 2026 Mohnish Shanmugavadivel` |
-
-### Demo video
-
-**Video link:** `TODO — ADD FINAL UNLISTED YOUTUBE URL`
+| Demo video | **Not recorded yet; no link.** The rules state both "minimum 20 minutes" and "15–20 minutes", so the length must be confirmed with the organisers. Script and shot list with two cuts (18:30 and 23:00): [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md). |
+| Real-data research results (aggregate only) | [public/SUMMARY.md](reports/real_data/shanghai_t2dm/public/SUMMARY.md) · protocol: [docs/research/SHANGHAI_T2DM_EXPERIMENT.md](docs/research/SHANGHAI_T2DM_EXPERIMENT.md) |
+| Static demo (recorded snapshot) | Build instructions: [docs/STATIC_DEMO.md](docs/STATIC_DEMO.md). Not published. |
+| Open-source licence | MIT, [`LICENSE`](LICENSE). See §16 for the copyright line. |
 
 
 ## 15. Team and institution
@@ -548,34 +699,18 @@ This section maps the challenge submission requirements to the repository.
 
 The repository contains an MIT licence file at `LICENSE`.
 
-**Current status:** Copyright (c) 2026 Mohnish Shanmugavadivel
+`LICENSE` currently reads **"Copyright (c) 2026 GlucoTwin contributors"**. Earlier README text named an individual instead. The intended copyright holder has **not been confirmed**, and the licence file has deliberately been left unchanged until the maintainer confirms it.
 
-## 17. Limitations and future work
+## 17. Future work
 
-### Current limitations
+Current limitations are collected in one place: [Limitations and intended use](#limitations-and-intended-use).
 
-- All patient records and observations are synthetic.
-- Synthetic simulator dynamics may be easier to predict than real physiology.
-- The held-out test cohort is small and does not establish generalization to real patients.
-- The event-risk and trajectory results are not clinical validation.
-- What-if meal comparisons are learned associations of the forecasting models, not physiological effects; meals under 30 g are unreliable (§11, backlog B-22).
-- Browser checks so far are scripted headless-Chromium runs (1440 px and 390 px widths, console errors); accessibility and keyboard-interaction QA remain to be completed.
-- The application does not claim real wearable integration or a sleep-data stream.
-- The dashboard is a research prototype and is not suitable for clinical decision-making.
-
-### Future work
-
-- Evaluate against appropriately governed real-world datasets.
+- Evaluate the full twin on an appropriately governed real-world dataset that records carbohydrate grams and activity. ShanghaiT2DM does not, so only glucose-history models were evaluated ([Results at a glance](#results-at-a-glance)).
 - Establish external and prospective validation before making clinical claims.
+- Isolate whether personalised carb sensitivity reduces forecast error, with a leakage-free sequential evaluation.
 - Replace associational what-if comparisons with a model designed for interventions (for example, per-patient mechanistic fitting), then validate it.
 - Complete accessibility and keyboard-interaction testing.
 - Investigate additional sensor streams only when suitable data and validated models are available.
-- Continue improving the traceability of observations, predictions, model versions and evaluation results.
-
-
-### Final disclaimer
-
-GlucoTwin is an experimental digital-twin research prototype that operates on synthetic patient data. Its predictions, risk estimates, feature attributions and counterfactual scenarios are not clinically validated and must not be used to guide medical care.
 
 ## 18. Submission compliance checklist
 
@@ -587,6 +722,6 @@ Status of the official submission items (rules in [COMPETITION_COMPLIANCE.md](do
 | README: team, institution, title, problem, use case, tech stack, ML details | Done |
 | Architecture diagram (PDF) | Done: [docs/submission/GlucoTwin_Architecture.pdf](docs/submission/GlucoTwin_Architecture.pdf) |
 | Presentation (PDF) | Done: [docs/submission/GlucoTwin_Presentation.pdf](docs/submission/GlucoTwin_Presentation.pdf) |
-| Open-source licence | Released under the MIT License (LICENSE). Copyright (c) 2026 Mohnish Shanmugavadivel. |
-| Demo video of at least 20 minutes (unlisted YouTube or recorded PPT) | **Not done.** No link yet; script in [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
-| Submission on the Unstop platform by the team leader | **verified** |
+| Open-source licence | MIT licence file present (`LICENSE`, "GlucoTwin contributors"). Copyright holder **unconfirmed** (§16). |
+| Demo video (rules say both "minimum 20 minutes" and "15–20 minutes"; confirm with the organisers) | **Not done.** No video and no link yet. Script in [docs/VIDEO_SCRIPT.md](docs/VIDEO_SCRIPT.md). |
+| Submission on the Unstop platform by the team leader | **Unverified.** It cannot be confirmed from this repository. |

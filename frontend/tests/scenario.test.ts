@@ -57,3 +57,28 @@ test("string details, duplicated prefixes and non-JSON bodies", () => {
   assert.equal(formatApiError(503, "oops"), "Request failed (503)");
   assert.equal(formatApiError(422, { detail: [{}] }), "Invalid request: invalid value");
 });
+
+// ---------------------------------------------------------------- B-23 joint training support
+import { jointSupportChip } from "../src/format.ts";
+
+test("joint support: chip only when the scenario has no training analogue", () => {
+  const chip = jointSupportChip({
+    status: "no_training_analogue",
+    message: "No comparable training example: another meal was logged 30-60 min earlier (no training meal had one).",
+    caveat: "Training-support check: it flags meal inputs with no comparable example in the training data.",
+  });
+  assert.ok(chip);
+  assert.equal(chip.label, "outside training support");
+  assert.match(chip.title, /30-60 min earlier/);
+  assert.match(chip.title, /Training-support check/);
+  // the label is shown inline: worded as training support, never as an error (the caveat itself says "not evidence
+  // that the forecast is wrong", so only the label is checked)
+  assert.doesNotMatch(chip.label, /\b(error|wrong|invalid|unsafe)\b/i);
+});
+
+test("joint support: no chip when within support, unavailable, or absent (older servers)", () => {
+  assert.equal(jointSupportChip({ status: "within_training_support" }), null);
+  assert.equal(jointSupportChip({ status: "unavailable", message: null }), null);
+  assert.equal(jointSupportChip(null), null);
+  assert.equal(jointSupportChip(undefined), null);
+});

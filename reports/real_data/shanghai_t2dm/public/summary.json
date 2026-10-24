@@ -1,0 +1,288 @@
+{
+  "schema": "glucotwin-realdata-public-summary/1",
+  "generated_from": "results.json of the run below (aggregates only)",
+  "run_date": "2026-10-22",
+  "scope": "These are models trained here on ShanghaiT2DM glucose history only (persistence, ridge, gradient boosting). They are NOT the GlucoTwin model: the full GlucoTwin model was not evaluated on ShanghaiT2DM because 10 of its 33 inputs (meal carbohydrate grams, steps, heart rate) are not recorded in the dataset. Research experiment on retrospective data; not clinical validation; not a medical device.",
+  "attribution": "Data: ShanghaiT2DM, from \"diabetes_datasets.zip\" version 5 by Qinpei Zhao, Jinhao Zhu, Congrong Wang and Weixiong Rao (figshare, 2022), https://doi.org/10.6084/m9.figshare.21600933.v5, licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Dataset descriptor: Zhao Q. et al., \"Chinese diabetes datasets for data-driven machine learning\", Scientific Data (2023), https://doi.org/10.1038/s41597-023-01940-7. Changes: only the Shanghai_T2DM CGM readings were used; they were cleaned, split into segments at gaps longer than 45 min and turned into forecasting windows, and only aggregate derived results are shown. No raw data are redistributed here. The dataset authors have not reviewed or endorsed this work.",
+  "dataset": {
+    "doi": "10.6084/m9.figshare.21600933.v5",
+    "licence": "CC BY 4.0",
+    "archive_md5": "4bfb61cfa506b48155fd9e841ee48e21",
+    "archive_size_bytes": 3738354
+  },
+  "protocol": {
+    "id": "shanghai-t2dm-cgm-forecasting/1",
+    "registered_on": "2026-10-22",
+    "config_sha256_canonical": "a8c0f3769ff1d3b01950f213bc3cab6dc109b9d5ce691119cd1a43ced2d0a0d2",
+    "seed": 20261022,
+    "horizons_min": [
+      30,
+      60,
+      120
+    ],
+    "features": [
+      "latest reading",
+      "changes over 15/30/60 min",
+      "15-min acceleration",
+      "mean and SD of the last 5 readings (60 min)",
+      "time of day"
+    ],
+    "target_matching": "recorded reading exactly at anchor + horizon (tolerance 5 min, same gap-free segment); no interpolation"
+  },
+  "counts": {
+    "session_files": 109,
+    "sessions_excluded": 0,
+    "unique_patients": 100,
+    "patients_included": 100,
+    "patients_with_more_than_one_session": 8,
+    "cgm_readings_used": 112462,
+    "sessions_with_any_missing_15min_slot": 6,
+    "max_session_missing_share": 0.0154,
+    "gaps_over_45_min": 2,
+    "readings_at_lowest_recorded_value_39_6": 329
+  },
+  "split": {
+    "unit": "patient",
+    "fixed_before_windowing": true,
+    "patients": {
+      "train": 60,
+      "validation": 20,
+      "test": 20
+    },
+    "leakage_checks": {
+      "patients_in_more_than_one_split": 0,
+      "sessions_in_more_than_one_split": 0
+    }
+  },
+  "frozen_glucotwin_model": {
+    "evaluated": false,
+    "verdict": "INCOMPATIBLE",
+    "not_recorded_inputs": 10,
+    "of_inputs": 33,
+    "confirmed_against_inspected_headers": {
+      "verdict": "INCOMPATIBLE",
+      "inputs_found": {
+        "carbohydrate_grams": false,
+        "steps": false,
+        "heart_rate": false
+      },
+      "session_files_inspected": 109
+    }
+  },
+  "held_out_test": {
+    "30": {
+      "test_windows": 22668,
+      "test_patients": 20,
+      "metrics_mg_dl": {
+        "persistence (last reading)": {
+          "mae": 10.99,
+          "rmse": 16.1
+        },
+        "ridge (glucose history only)": {
+          "mae": 9.047,
+          "rmse": 12.629
+        },
+        "gradient boosting (glucose history only)": {
+          "mae": 8.733,
+          "rmse": 12.316
+        }
+      },
+      "rmse_ci95": {
+        "persistence (last reading)": [
+          14.628,
+          17.635
+        ],
+        "ridge (glucose history only)": [
+          11.776,
+          13.508
+        ],
+        "gradient boosting (glucose history only)": [
+          11.436,
+          13.208
+        ]
+      },
+      "mae_ci95": {
+        "persistence (last reading)": [
+          9.858,
+          12.228
+        ],
+        "ridge (glucose history only)": [
+          8.446,
+          9.685
+        ],
+        "gradient boosting (glucose history only)": [
+          8.084,
+          9.416
+        ]
+      },
+      "rmse_difference_vs_persistence": {
+        "ridge (glucose history only)": {
+          "point": -3.471,
+          "ci95": [
+            -4.269,
+            -2.679
+          ]
+        },
+        "gradient boosting (glucose history only)": {
+          "point": -3.784,
+          "ci95": [
+            -4.722,
+            -2.845
+          ]
+        }
+      },
+      "test_patients_with_lower_rmse_than_persistence": {
+        "ridge (glucose history only)": "20/20",
+        "gradient boosting (glucose history only)": "20/20"
+      },
+      "patient_averaged_rmse": {
+        "persistence (last reading)": 16.23,
+        "ridge (glucose history only)": 12.86,
+        "gradient boosting (glucose history only)": 12.46
+      }
+    },
+    "60": {
+      "test_windows": 22624,
+      "test_patients": 20,
+      "metrics_mg_dl": {
+        "persistence (last reading)": {
+          "mae": 18.593,
+          "rmse": 26.944
+        },
+        "ridge (glucose history only)": {
+          "mae": 16.615,
+          "rmse": 23.176
+        },
+        "gradient boosting (glucose history only)": {
+          "mae": 15.939,
+          "rmse": 22.392
+        }
+      },
+      "rmse_ci95": {
+        "persistence (last reading)": [
+          24.133,
+          29.9
+        ],
+        "ridge (glucose history only)": [
+          21.455,
+          25.054
+        ],
+        "gradient boosting (glucose history only)": [
+          20.797,
+          24.05
+        ]
+      },
+      "mae_ci95": {
+        "persistence (last reading)": [
+          16.491,
+          20.99
+        ],
+        "ridge (glucose history only)": [
+          15.438,
+          17.908
+        ],
+        "gradient boosting (glucose history only)": [
+          14.772,
+          17.235
+        ]
+      },
+      "rmse_difference_vs_persistence": {
+        "ridge (glucose history only)": {
+          "point": -3.768,
+          "ci95": [
+            -4.935,
+            -2.584
+          ]
+        },
+        "gradient boosting (glucose history only)": {
+          "point": -4.552,
+          "ci95": [
+            -6.142,
+            -2.933
+          ]
+        }
+      },
+      "test_patients_with_lower_rmse_than_persistence": {
+        "ridge (glucose history only)": "17/20",
+        "gradient boosting (glucose history only)": "19/20"
+      },
+      "patient_averaged_rmse": {
+        "persistence (last reading)": 27.11,
+        "ridge (glucose history only)": 23.5,
+        "gradient boosting (glucose history only)": 22.63
+      }
+    },
+    "120": {
+      "test_windows": 22536,
+      "test_patients": 20,
+      "metrics_mg_dl": {
+        "persistence (last reading)": {
+          "mae": 29.008,
+          "rmse": 40.786
+        },
+        "ridge (glucose history only)": {
+          "mae": 26.154,
+          "rmse": 35.32
+        },
+        "gradient boosting (glucose history only)": {
+          "mae": 24.676,
+          "rmse": 33.624
+        }
+      },
+      "rmse_ci95": {
+        "persistence (last reading)": [
+          35.699,
+          46.168
+        ],
+        "ridge (glucose history only)": [
+          31.64,
+          39.274
+        ],
+        "gradient boosting (glucose history only)": [
+          30.463,
+          36.881
+        ]
+      },
+      "mae_ci95": {
+        "persistence (last reading)": [
+          25.032,
+          33.625
+        ],
+        "ridge (glucose history only)": [
+          23.674,
+          28.986
+        ],
+        "gradient boosting (glucose history only)": [
+          22.414,
+          27.274
+        ]
+      },
+      "rmse_difference_vs_persistence": {
+        "ridge (glucose history only)": {
+          "point": -5.466,
+          "ci95": [
+            -7.196,
+            -3.496
+          ]
+        },
+        "gradient boosting (glucose history only)": {
+          "point": -7.162,
+          "ci95": [
+            -10.096,
+            -4.193
+          ]
+        }
+      },
+      "test_patients_with_lower_rmse_than_persistence": {
+        "ridge (glucose history only)": "16/20",
+        "gradient boosting (glucose history only)": "15/20"
+      },
+      "patient_averaged_rmse": {
+        "persistence (last reading)": 41.13,
+        "ridge (glucose history only)": 36.09,
+        "gradient boosting (glucose history only)": 34.34
+      }
+    }
+  },
+  "uncertainty": "95% percentile intervals from 2,000 bootstrap resamples of test patients; pooled metrics weight patients by their number of windows (consecutive windows overlap and are correlated, which the patient-level resampling accounts for)."
+}

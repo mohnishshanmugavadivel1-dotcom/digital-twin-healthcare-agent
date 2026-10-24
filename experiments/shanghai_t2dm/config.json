@@ -1,0 +1,41 @@
+{
+  "protocol": "shanghai-t2dm-cgm-forecasting/1",
+  "registered_on": "2026-10-22",
+  "registered_before_data_access": true,
+  "seed": 20261022,
+  "data": {
+    "source": "Figshare article 21600933 version 5, file 42966622 (diabetes_datasets.zip)",
+    "archive_md5": "4bfb61cfa506b48155fd9e841ee48e21",
+    "archive_size_bytes": 3738354,
+    "folder": "Shanghai_T2DM",
+    "excluded": "Shanghai_T1DM folder and summary (different population); only T2DM sessions are used"
+  },
+  "cleaning": {
+    "plausible_mg_dl": [20, 600],
+    "sensor_limit_values_mg_dl": [40, 500],
+    "nominal_interval_min": 15,
+    "cadence_tolerance_min": 2,
+    "min_spacing_min": 5,
+    "gap_max_min": 45,
+    "mmol_median_range": [2, 25],
+    "mg_median_range": [40, 450]
+  },
+  "windows": {
+    "lags_min": [15, 30, 45, 60],
+    "horizons_min": [30, 60, 120],
+    "tolerance_min": 5
+  },
+  "inclusion": {"min_usable_windows_per_patient": 1},
+  "split": {"fractions": [0.6, 0.2, 0.2]},
+  "models": {
+    "primary_baseline": "persistence",
+    "ridge_alphas": [0.01, 0.1, 1, 10, 100, 1000],
+    "hgb_grid": [
+      {"max_iter": 200, "learning_rate": 0.05, "max_leaf_nodes": 15, "min_samples_leaf": 40},
+      {"max_iter": 400, "learning_rate": 0.05, "max_leaf_nodes": 31, "min_samples_leaf": 40},
+      {"max_iter": 200, "learning_rate": 0.1, "max_leaf_nodes": 15, "min_samples_leaf": 100}
+    ]
+  },
+  "bootstrap": {"n_boot": 2000},
+  "plots": {"horizon_min": 60, "min_windows": 50, "max_hours": 48}
+}
