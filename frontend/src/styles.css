@@ -99,4 +99,13 @@ tr.served td { background: #f4f7ff; }
 .whatif{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border:1px dashed #f1d0aa;background:#fff9f2;border-radius:8px;padding:8px 12px;margin-bottom:10px}
 .whatif input{width:70px}
 .sim-tag{background:#e8590c;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.05em}
+.sim-error{color:#b91c1c;font-weight:600}
 .sw-scen{background:repeating-linear-gradient(90deg,#e8590c 0 4px,transparent 4px 7px)}
+
+/* WS3: forecast-horizon chips, header data-freshness chip */
+.horizons{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 4px}
+.hz{display:flex;flex-direction:column;gap:1px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:6px 8px}
+.hz-h{font-size:11px;font-weight:700;color:#64748b;letter-spacing:.03em}
+.hz-v{font-size:16px;font-weight:700}
+.fresh{display:inline-block;margin-left:10px;font-size:11.5px;font-weight:600;color:#2f9e44;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:999px;padding:1px 9px;vertical-align:middle}
+.fresh-stale{color:#b45309;background:#fffbeb;border-color:#fde68a}
