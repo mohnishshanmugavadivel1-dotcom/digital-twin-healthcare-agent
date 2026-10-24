@@ -9,6 +9,7 @@ interface Props {
   cgm: Observation[];
   meals: Observation[];
   forecast: Forecast | null;
+  scenario?: Forecast | null;
   history: ForecastSummary[];
   clockMs: number;
   offsetMin: number;
@@ -18,7 +19,7 @@ interface Props {
 
 type Pt = { t: number; v?: number | null; band?: [number, number]; mealG?: number };
 
-export function GlucoseChart({ cgm, meals, forecast, history, clockMs, offsetMin, windowHours, showPastPredictions }: Props) {
+export function GlucoseChart({ cgm, meals, forecast, scenario, history, clockMs, offsetMin, windowHours, showPastPredictions }: Props) {
   const [ref, width] = useWidth<HTMLDivElement>();
   const startMs = clockMs - windowHours * 3600_000;
   const endMs = clockMs + 2.25 * 3600_000;
@@ -45,6 +46,13 @@ export function GlucoseChart({ cgm, meals, forecast, history, clockMs, offsetMin
         return v !== undefined && t >= startMs && t <= clockMs ? [{ t, v }] : [];
       })
     : [];
+  // Simulated what-if scenario (never ingested): dashed orange overlay on the same axis.
+  const scenPts: Pt[] = [];
+  if (scenario?.status === "ok" && scenario.current_glucose_mg_dl !== null) {
+    const g0 = scenario.current_glucose_mg_dl;
+    scenPts.push({ t: toMs(scenario.issued_at), v: g0, band: [g0, g0] });
+    for (const p of scenario.trajectory) scenPts.push({ t: toMs(p.timestamp), v: p.glucose_mg_dl, band: [p.lower_mg_dl, p.upper_mg_dl] });
+  }
   const mealPts: Pt[] = meals.filter((m) => toMs(m.timestamp) >= startMs).map((m) => ({ t: toMs(m.timestamp), v: 52, mealG: m.value }));
 
   const ticks: number[] = [];
@@ -66,8 +74,10 @@ export function GlucoseChart({ cgm, meals, forecast, history, clockMs, offsetMin
           <ReferenceLine y={70} stroke="#c0392b" strokeDasharray="4 3" label={{ value: "70", position: "right", fontSize: 11, fill: "#c0392b" }} />
           <ReferenceLine x={clockMs} stroke="#334155" label={{ value: "now", position: "top", fontSize: 11, fill: "#334155" }} />
           <Area data={fcPts} dataKey="band" stroke="none" fill="#6c8ef5" fillOpacity={0.18} isAnimationActive={false} name="80% interval" />
+          {scenPts.length > 0 && <Area data={scenPts} dataKey="band" stroke="none" fill="#e8590c" fillOpacity={0.10} isAnimationActive={false} name="What-if 80% interval (simulated)" />}
           <Line data={cgmPts} dataKey="v" stroke="#1f2a44" strokeWidth={2} dot={false} connectNulls={false} isAnimationActive={false} name="CGM" />
           <Line data={fcPts} dataKey="v" stroke="#3b5bdb" strokeWidth={2} strokeDasharray="6 4" dot={{ r: 3 }} isAnimationActive={false} name="Forecast" />
+          {scenPts.length > 0 && <Line data={scenPts} dataKey="v" stroke="#e8590c" strokeWidth={2} strokeDasharray="2 4" dot={false} isAnimationActive={false} name="What-if meal (simulated)" />}
           {showPastPredictions && <Scatter data={pastPts} dataKey="v" fill="#9aa8c7" shape={(p: { cx?: number; cy?: number }) => <circle cx={p.cx} cy={p.cy} r={2.5} fill="#8d9bbd" />} isAnimationActive={false} name="Past 60-min prediction" />}
           <Scatter data={mealPts} dataKey="v" fill="#2f9e44" shape="triangle" isAnimationActive={false} name="Logged meal" />
           <Tooltip
@@ -87,6 +97,7 @@ export function GlucoseChart({ cgm, meals, forecast, history, clockMs, offsetMin
         <span><i className="sw sw-range" /> Target range 70–180</span>
         <span><i className="sw sw-meal" /> Logged meal</span>
         {showPastPredictions && <span><i className="sw sw-past" /> Earlier 60-min predictions</span>}
+        {scenPts.length > 0 && <span><i className="sw sw-scen" /> What-if meal (simulated, not in record)</span>}
       </div>
     </div>
   );

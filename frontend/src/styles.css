@@ -94,3 +94,9 @@ tr.served td { background: #f4f7ff; }
   .side-title { display: none; }
   .main-row { grid-template-columns: 1fr; }
 }
+
+/* U1 counterfactual what-if (simulated only, never ingested) */
+.whatif{display:flex;flex-wrap:wrap;gap:10px;align-items:center;border:1px dashed #f1d0aa;background:#fff9f2;border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.whatif input{width:70px}
+.sim-tag{background:#e8590c;color:#fff;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;letter-spacing:.05em}
+.sw-scen{background:repeating-linear-gradient(90deg,#e8590c 0 4px,transparent 4px 7px)}

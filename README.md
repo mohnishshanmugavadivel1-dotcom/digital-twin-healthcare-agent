@@ -84,7 +84,7 @@ For frontend development, run `make dev-frontend` (Vite on :5173, which proxies 
 | `src/glucotwin/models/`, `evaluation/` | Baselines, models, conformal intervals, metrics, training pipeline |
 | `src/glucotwin/twin/engine.py` | Patient state engine (ingest, then state, then forecast) |
 | `src/glucotwin/service.py`, `api/app.py` | Service layer, replay sessions, FastAPI routes |
-| `frontend/` | React + TypeScript + Recharts doctor dashboard |
+| `frontend/` | React + TypeScript + Recharts doctor dashboard, incl. a **what-if meal simulation** (counterfactual fork on a copy of the history — never ingested, always labelled simulated) |
 | `tests/` | 52 pytest tests, including leakage and replay-never-leaks-future tests |
 | `scripts/` | Demo-moment finder, presentation builder, PDF export |
 | `docs/submission/` | Architecture and presentation PDFs, plus their HTML/SVG sources |

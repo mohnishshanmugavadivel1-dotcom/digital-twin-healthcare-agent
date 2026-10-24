@@ -44,6 +44,11 @@ Deep link: **`/?patient=SYN-0039&start=151.833`**. The replay starts at Sun 8 Ma
 4. Continue to **10:20**. **Expected:** glucose is 187, above 180. The risk card switches to "already above 180", because the onset question is only asked at ≤ 180.
    The alert stayed on from 08:55 until onset: an **85-min sustained warning**. The peak was about 207 mg/dL.
 5. *Say:* this is one well-chosen example. The audit shows that only about 69% of onsets get a sustained warning (95% CI 0.48–0.83).
+6. **What-if meal (U1, added 2026-10-20).** Restart to 07:55, press **+1 h** back to 08:55. In the orange strip enter **80 g** and press
+   **Simulate meal**: a dashed orange scenario curve overlays the solid forecast, with a **SIMULATED** tag and a Δ readout (risk and +60-min glucose).
+   The fork runs on a copy of the history — the hypothetical meal is **never ingested** (state, version, streams and forecast history are
+   unchanged; `tests/test_counterfactual.py` asserts it), the endpoint is test-split-only, and the response carries a
+   "not medical advice" disclaimer. Say those boundaries out loud.
 
 ### Scene 6: honest failure (verified)
 
