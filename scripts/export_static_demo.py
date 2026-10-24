@@ -13,6 +13,11 @@ Before writing anything, the script checks that the static replay is faithful:
     so any multiple of 5 min can be served from the 5-min frames.
 If any check fails it exits non-zero and writes nothing.
 
+Besides the two full replays (SCENARIOS), every other held-out test patient gets a lightweight "moment" scenario:
+one recorded moment 24 h into the patient's data (the live app's default replay start) plus the single 5-min step
+to the end of that short recording, with the record, twin state, forecast, glucose profile, FHIR export and every
+What-If amount at that moment. The same faithfulness checks run on them.
+
     .venv/bin/python scripts/export_static_demo.py [--out frontend/static-demo/demo]
 """
 
@@ -45,6 +50,8 @@ WHATIF_GRAMS = sorted(set(PRESET_GRAMS) | {30, 60, 90, 120, 200, 300})
 PRESET_GRID_MIN = 15
 FHIR_HOURS = 6  # CGM window of the recorded FHIR export (one export per scenario, at the replay start)
 AGP_DAYS = 14  # window of the recorded glucose profile (one per scenario, at the replay start)
+MOMENT_OFFSET_HOURS = 24.0  # PatientView's default startOffsetHours: the moment the live app opens on
+MOMENT_DURATION_HOURS = STEP_MIN / 60  # one 5-min step, so the recording ends (finished) right after the moment
 SCENARIOS = [
     {"id": "early-warning", "patient_id": "SYN-0039", "start_offset_hours": 151.833, "duration_hours": 6.0,
      "whatif_minutes": [0, 60],
@@ -108,7 +115,7 @@ def record_scenario(c: TestClient, sc: dict) -> dict:
     sid = st["session_id"]
     frames, summaries, whatifs, probes = [], [], [], []
     n_frames = int(sc["duration_hours"] * 60 / STEP_MIN) + 1
-    probe_at = {0, 7, n_frames // 2, n_frames - 1}
+    probe_at = {i for i in (0, 7, n_frames // 2, n_frames - 1) if i < n_frames}
     for i in range(n_frames):
         if i > 0:
             st = ok(c.post(f"/api/replay/{sid}/step", json={"minutes": STEP_MIN}))
@@ -159,12 +166,28 @@ def record_scenario(c: TestClient, sc: dict) -> dict:
     if not frames[-1]["finished"]:
         raise SystemExit(f"{sc['id']}: the last recorded frame is not the end of the replay")
     return {**{k: sc[k] for k in ("id", "patient_id", "start_offset_hours", "duration_hours", "title", "description")},
+            "kind": sc.get("kind", "replay"),
             "step_minutes": STEP_MIN, "record": record, "frames": frames, "summaries": summaries,
             "observations": observations, "forecasts": forecasts, "whatifs": whatifs, "fhir": fhir, "agp": agp,
             "checks": {"probed_frames": sorted(probe_at), "observation_and_forecast_replay_equals_api": True,
                        "step_60_equals_step_5_frames": True,
+                       # frames compared by check 2; a one-moment scenario has only frame 0 (fresh replay = recorded frame)
+                       "step_60_compared_frames": list(range(0, n_frames, 60 // STEP_MIN)),
                        "step_comparison_ignores": ["forecast_id", "session_id",
                                                    "state.version (update counter; depends on step size)"]}}
+
+
+def moment_scenarios(c: TestClient) -> list[dict]:
+    """A one-moment scenario for every held-out test patient that has no full replay (API list order)."""
+    replayed = {sc["patient_id"] for sc in SCENARIOS}
+    pids = [p["patient_id"] for p in ok(c.get("/api/patients")) if p["patient_id"] not in replayed]
+    return [{"id": f"moment-{pid.lower()}", "patient_id": pid, "kind": "moment",
+             "start_offset_hours": MOMENT_OFFSET_HOURS, "duration_hours": MOMENT_DURATION_HOURS, "whatif_minutes": [0],
+             "title": f"{pid}: one recorded moment",
+             "description": f"One recorded moment {MOMENT_OFFSET_HOURS:g} h into this held-out patient's data (the live app's "
+                            "default start): record, twin state, forecast, glucose profile, FHIR export and every What-If "
+                            "amount. The replay can step once, 5 min, to the end of the recording. Full replays: SYN-0039 "
+                            "and SYN-0019, or any patient in the local app."} for pid in pids]
 
 
 def all_amount_frames(s: dict) -> set[int]:
@@ -182,7 +205,9 @@ def main() -> None:
     health = ok(c.get("/api/health"))
     model = ok(c.get("/api/model"))
     evaluation = ok(c.get("/api/evaluation"))
-    scenarios = [record_scenario(c, sc) for sc in SCENARIOS]
+    scenarios = [record_scenario(c, sc) for sc in SCENARIOS + moment_scenarios(c)]
+    if len(scenarios) != health["patients_available"]:
+        raise SystemExit(f"recorded {len(scenarios)} patients, but the API serves {health['patients_available']}")
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO, capture_output=True, text=True).stdout.strip()
     dirty = bool(subprocess.run(["git", "status", "--porcelain"], cwd=REPO, capture_output=True, text=True).stdout.strip())
     b23 = REPO / "reports/research/b23_joint_support.json"
@@ -197,7 +222,7 @@ def main() -> None:
         "b23_joint_support_sha256": hashlib.sha256(b23.read_bytes()).hexdigest() if b23.exists() else None,
         "whatif_grams": WHATIF_GRAMS, "preset_grams": PRESET_GRAMS, "preset_grid_minutes": PRESET_GRID_MIN,
         "health": health, "model": model, "evaluation": evaluation,
-        "scenarios": [{"id": s["id"], "patient_id": s["patient_id"], "start_offset_hours": s["start_offset_hours"],
+        "scenarios": [{"id": s["id"], "patient_id": s["patient_id"], "kind": s["kind"], "start_offset_hours": s["start_offset_hours"],
                        "title": s["title"], "description": s["description"], "file": f"{s['id']}.json",
                        "start_clock": s["frames"][0]["clock"], "end_clock": s["frames"][-1]["clock"],
                        # clocks with every amount recorded; preset_clocks have the preset amounts only

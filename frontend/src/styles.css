@@ -236,3 +236,9 @@ tr.served td { background: #f4f7ff; }
 .swap-serving { display: block; }
 .swap-table td, .swap-table th { white-space: nowrap; }
 .swap-table td.swap-dish { white-space: normal; }
+.whatif-lead { flex-basis: 100%; margin: 4px 0 0; }
+.sim-table td.sim-primary { font-weight: 700; }
+.sim-table th.sim-primary { color: #4c2fb0; }
+.sim-table td.sim-tree { color: var(--muted, #6b6a66); }
+.sim-table th.sim-tree { font-style: normal; }
+.static-moment { margin-top: 4px; padding: 3px 6px; border-radius: 6px; background: #fff7e6; color: #7a4b00; max-width: 420px; }

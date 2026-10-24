@@ -77,7 +77,12 @@ test("snapshot: every preset at every 15-min frame, the research twin curve besi
     }
     assert.equal(sc.agp.frame_index, 0);
     assert.equal(sc.agp.summary.as_of, sc.frames[0].state.as_of);
-    assert.ok(sc.agp.summary.n_readings > 0 && sc.agp.summary.hourly.length === 24);
+    const hours = sc.agp.summary.hourly.map((h) => h.hour);
+    if (meta.kind === "moment") { // one day of data: hours with a CGM gap have no bin (e.g. SYN-0009 has none at 10-11 h)
+      assert.ok(sc.agp.summary.n_readings > 0 && hours.length > 0 && new Set(hours).size === hours.length && hours.every((h) => h >= 0 && h <= 23));
+      assert.equal(sc.frames.length, 2); // the moment plus one 5-min step to the end of the recording
+      assert.ok(!sc.frames[0].finished && sc.frames[1].finished);
+    } else assert.ok(sc.agp.summary.n_readings > 0 && hours.length === 24);
   }
 });
 
@@ -119,4 +124,16 @@ test("an unrecorded what-if gets an explanatory message, not an invented result"
   assert.match(msg, /no recorded what-if for 77 g/);
   assert.match(msg, /make serve/);
   assert.equal(findWhatIf(sc, 0, 77), null);
+});
+
+test("snapshot: all 12 held-out test patients are recorded; the two full replays come first (SYN-0039 is the default view)", () => {
+  const ids = manifest.scenarios.map((sc) => sc.patient_id);
+  assert.equal(ids.length, 12);
+  assert.equal(new Set(ids).size, 12);
+  assert.deepEqual(manifest.scenarios.slice(0, 2).map((sc) => [sc.patient_id, sc.kind]), [["SYN-0039", "replay"], ["SYN-0019", "replay"]]);
+  for (const sc of manifest.scenarios.slice(2)) {
+    assert.equal(sc.kind, "moment");
+    assert.equal(sc.start_offset_hours, 24); // the live app's default start, not a hand-picked moment
+    assert.ok(sc.whatif_clocks?.length === 1 && sc.fhir_clock === sc.start_clock, sc.patient_id);
+  }
 });

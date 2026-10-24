@@ -1,5 +1,18 @@
 # GlucoTwin — a living glucose digital twin for type 2 diabetes
 
+## TL;DR (60-Second Judge's Summary)
+
+**Demo video:** not recorded yet (recording script: [`docs/VIDEO_SCRIPT.md`](docs/VIDEO_SCRIPT.md)) · **Live demo (static snapshot, no install):** <https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/> · **Submission PDFs:** [`team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/`](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/) — [16-slide deck](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Presentation.pdf) · [architecture](team_mono_Amrita_Vishwa_Vidyapeetham_Chennai/GlucoTwin_Architecture.pdf)
+
+| What | Result (held-out test patients; source in brackets) |
+|---|---|
+| Synthetic benchmark | 30-min glucose RMSE **10.4** mg/dL (served gradient boosting; persistence 18.7). Excursion warning AUROC **0.884** (served logistic regression) / 0.936 (opt-in gradient boosting); **85-min median lead time** for the 69% of onsets that get a sustained warning ([evaluation](reports/evaluation_report.json), [audit](reports/audit_report.json)) |
+| Twin What-If vs simulator truth (+120 min) | Meal MAE **5.9** mg/dL (personalised twin curve) vs 37.3 (tree feature perturbation); walk MAE **4.3** vs 11.6 (assuming no effect) ([twin validity](docs/research/TWIN_VALIDITY.md)) |
+| Real data: ShanghaiT2DM (100 people with T2D) | 30-min glucose-history GBDT RMSE **12.32** vs persistence 16.10 mg/dL, better for **20/20** test patients ([summary](reports/real_data/shanghai_t2dm/public/SUMMARY.md)) |
+| Tests (rerun 2026-10-24) | **161** Python + **50** frontend + **83** browser checks, all passing |
+
+*ShanghaiT2DM has no step or heart-rate data and only free-text meals, so 10 of GlucoTwin's 33 inputs are absent there: we evaluate separate glucose-history models on it, which does not validate the full twin.*
+
 **Team / Submission Folder:** team_mono_Amrita_Vishwa_Vidyapeetham_Chennai
 
 **Happiest Health Digital Twin Challenge 2026 · Prototype & Code Submission · team mono**
