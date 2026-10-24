@@ -18,12 +18,15 @@ import logging
 import uuid
 from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import NamedTuple
 
 import numpy as np
 import pandas as pd
 
 from glucotwin.config import (
     CGM_VALID_RANGE,
+    COUNTERFACTUAL_MEAL_GRAMS_RANGE,
+    COUNTERFACTUAL_REFERENCE_GRAMS,
     ENGINE_HISTORY_HOURS,
     HR_VALID_RANGE,
     HYPER_THRESHOLD_MG_DL,
@@ -65,6 +68,14 @@ VALID_RANGES = {
     ObservationKind.heart_rate: HR_VALID_RANGE,
 }
 MAX_FORECAST_HISTORY = 5000
+
+
+class CounterfactualLegs(NamedTuple):
+    """The three forecasts behind one what-if: no meal, zero-carb meal now, X-g meal now."""
+
+    baseline: Forecast
+    reference: Forecast
+    scenario: Forecast
 
 
 def feats_frame_empty() -> pd.DataFrame:
@@ -209,18 +220,48 @@ class TwinEngine:
 
     # ----------------------------------------------------------- counterfactual
     def counterfactual_forecast(self, meal_grams: float) -> tuple[Forecast, Forecast]:
+        """Backward-compatible ``(baseline, scenario)`` pair; see :meth:`counterfactual_forecasts`."""
+        legs = self.counterfactual_forecasts(meal_grams)
+        return legs.baseline, legs.scenario
+
+    def counterfactual_forecasts(self, meal_grams: float) -> CounterfactualLegs:
         """Simulate "what if the patient ate ``meal_grams`` of carbs right now".
 
-        Runs entirely on a local copy of the observation history: the hypothetical
-        meal is NEVER ingested into this twin — streams, state, version,
-        ``latest_forecast`` and ``forecast_history`` are untouched (enforced by
-        tests/test_counterfactual.py). Returns ``(baseline, scenario)`` where the
-        baseline is the forecast the twin would issue at ``as_of`` right now and
-        the scenario adds one hypothetical meal at ``as_of`` before rebuilding the
-        same features through the same served models. Simulated output only.
+        Runs entirely on local copies of the observation history: no hypothetical meal
+        is ever ingested into this twin — streams, state, version, ``latest_forecast``
+        and ``forecast_history`` are untouched (enforced by tests/test_counterfactual.py).
+
+        Three legs are forecast at ``t0`` (the latest observation, on the 5-min grid)
+        by the same served models on features rebuilt by the same function:
+
+        * ``baseline``  — no hypothetical meal (equals the live served forecast);
+        * ``reference`` — a zero-carb meal logged at ``t0`` (backlog B-22): like the
+          scenario it resets ``minutes_since_meal`` to 0, but adds no carbohydrate;
+        * ``scenario``  — a ``meal_grams`` meal logged at ``t0``.
+
+        ``scenario - reference`` isolates the carb content; ``scenario - baseline`` also
+        contains the models' learned meal-timing expectation. Both are learned model
+        associations, not physiological effects. Simulated output only.
         """
-        if not 1.0 <= float(meal_grams) <= 300.0:
-            raise ValueError(f"meal_grams must be within [1, 300], got {meal_grams}")
+        lo, hi = COUNTERFACTUAL_MEAL_GRAMS_RANGE
+        if not lo <= float(meal_grams) <= hi:
+            raise ValueError(f"meal_grams must be within [{lo:g}, {hi:g}], got {meal_grams}")
+        t0, rows, reason = self._counterfactual_features(float(meal_grams))
+        if reason is not None:
+            empty = feats_frame_empty()
+            return CounterfactualLegs(*(self._forecast_at(t0, empty, reason=reason) for _ in range(3)))
+        return CounterfactualLegs(
+            baseline=self._forecast_at(t0, rows["baseline"]),
+            reference=self._forecast_at(t0, rows["reference"]),
+            scenario=self._forecast_at(t0, rows["scenario"]),
+        )
+
+    def _counterfactual_features(self, meal_grams: float) -> tuple[pd.Timestamp, dict[str, pd.DataFrame], str | None]:
+        """Feature frames for the three counterfactual legs at ``t0`` (exposed for tests and audits).
+
+        Returns ``(t0, {"baseline"|"reference"|"scenario": features}, reason)``; ``reason`` is
+        not None (and the dict empty) when the live sufficiency gate would withhold a forecast.
+        """
         hist = self.history_frame()
         if hist.empty or not (hist["kind"] == ObservationKind.cgm.value).any():
             raise ValueError("counterfactual needs at least one CGM observation")
@@ -231,25 +272,21 @@ class TwinEngine:
         n_recent = int((cgm_mask & (hist["timestamp"] > t0 - pd.Timedelta(minutes=60))
                         & (hist["timestamp"] <= t0)).sum())
         if n_recent < MIN_CGM_READINGS_FOR_FORECAST:
-            reason = f"only {n_recent} CGM readings in the last 60 min (need {MIN_CGM_READINGS_FOR_FORECAST})"
-            empty = feats_frame_empty()
-            return self._forecast_at(t0, empty, reason=reason), self._forecast_at(t0, empty, reason=reason)
+            return t0, {}, f"only {n_recent} CGM readings in the last 60 min (need {MIN_CGM_READINGS_FOR_FORECAST})"
 
         def features_for(frame: pd.DataFrame) -> pd.DataFrame:
             window = frame[frame["timestamp"] > t0 - pd.Timedelta(hours=ENGINE_HISTORY_HOURS)]
             return build_feature_frame(window, self.record, responses=self._responses(frame))
 
-        baseline = self._forecast_at(t0, features_for(hist))
-        scenario_hist = (
-            pd.concat(
-                [hist, pd.DataFrame({"timestamp": [t0], "kind": [ObservationKind.meal.value], "value": [float(meal_grams)]})],
-                ignore_index=True,
-            )
-            .sort_values(["timestamp", "kind"])
-            .reset_index(drop=True)
-        )
-        scenario = self._forecast_at(t0, features_for(scenario_hist))
-        return baseline, scenario
+        def with_meal(grams: float) -> pd.DataFrame:
+            meal = pd.DataFrame({"timestamp": [t0], "kind": [ObservationKind.meal.value], "value": [grams]})
+            return pd.concat([hist, meal], ignore_index=True).sort_values(["timestamp", "kind"]).reset_index(drop=True)
+
+        return t0, {
+            "baseline": features_for(hist),
+            "reference": features_for(with_meal(COUNTERFACTUAL_REFERENCE_GRAMS)),
+            "scenario": features_for(with_meal(meal_grams)),
+        }, None
 
     def _forecast_at(self, t: pd.Timestamp, feats: pd.DataFrame, reason: str | None = None) -> Forecast:
         """Standalone forecast builder for what-if scenarios (does NOT touch twin state)."""

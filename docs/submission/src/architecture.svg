@@ -51,6 +51,16 @@
   <text x="46" y="572" class="m">60 patients × 14 days</text>
 
   <!-- column 2 -->
+  <rect class="box ml" x="330" y="112" width="260" height="184"/>
+  <text x="346" y="138" class="t">What-if meal lab</text>
+  <text x="346" y="158" class="m">simulated · never ingested · test split</text>
+  <text x="346" y="180" class="s">Copies of the twin history; same</text>
+  <text x="346" y="197" class="s">served models, 3 legs: no meal ·</text>
+  <text x="346" y="214" class="s">zero-carb meal now · X g now</text>
+  <text x="346" y="236" class="s">Primary Δ = X g − zero-carb meal;</text>
+  <text x="346" y="253" class="s">&lt; 30 g flagged unreliable</text>
+  <text x="346" y="276" class="m">Learned associations, not physiology</text>
+
   <rect class="box st" x="330" y="352" width="260" height="176"/>
   <text x="346" y="378" class="t">Chronological replay</text>
   <text x="346" y="398" class="t">&amp; ingestion</text>
@@ -98,7 +108,7 @@
   <text x="1246" y="196" class="t">FastAPI REST API</text>
   <text x="1246" y="218" class="s">Pydantic contracts (schema 0.2.0)</text>
   <text x="1246" y="235" class="s">patients · state · forecast(s) · replay</text>
-  <text x="1246" y="252" class="s">model card · evaluation</text>
+  <text x="1246" y="252" class="s">model card · evaluation · counterfactual</text>
 
   <rect class="box ui" x="1230" y="320" width="340" height="240"/>
   <text x="1246" y="346" class="t">Clinician dashboard (React)</text>
@@ -108,8 +118,9 @@
   <text x="1246" y="432" class="s">• Risk history, twin state, data quality</text>
   <text x="1246" y="452" class="s">• Replay: play, +5 min, +1 h, restart</text>
   <text x="1246" y="472" class="s">• Evaluation tab: all baselines, limits</text>
-  <text x="1246" y="502" class="s">Persistent "synthetic, not a medical</text>
-  <text x="1246" y="519" class="s">device" banner; no treatment advice</text>
+  <text x="1246" y="492" class="s">• What-if meal lab (labelled SIMULATED)</text>
+  <text x="1246" y="520" class="s">Persistent "synthetic, not a medical</text>
+  <text x="1246" y="537" class="s">device" banner; no treatment advice</text>
 
   <!-- offline lane -->
   <text x="330" y="628" class="lane">6 · OFFLINE TRAINING &amp; EVALUATION</text>
@@ -143,7 +154,7 @@
   <text x="46" y="709" class="s">  CC BY 4.0)</text>
   <text x="46" y="729" class="s">• HGB + TreeSHAP event model</text>
   <text x="46" y="749" class="s">• HRV, sleep stages streams</text>
-  <text x="46" y="769" class="s">• What-if simulation</text>
+  <text x="46" y="769" class="s">• Activity / walk what-if</text>
   <text x="46" y="789" class="s">• Database, auth, audit log,</text>
   <text x="46" y="806" class="s">  FHIR export</text>
   <text x="46" y="826" class="s">• Hypoglycaemia as 2nd event</text>
@@ -173,4 +184,8 @@
   <path class="a" d="M1570,700 L1590,700 L1590,225 L1572,225"/>
   <text x="1420" y="630" class="lbl">served via /api/evaluation</text>
   <path class="a" d="M160,422 L160,462"/>
+  <path class="a" d="M700,320 L700,268 L592,268"/>
+  <text x="604" y="284" class="lbl">history copy</text>
+  <path class="a" d="M590,150 L928,190"/>
+  <text x="640" y="150" class="lbl">3 legs → same features + models</text>
 </svg>
