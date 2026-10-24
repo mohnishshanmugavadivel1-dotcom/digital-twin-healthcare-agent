@@ -64,7 +64,7 @@ make setup && make train && make build-frontend && make serve
 # then open http://localhost:8000/?patient=SYN-0039&start=151.833
 ```
 
-**Public static snapshot:** [https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). It is deployed by the manual GitHub Pages workflow ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)), and the site was confirmed loading on 2026-10-23. The public site serves whichever snapshot was last deployed; its `demo/manifest.json` shows the commit and recording time. The snapshot in this repository was recorded on 2026-10-23 (20:27 UTC) from clean commit 55ff96f (model `gt-0.1.0-s20261017-202610232010`). Its frames, forecasts and What-Ifs are identical to the previous recording from 3e89247; only session IDs and the model-version label differ. It includes the FHIR panel with its RiskAssessment and handover note, the low-glucose watch (risk card and What-If column), the personalisation confidence line, the personalised twin-curve research column with the walk toggle, all 24 regional meal presets on a 15-min grid, the AGP card and the fact-grounded handover note. There is no demo video yet.
+**Public static snapshot:** [https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/](https://mohnishshanmugavadivel1-dotcom.github.io/digital-twin-healthcare-agent/). It is deployed by the manual GitHub Pages workflow ([`.github/workflows/pages-demo.yml`](.github/workflows/pages-demo.yml)), and the site was confirmed loading on 2026-10-23. The public site serves whichever snapshot was last deployed; its `demo/manifest.json` shows the commit and recording time. The snapshot in this repository was recorded on 2026-10-24 (06:12 UTC) from clean commit 902063c (model `gt-0.1.0-s20261017-202610240555`). The two full replays (SYN-0039, SYN-0019) are identical to the previous recording from 55ff96f; only session IDs, the model-version label and a new `kind` field differ. All 12 held-out patients are now clickable: the other 10 each have one recorded moment (24 h into their data, the live app's default start) with the record, forecast, AGP, FHIR export and every What-If amount ([details](docs/STATIC_DEMO.md)). It includes the FHIR panel with its RiskAssessment and handover note, the low-glucose watch (risk card and What-If column), the personalisation confidence line, the personalised twin-curve columns as the primary What-If deltas (with the post-meal walk; tree deltas beside them), all 24 regional meal presets on a 15-min grid, the AGP card and the fact-grounded handover note. There is no demo video yet.
 
 ### 90-second judge walkthrough
 
@@ -840,6 +840,12 @@ GitHub Actions (`.github/workflows/ci.yml`) runs the same lint, Python test, bui
 - Bundle rebuilt with `run_pipeline`: matched `reports/evaluation_report.json` apart from `generated_at` and `model_version`.
 - `scripts/export_static_demo.py` exit 0 from a clean tree. Every frame, forecast and What-If is identical to the 3e89247 recording (session IDs and the model-version label excluded).
 
+**Results recorded on 2026-10-24 (IST) for commit 902063c** (the following commit adds only the re-recorded snapshot, the refreshed What-If screenshot, the rebuilt deck PDF and its submission-folder copy, and docs):
+- `make check` exit 0: Ruff passed; TypeScript check and production build succeeded; 50/50 frontend tests passed (1 new: all 12 held-out patients in the snapshot).
+- pytest: **161 passed, 0 skipped**. openpyxl 3.1.5, et-xmlfile 2.0.0 and xlrd 2.0.2 are now pinned in `requirements.lock`, so `make setup` and CI run the two Shanghai loader tests.
+- Bundle rebuilt with `run_pipeline`: matched `reports/evaluation_report.json` apart from `generated_at` and `model_version`. No model, simulator or report numbers changed.
+- `scripts/export_static_demo.py` exit 0 from a clean tree, all faithfulness checks passed for 12 patients. The two full replays are identical to the 55ff96f recording (session IDs, the model-version label and the new `kind` field excluded).
+
 Check the latest GitHub Actions run for the submitted commit before relying on these results.
 
 **Browser checks:**
@@ -859,6 +865,11 @@ Check the latest GitHub Actions run for the submitted commit before relying on t
   - `browser_smoke.mjs` passed 14/14, `browser_new_features.mjs` 15/15 and `browser_final_upgrade.mjs` 17/17;
   - there were no console errors or failed requests.
   - This run found the swap-finder card widening a 390 px page; two CSS fixes resolved it before the final run.
+- On 2026-10-24 (IST), against the snapshot recorded from 902063c and served locally under `/digital-twin-healthcare-agent/`:
+  - `browser_swap_atithi.mjs` 15/15, `browser_smoke.mjs` 14/14, `browser_new_features.mjs` 15/15;
+  - `browser_final_upgrade.mjs` 23/23. Its What-If layout checks were rewritten for the requested column order (twin curve first and bold, walk column on by default, tree deltas to the right); the asserted values are unchanged (+42.5, +60.0, +48.8 with walk −11.2; tree +7.9, +29.9, +10.7). Three checks per viewport are new: bold primary cells, the lead sentence, and the walk toggle hiding its column;
+  - new `docs/qa/browser_all_patients.mjs` 16/16: 12 patients listed and none disabled, SYN-0039 still the default, every patient view loads (chart, AGP, verified handover), the 10 one-moment patients are labelled, and a recorded What-If answers for one of them;
+  - 83/83 in total, with no console errors or failed requests.
 - Accessibility and keyboard-interaction testing have not been done.
 
 ## 14. Submission artefacts
