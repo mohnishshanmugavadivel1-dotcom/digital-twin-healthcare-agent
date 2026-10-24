@@ -1,9 +1,9 @@
 {
- "generated_at": "2026-10-23T10:01:04+00:00",
+ "generated_at": "2026-10-23T19:31:20+00:00",
  "protocol": "experiments/twin_validity/protocol_addendum_v2.json",
  "protocol_d": "experiments/twin_validity/protocol_addendum_v3.json",
  "status": "POST-HOC / EXPLORATORY addendum. v1 pre-registered results are collated unchanged below.",
- "model_version": "gt-0.1.0-s20261017-202610230926",
+ "model_version": "gt-0.1.0-s20261017-202610231912",
  "what": "Synthetic simulator cohort only (extended Bergman minimal model per src/glucotwin/synth/generator.py). Frozen served models. Not clinical evidence.",
  "checks": {
   "simulator_reconstruction_exact": true
@@ -19,8 +19,8 @@
      "ablated": 22.965,
      "ablated_minus_served": 2.441,
      "ci95_patient_bootstrap": [
-      0.812,
-      3.851
+      0.734,
+      3.858
      ]
     },
     "mae": {
@@ -28,8 +28,8 @@
      "ablated": 17.986,
      "ablated_minus_served": 1.924,
      "ci95_patient_bootstrap": [
-      0.741,
-      3.2
+      0.655,
+      3.113
      ]
     }
    },
@@ -40,8 +40,8 @@
      "ablated": 23.889,
      "ablated_minus_served": 1.045,
      "ci95_patient_bootstrap": [
-      -0.012,
-      2.372
+      -0.021,
+      2.4
      ]
     },
     "mae": {
@@ -49,8 +49,8 @@
      "ablated": 18.937,
      "ablated_minus_served": 0.827,
      "ci95_patient_bootstrap": [
-      -0.017,
-      1.909
+      -0.021,
+      1.937
      ]
     }
    }
@@ -122,13 +122,13 @@
     },
     "mae_whatif_minus_baseline": 2.994,
     "mae_whatif_minus_baseline_ci95": [
-     0.523,
-     5.426
+     0.66,
+     5.454
     ],
     "median_ae_whatif_minus_baseline": 1.776,
     "median_ae_whatif_minus_baseline_ci95": [
-     -0.343,
-     4.127
+     -0.312,
+     4.344
     ],
     "by_grams": {
      "20": {
@@ -200,13 +200,13 @@
     },
     "mae_whatif_minus_baseline": 7.376,
     "mae_whatif_minus_baseline_ci95": [
-     -0.311,
-     15.346
+     -0.432,
+     15.059
     ],
     "median_ae_whatif_minus_baseline": 4.65,
     "median_ae_whatif_minus_baseline_ci95": [
-     -2.734,
-     11.9
+     -2.582,
+     11.806
     ],
     "by_grams": {
      "20": {
@@ -278,13 +278,13 @@
     },
     "mae_whatif_minus_baseline": 24.451,
     "mae_whatif_minus_baseline_ci95": [
-     13.355,
-     34.805
+     13.117,
+     35.429
     ],
     "median_ae_whatif_minus_baseline": 21.514,
     "median_ae_whatif_minus_baseline_ci95": [
-     8.624,
-     31.234
+     8.579,
+     31.642
     ],
     "by_grams": {
      "20": {
@@ -475,18 +475,18 @@
     },
     "mae_explore_personal_minus_baseline": 2.317,
     "mae_explore_personal_minus_baseline_ci95": [
-     0.538,
-     4.082
+     0.52,
+     4.233
     ],
     "median_ae_explore_personal_minus_baseline": 1.498,
     "median_ae_explore_personal_minus_baseline_ci95": [
-     0.061,
-     3.619
+     0.054,
+     3.883
     ],
     "mae_explore_cohort_curve_minus_baseline": 1.633,
     "mae_explore_cohort_curve_minus_baseline_ci95": [
-     -0.613,
-     3.873
+     -0.652,
+     3.96
     ]
    },
    "60": {
@@ -532,18 +532,18 @@
     },
     "mae_explore_personal_minus_baseline": -1.723,
     "mae_explore_personal_minus_baseline_ci95": [
-     -6.816,
-     3.471
+     -6.65,
+     3.614
     ],
     "median_ae_explore_personal_minus_baseline": -1.877,
     "median_ae_explore_personal_minus_baseline_ci95": [
-     -7.092,
-     3.638
+     -6.843,
+     3.942
     ],
     "mae_explore_cohort_curve_minus_baseline": -1.94,
     "mae_explore_cohort_curve_minus_baseline_ci95": [
-     -7.483,
-     4.009
+     -7.532,
+     4.04
     ]
    },
    "120": {
@@ -589,18 +589,18 @@
     },
     "mae_explore_personal_minus_baseline": -8.215,
     "mae_explore_personal_minus_baseline_ci95": [
-     -13.984,
-     -2.886
+     -14.19,
+     -2.985
     ],
     "median_ae_explore_personal_minus_baseline": -7.414,
     "median_ae_explore_personal_minus_baseline_ci95": [
-     -12.824,
-     -1.064
+     -13.095,
+     -1.155
     ],
     "mae_explore_cohort_curve_minus_baseline": -2.113,
     "mae_explore_cohort_curve_minus_baseline_ci95": [
-     -5.421,
-     1.643
+     -5.415,
+     1.841
     ]
    }
   }
@@ -709,25 +709,25 @@
     "vs_cohort_average": {
      "mae_diff": -1.392,
      "mae_diff_ci95": [
-      -2.632,
-      -0.15
+      -2.652,
+      0.046
      ],
      "rmse_diff": -1.483,
      "rmse_diff_ci95": [
       -2.77,
-      -0.258
+      -0.177
      ]
     },
     "vs_served_whatif": {
      "mae_diff": -3.692,
      "mae_diff_ci95": [
-      -4.865,
+      -4.842,
       -2.699
      ],
      "rmse_diff": -4.942,
      "rmse_diff_ci95": [
-      -6.452,
-      -3.384
+      -6.511,
+      -3.4
      ]
     }
    },
@@ -763,25 +763,25 @@
     "vs_cohort_average": {
      "mae_diff": -7.206,
      "mae_diff_ci95": [
-      -11.371,
-      -2.99
+      -11.415,
+      -2.93
      ],
      "rmse_diff": -8.236,
      "rmse_diff_ci95": [
-      -12.446,
-      -3.821
+      -12.341,
+      -3.637
      ]
     },
     "vs_served_whatif": {
      "mae_diff": -11.972,
      "mae_diff_ci95": [
-      -15.075,
-      -9.194
+      -15.213,
+      -9.183
      ],
      "rmse_diff": -16.679,
      "rmse_diff_ci95": [
-      -20.869,
-      -12.053
+      -20.999,
+      -12.099
      ]
     }
    },
@@ -817,25 +817,25 @@
     "vs_cohort_average": {
      "mae_diff": -10.855,
      "mae_diff_ci95": [
-      -15.436,
-      -6.173
+      -15.766,
+      -6.248
      ],
      "rmse_diff": -13.464,
      "rmse_diff_ci95": [
-      -17.967,
-      -8.408
+      -17.951,
+      -8.299
      ]
     },
     "vs_served_whatif": {
      "mae_diff": -31.422,
      "mae_diff_ci95": [
-      -38.454,
-      -25.32
+      -39.149,
+      -24.93
      ],
      "rmse_diff": -36.407,
      "rmse_diff_ci95": [
-      -44.491,
-      -28.31
+      -45.328,
+      -28.179
      ]
     }
    }
@@ -873,25 +873,25 @@
     "vs_cohort_average": {
      "mae_diff": -1.759,
      "mae_diff_ci95": [
-      -3.325,
-      -0.187
+      -3.357,
+      0.057
      ],
      "rmse_diff": -1.854,
      "rmse_diff_ci95": [
-      -3.468,
-      -0.317
+      -3.465,
+      -0.217
      ]
     },
     "vs_served_whatif": {
      "mae_diff": -4.753,
      "mae_diff_ci95": [
-      -6.264,
-      -3.482
+      -6.25,
+      -3.491
      ],
      "rmse_diff": -6.178,
      "rmse_diff_ci95": [
-      -8.084,
-      -4.169
+      -8.112,
+      -4.149
      ]
     }
    },
@@ -927,25 +927,25 @@
     "vs_cohort_average": {
      "mae_diff": -9.101,
      "mae_diff_ci95": [
-      -14.362,
-      -3.789
+      -14.428,
+      -3.7
      ],
      "rmse_diff": -10.303,
      "rmse_diff_ci95": [
-      -15.573,
-      -4.785
+      -15.437,
+      -4.557
      ]
     },
     "vs_served_whatif": {
      "mae_diff": -16.477,
      "mae_diff_ci95": [
-      -21.011,
-      -12.375
+      -21.086,
+      -12.341
      ],
      "rmse_diff": -21.714,
      "rmse_diff_ci95": [
-      -27.36,
-      -15.324
+      -27.531,
+      -15.493
      ]
     }
    },
@@ -981,25 +981,25 @@
     "vs_cohort_average": {
      "mae_diff": -13.546,
      "mae_diff_ci95": [
-      -19.37,
-      -7.626
+      -19.69,
+      -7.784
      ],
      "rmse_diff": -16.805,
      "rmse_diff_ci95": [
-      -22.451,
-      -10.421
+      -22.452,
+      -10.256
      ]
     },
     "vs_served_whatif": {
      "mae_diff": -37.997,
      "mae_diff_ci95": [
-      -46.702,
-      -30.557
+      -47.615,
+      -29.941
      ],
      "rmse_diff": -44.24,
      "rmse_diff_ci95": [
-      -54.334,
-      -34.094
+      -55.436,
+      -33.712
      ]
     }
    }
@@ -1359,6 +1359,8 @@
    "eligible": 1776
   }
  },
- "deviations": [],
- "runtime_s": 1040.6
+ "deviations": [
+  "Correction (2026-10-23): reports generated before this date computed every CI with 2,000 patient resamples and seed 20261023 (imported from the v1 script), although protocol addenda v2 and v3 register 1,000 resamples with seed 20261017 and the report text said 1,000. This run uses the registered settings. Point estimates are unaffected; only CI endpoints can change."
+ ],
+ "runtime_s": 1013.7
 }

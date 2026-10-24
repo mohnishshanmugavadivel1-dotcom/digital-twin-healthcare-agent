@@ -141,20 +141,20 @@ CIs are 95% from 1,000 paired patient-bootstrap resamples.
 
 | Horizon | Rows | RMSE with learned sensitivity | RMSE with prior only | Prior only minus learned [95% CI] |
 |---|---|---|---|---|
-| +60 min | 6,266 | 20.52 | 22.96 | +2.44 [+0.81, +3.85] |
-| +120 min | 6,250 | 22.84 | 23.89 | +1.04 [−0.01, +2.37] |
+| +60 min | 6,266 | 20.52 | 22.96 | +2.44 [+0.73, +3.86] |
+| +120 min | 6,250 | 22.84 | 23.89 | +1.04 [−0.02, +2.40] |
 
-- MAE at +60 min: +1.92 [+0.74, +3.20].
+- MAE at +60 min: +1.92 [+0.66, +3.11].
 - At +60 min the effect is about 4× larger than over all rows (+0.58).
-- At +120 min it is borderline: the CI touches 0.
+- At +120 min it is borderline: the CI includes 0 by a hair.
 
 **B. The served What-If across meal sizes (negative result, extended).** 1,473 eligible scenarios at 20/40/60/90/120 g on 12 test patients.
 
 | Horizon | Mean true Δ | What-If MAE | Cohort-average MAE | Difference [95% CI] | Median AE difference [95% CI] |
 |---|---|---|---|---|---|
-| +30 min | 14.8 | 7.0 | 4.0 | +2.99 [+0.52, +5.43] | +1.78 [−0.34, +4.13] |
-| +60 min | 61.1 | 23.1 | 15.8 | +7.38 [−0.31, +15.35] | +4.65 [−2.73, +11.90] |
-| +120 min | 82.3 | 45.3 | 20.8 | +24.45 [+13.36, +34.80] | +21.51 [+8.62, +31.23] |
+| +30 min | 14.8 | 7.0 | 4.0 | +2.99 [+0.66, +5.45] | +1.78 [−0.31, +4.34] |
+| +60 min | 61.1 | 23.1 | 15.8 | +7.38 [−0.43, +15.06] | +4.65 [−2.58, +11.81] |
+| +120 min | 82.3 | 45.3 | 20.8 | +24.45 [+13.12, +35.43] | +21.51 [+8.58, +31.64] |
 
 - The What-If's error grows with meal size. At +120 min its MAE is 25.0 at 20 g and 83.0 at 120 g, against 6.8 and 36.3 for the cohort average.
 - Its bias is −45.3 mg/dL at +120 min: it underestimates large and late meal effects.
@@ -168,9 +168,9 @@ CIs are 95% from 1,000 paired patient-bootstrap resamples.
 
 | Horizon (2,953 scenarios, 10 meal sizes) | Personal curve | Same curve, cohort sensitivity | Served What-If | Cohort average fitted on simulator truth | Personal minus cohort average [95% CI] |
 |---|---|---|---|---|---|
-| +30 min | 5.5 | 4.8 | 5.4 | 3.1 | +2.32 [+0.54, +4.08] (worse) |
-| +60 min | 10.7 | 10.5 | 17.2 | 12.5 | −1.72 [−6.82, +3.47] (tie) |
-| +120 min | **8.5** | 14.6 | 37.3 | 16.8 | **−8.21 [−13.98, −2.89]** (better) |
+| +30 min | 5.5 | 4.8 | 5.4 | 3.1 | +2.32 [+0.52, +4.23] (worse) |
+| +60 min | 10.7 | 10.5 | 17.2 | 12.5 | −1.72 [−6.65, +3.61] (tie) |
+| +120 min | **8.5** | 14.6 | 37.3 | 16.8 | **−8.21 [−14.19, −2.98]** (better) |
 
 **Interpretation, with caveats:**
 
@@ -206,15 +206,15 @@ CIs are 95% from 1,000 paired patient-bootstrap resamples.
 
 | Horizon | Mean true Δ | Curve MAE / RMSE | Cohort average (train) MAE / RMSE | Served What-If MAE / RMSE | Curve − cohort, MAE [CI] | Curve − cohort, RMSE [CI] | Curve − What-If, MAE [CI] |
 |---|---|---|---|---|---|---|---|
-| +30 min | 11.7 | **1.8** / 2.6 | 3.1 / 4.1 | 5.4 / 7.5 | −1.39 [−2.63, −0.15] | −1.48 [−2.77, −0.26] | −3.69 [−4.87, −2.70] |
-| +60 min | 48.3 | **5.3** / 7.8 | 12.5 / 16.1 | 17.2 / 24.5 | −7.21 [−11.37, −2.99] | −8.24 [−12.45, −3.82] | −11.97 [−15.07, −9.19] |
-| +120 min | 65.4 | **5.9** / 9.0 | 16.8 / 22.5 | 37.3 / 45.4 | −10.86 [−15.44, −6.17] | −13.46 [−17.97, −8.41] | −31.42 [−38.45, −25.32] |
+| +30 min | 11.7 | **1.8** / 2.6 | 3.1 / 4.1 | 5.4 / 7.5 | −1.39 [−2.65, +0.05] | −1.48 [−2.77, −0.18] | −3.69 [−4.84, −2.70] |
+| +60 min | 48.3 | **5.3** / 7.8 | 12.5 / 16.1 | 17.2 / 24.5 | −7.21 [−11.41, −2.93] | −8.24 [−12.34, −3.64] | −11.97 [−15.21, −9.18] |
+| +120 min | 65.4 | **5.9** / 9.0 | 16.8 / 22.5 | 37.3 / 45.4 | −10.86 [−15.77, −6.25] | −13.46 [−17.95, −8.30] | −31.42 [−39.15, −24.93] |
 
 **On the 20/40/60/90/120 g subset** (1,473 scenarios, the set behind v2's "What-If 45.3"), at +120 min:
 
 - MAE: curve 7.3, cohort average 20.8, served What-If 45.3.
-- Curve − cohort: −13.55 [−19.37, −7.63].
-- Curve − What-If: −38.00 [−46.70, −30.56].
+- Curve − cohort: −13.55 [−19.69, −7.78].
+- Curve − What-If: −38.00 [−47.62, −29.94].
 
 **Direction accuracy:**
 
@@ -223,6 +223,50 @@ CIs are 95% from 1,000 paired patient-bootstrap resamples.
 
 **Interpretation, with caveats:**
 
-- **Each patient split had one role before scoring.** The pre-specified estimator beats the train-only cohort average at all three horizons; every CI excludes zero. It also beats the served What-If at every horizon. The v2 weakness at +30 min came from the uncalibrated shape. One validation-fitted scale per horizon removes it.
+- **Each patient split had one role before scoring.** The pre-specified estimator beats the train-only cohort average at +60 and +120 min, and both MAE and RMSE CIs exclude zero. At +30 min its MAE is lower (1.8 against 3.1), but with the registered bootstrap settings the MAE CI just includes zero ([−2.65, +0.05]); the RMSE CI excludes it. *Correction:* this paragraph first said every CI excluded zero, which was true only with the unregistered 2,000 / 20261023 bootstrap (see addendum v4). It beats the served What-If at every horizon. The v2 weakness at +30 min (worse than the cohort average) came from the uncalibrated shape, and one validation-fitted scale per horizon removes it.
 - **Simulator structure, not real-world evidence.** In this simulator the meal effect is close to linear in grams and scales with a per-patient gain. That is exactly what the estimator assumes, so these errors are a best case. Real meals (fat, fibre, glycaemic index, medication timing) would not behave like this. Real-data validation of the twin is still not done.
 - **Not served.** The dashboard's What-If table still shows the frozen tree model's feature-perturbation numbers. The research note under the table reports this result as research.
+
+## Addendum v4 (2026-10-23): post-meal walk effect, and what the dashboard now shows
+
+**Protocol:** [`experiments/twin_validity/protocol_addendum_v4.json`](../../experiments/twin_validity/protocol_addendum_v4.json), written before `scripts/validate_walk_whatif.py` was implemented or run. **Aggregates:** [`reports/research/walk_whatif_validation.json`](../../reports/research/walk_whatif_validation.json) and [`WALK_WHATIF_VALIDATION.md`](../../reports/research/WALK_WHATIF_VALIDATION.md). Synthetic simulator only.
+
+**Why the tree model is not used for a walk.** The served models see activity only as steps in the 30 and 60 min *before* the forecast moment. A walk planned after the meal is future activity that no model input represents, so a feature-perturbation walk What-If would answer a different question ("had they walked before eating"). It was not built.
+
+**Design.**
+
+- Intervention: +125 steps/min for 20 min (2,500 steps), starting 15 min after the meal.
+- Truth: paired simulator difference (meal + walk minus meal only) in noiseless interstitial glucose.
+- The twin has no learned per-patient activity parameter, so all three candidates are **cohort level**.
+- Each split had one role: candidates fitted on train (36 patients, 8,630 scenarios); one selected on validation (12 patients, 2,820); test (12 patients, 3,320) scored once.
+
+**Validation:** mean MAE over +30/60/120 min was cohort_constant 5.92, cohort_by_grams 5.76 and glucose_scaled 5.24, so **glucose_scaled** was selected (Ŵ = β_h × latest CGM; β = −0.0452 / −0.2368 / −0.1195).
+
+**Test (1,000 paired patient-bootstrap resamples, seed 20261017):**
+
+| Horizon | Mean true walk effect | Selected MAE / RMSE | No-effect MAE / RMSE | Selected − no effect, MAE [95% CI] |
+|---|---|---|---|---|
+| +30 min | −5.0 | 1.0 / 1.3 | 5.0 / 5.3 | −4.01 [−4.70, −3.33] |
+| +60 min | −25.6 | 6.2 / 7.8 | 25.6 / 26.9 | −19.35 [−23.23, −15.49] |
+| +120 min | −11.6 | 4.3 / 5.3 | 11.6 / 12.9 | −7.29 [−10.70, −3.52] |
+
+Against the simplest cohort constant at +120 min: 4.31 against 5.91, Δ −1.60 [−2.67, −0.57]. Direction accuracy is uninformative (every true effect is negative).
+
+**Caveats.**
+
+- **Best case for this simulator.** The simulator's exercise term is −ex_gain × activity × G, and glucose_scaled mirrors that structure.
+- **The size is a simulator property.** The effect size comes from the simulator's built-in exercise model. It is not evidence about real walking, and it is not exercise advice.
+
+**What the dashboard and API now show (additive; no change to the served forecast).**
+
+- **Payload.** `CounterfactualResult.twin_curve` carries:
+  - the v3 personalised curve, Δ̂(h) = k_h × grams × the patient's learned carb sensitivity at the moment of the What-If, with k_h = α_h × c(h) from v3;
+  - the v4 walk effect (β_h × latest CGM);
+  - their sum;
+  - the held-out test MAEs.
+- **Tested range.** `within_tested_range` is false outside the conditions both studies tested: 20–120 g, and latest CGM ≤ 180 mg/dL (the anchor eligibility rule). The UI then marks the value "untested".
+- **Source of the coefficients.** They live in `src/glucotwin/twin/response_curve.py`, and `tests/test_twin_curve_agp_fhir_ingest.py` checks them against both report files.
+- **Where it appears.** The What-If table shows it in a separate "Personalised twin curve (research)" column group. The walk toggle only shows or hides the walk columns. The tree What-If numbers are unchanged, and a test asserts that `primary` is still scenario minus zero-carb reference.
+- **An example of the gap, not evidence.** For SYN-0039 at 07:55 with 35 g, the served What-If says +10.7 mg/dL at +120 min and the curve says +60.0. The paired-simulator truth for that case (section B; reproduced on 2026-10-23 with `paired_meal_delta`) is +9.1 / +40.9 / +65.4 at +30/+60/+120 min, against the curve's +10.0 / +42.5 / +60.0. This is one illustration; the aggregate evidence is the v3 table.
+
+**Bootstrap settings (correction).** Protocol addenda v2 and v3 register 1,000 patient resamples with seed 20261017; v1's own protocol registers 2,000 with seed 20261023, and its sections are unaffected. The v2 and v3 sections of `scripts/validate_twin_and_whatif.py` imported v1's 2,000 / 20261023 settings, so their published CIs came from the wrong settings, although the text said 1,000. The script now uses the protocol's settings and records the deviation in its output. Point estimates do not depend on the bootstrap, and the rerun reproduced every one of them exactly. The CIs in the v2 and v3 sections above are from the corrected rerun. One conclusion changed: at +30 min the v3 curve − cohort MAE CI moved from [−2.63, −0.15] to [−2.65, +0.05], so it now includes zero; the same happens on the 20–120 g subset ([−3.36, +0.06]). Every other CI keeps its sign.

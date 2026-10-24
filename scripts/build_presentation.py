@@ -28,6 +28,11 @@ def rng(vals, fmt) -> str:
     return f"{fmt(min(vals))}–{fmt(max(vals))}"
 
 
+# Paired-simulator truth for SYN-0039, 35 g at 07:55, +120 min (docs/research/TWIN_VALIDITY.md section B);
+# tests/test_twin_curve_agp_fhir_ingest.py::test_demo_example_ground_truth reproduces it from the simulator.
+DEMO_TRUTH_120 = 65.4
+
+
 def twin_validity_values() -> dict[str, str]:
     """Tokens for the twin-validity slide, read from the research reports and the recorded static snapshot."""
     tv = json.loads((ROOT / "reports/research/twin_validity.json").read_text())
@@ -39,6 +44,8 @@ def twin_validity_values() -> dict[str, str]:
     d = tw["D_train_fitted_validation_selected_curve"]
     dt = d["test_all_grams"]
     personal = snap["frames"][0]["state"]["personal"]
+    w35 = next(w["result"] for w in snap["whatifs"] if w["frame_index"] == 0 and w["grams"] == 35)
+    walk = json.loads((ROOT / "reports/research/walk_whatif_validation.json").read_text())["test"]["120"]
     entries = snap["fhir"]["bundle"]["entry"]
     kinds: dict[str, int] = {}
     for e in entries:
@@ -70,6 +77,10 @@ def twin_validity_values() -> dict[str, str]:
         "fhir_counts": " · ".join(f"{n} {k}" for k, n in sorted(kinds.items())),
         "fhir_p": f"probabilityDecimal {probs[0]:.3f} at the replay start" if probs else "none recorded",
         "lb_ppv": f'{100 * tv["D_lower_bound_below_70_rule"]["test"]["all"]["ppv"]:.1f}%',
+        "tc_served": f"{w35['primary']['delta_glucose_mg_dl']['120']:+.1f}",
+        "tc_curve": f"{w35['twin_curve']['delta_glucose_mg_dl']['120']:+.1f}",
+        "tc_truth": f"{DEMO_TRUTH_120:+.1f}",
+        "walk_mae": f"{walk['selected']['mae']:.1f}", "walk_none": f"{walk['no_effect']['mae']:.1f}",
     }
 
 

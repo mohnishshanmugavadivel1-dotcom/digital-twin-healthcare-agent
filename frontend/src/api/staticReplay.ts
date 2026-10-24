@@ -5,7 +5,7 @@
  * writes a snapshot: observations and forecast summaries are those with a timestamp > `since` and at or before
  * the replay clock, keeping the last `limit` items; replay steps advance whole 5-min frames.
  */
-import type { CounterfactualResult, FhirBundle, ForecastSummary, Observation, PatientRecord, PatientSummary, ReplayStatus } from "./types";
+import type { AgpSummary, CounterfactualResult, FhirBundle, ForecastSummary, Observation, PatientRecord, PatientSummary, ReplayStatus } from "./types";
 
 export interface SnapshotScenarioMeta {
   id: string; patient_id: string; start_offset_hours: number; title: string; description: string; file: string;
@@ -26,6 +26,7 @@ export interface SnapshotScenario {
   frames: ReplayStatus[]; summaries: PatientSummary[]; observations: Observation[]; forecasts: ForecastSummary[];
   whatifs: { frame_index: number; grams: number; result: CounterfactualResult }[];
   fhir?: { frame_index: number; hours: number; bundle: FhirBundle };
+  agp?: { frame_index: number; days: number; summary: AgpSummary }; // optional: older snapshots lack it
 }
 
 const ms = (iso: string) => new Date(iso).getTime();

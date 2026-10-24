@@ -8,7 +8,7 @@ import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
 import { jointSupportChip } from "../src/format.ts";
-import { MEAL_PRESETS } from "../src/mealPresets.ts";
+import { MEAL_PRESETS, presetGrams } from "../src/mealPresets.ts";
 import { filterForecasts, filterObservations, findWhatIf, missingWhatIfMessage, stepFrame } from "../src/api/staticReplay.ts";
 
 const dir = new URL("../static-demo/demo/", import.meta.url);
@@ -60,6 +60,25 @@ test("recorded snapshot: provenance, two scenarios, frames end the replay, faith
 
 test("every Indian meal preset has a recorded what-if (presets stay in sync with the export script)", () => {
   for (const p of MEAL_PRESETS) assert.ok(manifest.whatif_grams.includes(p.carbs), `${p.id}: ${p.carbs} g not recorded`);
+  assert.deepEqual(manifest.preset_grams, presetGrams());
+});
+
+test("snapshot: every preset at every 15-min frame, the research twin curve beside the tree deltas, and the AGP", () => {
+  for (const meta of manifest.scenarios) {
+    const sc = load(meta.id);
+    for (let i = 0; i < sc.frames.length; i += manifest.preset_grid_minutes / sc.step_minutes) {
+      for (const g of presetGrams()) assert.ok(findWhatIf(sc, i, g), `${meta.id}: ${g} g missing at frame ${i}`);
+    }
+    for (const w of sc.whatifs) {
+      const tc = w.result.twin_curve;
+      assert.ok(tc && tc.kind === "personalised_curve_research", `${meta.id}: no twin curve at frame ${w.frame_index}`);
+      assert.match(tc.caveat, /not the served forecast/);
+      assert.equal(tc.within_tested_range, w.grams >= 20 && w.grams <= 120 && tc.latest_cgm_mg_dl <= 180);
+    }
+    assert.equal(sc.agp.frame_index, 0);
+    assert.equal(sc.agp.summary.as_of, sc.frames[0].state.as_of);
+    assert.ok(sc.agp.summary.n_readings > 0 && sc.agp.summary.hourly.length === 24);
+  }
 });
 
 test("07:55 demo point in the snapshot: glucose 94, risk 0.2154; 120 g within support; 300 g flagged with the API text", () => {

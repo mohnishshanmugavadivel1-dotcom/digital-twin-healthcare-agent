@@ -9,15 +9,18 @@ from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
-from fastapi import APIRouter, FastAPI, HTTPException, Query, Request
+from fastapi import APIRouter, Body, FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from glucotwin.agp import agp_summary
 from glucotwin.contracts import (
     SCHEMA_VERSION,
+    AgpSummary,
     CounterfactualRequest,
     CounterfactualResult,
     EvaluationReport,
+    FhirIngestResult,
     Forecast,
     ForecastSummary,
     HealthStatus,
@@ -34,6 +37,7 @@ from glucotwin.contracts import (
     TwinState,
 )
 from glucotwin.fhir_export import patient_bundle
+from glucotwin.fhir_ingest import parse_bundle
 from glucotwin.models.bundle import ModelBundle
 from glucotwin.service import NotFound, TwinService
 
@@ -103,6 +107,28 @@ def build_router(svc: TwinService) -> APIRouter:
             cgm = cgm[cgm["timestamp"] > cgm["timestamp"].max() - pd.Timedelta(hours=hours)]
         return patient_bundle(record, ((t.to_pydatetime(), float(v)) for t, v in zip(cgm["timestamp"], cgm["value"],
                                                                                     strict=True)), forecast=latest)
+
+    @r.get("/patients/{pid}/agp", response_model=AgpSummary)
+    def get_agp(pid: str, days: int = Query(14, ge=1, le=14)):
+        """Ambulatory glucose profile of the CGM this twin has received up to now (descriptive, synthetic)."""
+        record = svc.record(pid)
+        eng = svc.engine(pid)
+        with svc.lock:
+            hist = eng.history_frame(None)
+            as_of = eng.as_of
+        if as_of is None:
+            raise HTTPException(status_code=409, detail="no observations received yet")
+        cgm = hist[(hist["kind"] == "cgm") & hist["value"].notna()]
+        return agp_summary(pid, pd.DatetimeIndex(cgm["timestamp"]), cgm["value"].to_numpy(), as_of,
+                           record.utc_offset_minutes, days=days)
+
+    @r.post("/fhir/Bundle", response_model=FhirIngestResult)
+    def post_fhir_bundle(bundle: dict = Body(...), patient_id: str | None = Query(None, pattern=r"^SYN-\d{4}$")):
+        """Parse a FHIR R4 Bundle into GlucoTwin observations. Validation only: nothing is added to a twin."""
+        try:
+            return parse_bundle(bundle, patient_id=patient_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     @r.get("/patients/{pid}/state", response_model=TwinState)
     def get_state(pid: str):
